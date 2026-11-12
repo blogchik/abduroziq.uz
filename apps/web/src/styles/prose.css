@@ -1,0 +1,516 @@
+/*
+ * Article typography (docs/DESIGN.md 5.3). Everything inside `.prose` is the body of a post:
+ * paragraphs, numbered headings, lists, quotes, figures, code, tables and footnotes. The
+ * wrapper also carries `type-article-body` (Newsreader, 19 -> 21px) and `data-cursor-text`
+ * territory for the cursor (see the motion README).
+ *
+ * Imported by the blog components (not by global.css). Plain CSS on design tokens only: no raw
+ * hex values, font sizes or easings. The MDX elements it styles are produced by the mapping
+ * in components/blog/mdx.ts; the classes it uses (`code-block`, `table-wrap`, `figure`,
+ * `prose-mark`, `prose-anchor`...) come from those components.
+ */
+
+.prose {
+  --prose-column: 680px;
+  /* Wide figures: up to 920px, never wider than the viewport minus the gutters. */
+  --prose-wide: min(920px, 100vw - 2 * var(--gutter));
+  --prose-hang: 120px;
+  --prose-gap: 1.35em;
+
+  counter-reset: prose-h2;
+  width: 100%;
+  max-width: var(--prose-column);
+  margin-inline: auto;
+  min-width: 0;
+  color: var(--ink);
+  overflow-wrap: break-word;
+}
+
+/* ---------------------------------------------------------------- rhythm */
+
+.prose > * {
+  margin-block: 0;
+}
+
+.prose > * + * {
+  margin-block-start: var(--prose-gap);
+}
+
+.prose > :is(h2) {
+  margin-block-start: 2.9em;
+}
+
+.prose > :is(h3, h4) {
+  margin-block-start: 2.2em;
+}
+
+.prose > :is(h2, h3, h4) + * {
+  margin-block-start: 0.85em;
+}
+
+/* ------------------------------------------------------------- drop cap */
+
+.prose > p:first-child::first-letter {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-stretch: 100%;
+  font-optical-sizing: auto;
+  font-style: normal;
+  color: var(--ink);
+}
+
+@supports (initial-letter: 3) {
+  .prose > p:first-child::first-letter {
+    initial-letter: 3;
+    margin-inline-end: 0.12em;
+  }
+}
+
+@supports not (initial-letter: 3) {
+  .prose > p:first-child::first-letter {
+    float: left;
+    font-size: 4.65em;
+    line-height: 0.74;
+    padding-block-start: 0.04em;
+    padding-inline-end: 0.1em;
+  }
+}
+
+/* ------------------------------------------------------------- headings */
+
+.prose :is(h2, h3, h4) {
+  scroll-margin-block-start: calc(var(--header-h) + 1.5rem);
+  text-wrap: balance;
+}
+
+.prose h2 {
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  font-weight: 500;
+  font-stretch: 100%;
+  font-optical-sizing: auto;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+
+/* `01 ——` above the heading: mono number, 24px rule. Decorative; the number is a counter. */
+.prose-mark {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-block-end: 0.85rem;
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  line-height: 1.3;
+  color: var(--accent-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.prose-mark::before {
+  content: counter(prose-h2, decimal-leading-zero) / '';
+}
+
+.prose-mark::after {
+  content: '';
+  width: 24px;
+  height: var(--hairline);
+  background-color: var(--accent-text);
+}
+
+.prose h2.prose-h2 {
+  counter-increment: prose-h2;
+}
+
+.prose h3 {
+  font-family: var(--font-display);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  font-stretch: 100%;
+  font-optical-sizing: auto;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+
+.prose h4 {
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* The heading text is its own permalink: no link styling, a mono # appears on hover. */
+.prose-anchor {
+  color: inherit;
+  text-decoration: none;
+}
+
+.prose-anchor::after {
+  content: '#';
+  margin-inline-start: 0.4em;
+  font-family: var(--font-mono);
+  font-size: 0.6em;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--accent-text);
+  opacity: 0;
+  transition: opacity var(--dur-1) var(--ease-out);
+}
+
+.prose-anchor:is(:hover, :focus-visible)::after {
+  opacity: 1;
+}
+
+/* ------------------------------------------------------- inline elements */
+
+.prose :is(strong, b) {
+  font-weight: 600;
+}
+
+.prose :is(em, i) {
+  font-style: italic;
+}
+
+.prose a:not(.prose-anchor) {
+  color: var(--ink);
+  text-decoration-line: underline;
+  text-decoration-color: var(--accent-text);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  text-decoration-skip-ink: auto;
+  transition: text-decoration-thickness var(--dur-1) var(--ease-out);
+}
+
+.prose a:not(.prose-anchor):hover {
+  text-decoration-thickness: 2px;
+}
+
+.prose-link__arrow {
+  width: 0.62em;
+  height: 0.62em;
+  margin-inline-start: 0.2em;
+  vertical-align: 0.12em;
+  color: var(--accent-text);
+}
+
+.prose :not(pre) > code {
+  padding: 0.1em 0.35em;
+  background-color: var(--paper-raised);
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  font-weight: 400;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+.prose kbd {
+  padding: 0.1em 0.45em;
+  border: var(--hairline) solid var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 0.78em;
+}
+
+.prose sub,
+.prose sup {
+  line-height: 0;
+}
+
+.prose mark {
+  background-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.prose abbr[title] {
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 0.18em;
+}
+
+/* ------------------------------------------------------------------ lists */
+
+.prose :is(ul, ol) {
+  padding-inline-start: 1.45em;
+}
+
+.prose ul {
+  list-style: disc outside;
+}
+
+.prose ol {
+  list-style: decimal outside;
+}
+
+.prose li {
+  padding-inline-start: 0.15em;
+}
+
+.prose li + li {
+  margin-block-start: 0.45em;
+}
+
+.prose li::marker {
+  color: var(--accent-text);
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+}
+
+.prose li > :is(ul, ol) {
+  margin-block-start: 0.45em;
+}
+
+/* Markers hang in the margin where the column has room for them. */
+@media (width >= 48rem) {
+  .prose :is(ul, ol) {
+    padding-inline-start: 0;
+  }
+
+  .prose li {
+    padding-inline-start: 0;
+  }
+
+  .prose li :is(ul, ol) {
+    padding-inline-start: 1.45em;
+  }
+}
+
+/* ------------------------------------------------- quotes (pull quotes) */
+
+.prose :is(blockquote, .pull-quote) {
+  margin-inline: 0;
+  padding-block: 0.2em;
+  padding-inline-start: clamp(1rem, 0.6rem + 1.8vw, 1.75rem);
+  border-inline-start: 2px solid var(--accent);
+  font-family: var(--font-serif-display);
+  font-size: var(--fs-lead);
+  font-style: italic;
+  font-weight: 400;
+  font-optical-sizing: auto;
+  line-height: 1.22;
+  letter-spacing: -0.01em;
+}
+
+.prose > :is(blockquote, .pull-quote) {
+  margin-block: 2.6rem;
+}
+
+.prose blockquote > * {
+  margin-block: 0;
+}
+
+.prose blockquote > * + * {
+  margin-block-start: 0.7em;
+}
+
+/* The component form: the figure carries the look, the inner quote is bare. */
+.prose .pull-quote blockquote {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font: inherit;
+  letter-spacing: inherit;
+}
+
+.pull-quote__cite {
+  margin: 1rem 0 0;
+  font-style: normal;
+  color: var(--ink-soft);
+}
+
+@media (width >= 64rem) {
+  .prose :is(blockquote, .pull-quote) {
+    margin-inline-end: calc(var(--prose-hang) * -1);
+  }
+}
+
+/* ---------------------------------------------------- figures and images */
+
+.prose :is(img, svg, video) {
+  max-width: 100%;
+  height: auto;
+}
+
+.prose .figure {
+  margin-inline: 0;
+  margin-block: 2.4rem;
+}
+
+.prose .figure__frame {
+  background-color: var(--paper-raised);
+}
+
+.prose .figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.prose .figure--wide {
+  margin-inline: calc((100% - var(--prose-wide)) / 2);
+}
+
+.figure__caption {
+  margin: 0.8rem 0 0;
+  font-family: var(--font-mono);
+  font-size: calc(var(--fs-label) * 1.1);
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+  text-wrap: pretty;
+}
+
+/* ------------------------------------------------------------ code blocks */
+
+.prose .code-block {
+  margin-block: 2.2rem;
+  border: var(--hairline) solid var(--rule);
+  border-radius: var(--radius-card);
+  background-color: var(--paper-raised);
+  overflow: hidden;
+}
+
+.code-block__head {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 1.9rem;
+  padding: 0.65rem 1rem 0;
+  color: var(--ink-soft);
+}
+
+.prose .code-block pre {
+  margin: 0;
+  padding: 0.35rem 1.1rem 1.15rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.7;
+  letter-spacing: 0;
+  tab-size: 2;
+  /* Shiki is configured to wrap; code blocks scroll sideways instead. */
+  white-space: pre !important;
+  word-wrap: normal !important;
+  overflow-wrap: normal;
+  /* The frame supplies the background in both themes (global.css paints dark with !important). */
+  background-color: transparent !important;
+  text-wrap: nowrap;
+}
+
+/* global.css paints every token span with the dark theme's background through an inherited
+   variable; the frame is the only background. */
+.prose .code-block pre span {
+  background-color: transparent !important;
+}
+
+.prose .code-block pre:focus-visible {
+  outline-offset: -3px;
+}
+
+.prose .code-block pre code {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  padding: 0;
+  background: none;
+  font-size: inherit;
+}
+
+/* ------------------------------------------------------------------ tables */
+
+.prose .table-wrap {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  margin-block: 2.2rem;
+  border-block-start: var(--hairline) solid var(--ink);
+}
+
+.prose .table-wrap:focus-visible {
+  outline-offset: 2px;
+}
+
+.prose table {
+  width: 100%;
+  min-width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: calc(var(--fs-label) * 1.15);
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+
+.prose th {
+  padding: 0.85em 1.4em 0.75em 0;
+  border-block-end: var(--hairline) solid var(--ink);
+  font-size: var(--fs-label);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-align: start;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.prose td {
+  min-width: 11ch;
+  padding: 0.85em 1.4em 0.8em 0;
+  border-block-end: var(--hairline) solid var(--rule);
+  vertical-align: top;
+}
+
+.prose :is(th, td):last-child {
+  padding-inline-end: 0.2em;
+}
+
+/* --------------------------------------------------------------- the rest */
+
+.prose hr {
+  width: 4rem;
+  margin-block: 3.4rem;
+  margin-inline: auto;
+  border-block-start: var(--hairline) solid var(--ink);
+}
+
+.prose > hr + * {
+  margin-block-start: 0;
+}
+
+/* GFM footnotes: a mono list under a hairline. The label heading is visually hidden. */
+.prose :is(section[data-footnotes], .footnotes) {
+  margin-block-start: 3.2rem;
+  padding-block-start: 1.2rem;
+  border-block-start: var(--hairline) solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: calc(var(--fs-label) * 1.1);
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+.prose :is(section[data-footnotes], .footnotes) :is(ol, ul) {
+  padding-inline-start: 1.6em;
+}
+
+.prose :is(section[data-footnotes], .footnotes) p {
+  margin: 0;
+}
+
+.prose sup > a[data-footnote-ref],
+.prose a[data-footnote-backref] {
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  text-decoration: none;
+  color: var(--accent-text);
+}
+
+.prose sup > a[data-footnote-ref] {
+  padding-inline: 0.1em;
+}
+
+@media print {
+  .prose .code-block pre {
+    white-space: pre-wrap !important;
+  }
+}

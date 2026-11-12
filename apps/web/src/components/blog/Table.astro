@@ -1,0 +1,24 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import { localeFromPath, t } from '@/i18n';
+
+/**
+ * Wraps a table in a keyboard-focusable, horizontally scrollable region, so a wide table
+ * scrolls inside the column and never widens the page.
+ */
+type Props = HTMLAttributes<'table'>;
+
+const locale = localeFromPath(Astro.url.pathname);
+---
+
+<div
+  class="table-wrap"
+  role="region"
+  tabindex="0"
+  aria-label={t(locale, 'blog.post.tableLabel')}
+  data-lenis-prevent
+>
+  <table {...Astro.props}>
+    <slot />
+  </table>
+</div>

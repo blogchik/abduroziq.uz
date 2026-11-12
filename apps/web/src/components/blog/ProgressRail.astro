@@ -1,0 +1,79 @@
+---
+/**
+ * The vertical reading-progress line in the left margin (DESIGN 5.3), desktop only. It sits
+ * in an absolutely positioned track as tall as the article body and sticks to the viewport
+ * while the body scrolls past. The motion kit's `data-progress` writes `--progress` (0 to 1)
+ * and the accent fill follows it. The post title runs along the line, rotated 90 degrees.
+ * Decorative: hidden from assistive technology (the title is the page's h1).
+ *
+ * Without JavaScript the line simply stays empty.
+ */
+interface Props {
+  title: string;
+  /** Selector of the element whose scroll range drives the line. */
+  target: string;
+}
+
+const { title, target } = Astro.props;
+---
+
+<div class="rail" aria-hidden="true">
+  <div class="rail__sticky" data-progress data-progress-target={target}>
+    <span class="rail__line">
+      <span class="rail__fill"></span>
+    </span>
+    <span class="rail__title type-label">{title}</span>
+  </div>
+</div>
+
+<style>
+  .rail {
+    display: none;
+  }
+
+  @media (width >= 64rem) {
+    .rail {
+      display: block;
+      position: absolute;
+      inset-block: 0;
+      inset-inline-start: max(0.5rem, calc(50% - 340px - 9.5rem));
+      width: 1.75rem;
+      pointer-events: none;
+    }
+  }
+
+  .rail__sticky {
+    position: sticky;
+    inset-block-start: calc(var(--header-h) + 2.5rem);
+    display: flex;
+    gap: 0.9rem;
+    height: min(60dvh, 30rem, 100%);
+  }
+
+  .rail__line {
+    position: relative;
+    flex: none;
+    width: 2px;
+    height: 100%;
+    background-color: var(--rule);
+  }
+
+  .rail__fill {
+    position: absolute;
+    inset: 0;
+    background-color: var(--accent);
+    transform: scaleY(var(--progress, 0));
+    transform-origin: top center;
+  }
+
+  .rail__title {
+    min-height: 0;
+    height: 100%;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--ink-soft);
+  }
+</style>

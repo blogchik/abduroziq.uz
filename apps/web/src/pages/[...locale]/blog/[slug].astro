@@ -2,9 +2,12 @@
 import { Image } from 'astro:assets';
 import { render } from 'astro:content';
 import type { GetStaticPaths } from 'astro';
+import ArticleEnd from '@/components/blog/ArticleEnd.astro';
+import ArticleHeader from '@/components/blog/ArticleHeader.astro';
+import ProgressRail from '@/components/blog/ProgressRail.astro';
+import { mdxComponents } from '@/components/blog/mdx';
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import { localeParam, localePath, resolveLocale, t } from '@/i18n';
-import { formatDate, isoDate } from '@/lib/dates';
+import { localeParam, resolveLocale, t } from '@/i18n';
 import {
   getAdjacentPosts,
   getPostEntries,
@@ -13,6 +16,8 @@ import {
   toPostSummary,
 } from '@/lib/posts';
 import { blogPostingSchema, breadcrumbSchema, countWords } from '@/lib/seo/schema';
+import { absoluteUrl } from '@/lib/seo/site';
+import '@/styles/prose.css';
 
 // A post exists at one URL, in its own language: /blog/<slug>/ or /uz/blog/<slug>/.
 export const getStaticPaths = (async () =>
@@ -58,45 +63,56 @@ const alternates = [
     ],
   }}
 >
-  <article>
-    <h1>{post.title}</h1>
-    <p>
-      <time datetime={isoDate(post.date)}>{formatDate(post.date, locale)}</time>
-      {' · '}
-      {t(locale, 'blog.readingTime', { minutes: post.readingMinutes })}
-      {draft && <> · {t(locale, 'blog.draft')}</>}
-    </p>
+  <article class="post">
+    <ArticleHeader post={post} locale={locale} draft={draft} translation={translations[0]} />
+
     {cover && (
-      <Image
-        src={cover}
-        alt={coverAlt}
-        widths={[480, 960, 1440]}
-        sizes="(min-width: 960px) 960px, 100vw"
-      />
+      <figure class="post-cover shell" data-reveal="rise">
+        <Image
+          src={cover}
+          alt={coverAlt}
+          widths={[480, 960, 1440, 1840]}
+          sizes="(min-width: 960px) 920px, calc(100vw - 2rem)"
+          loading="eager"
+          fetchpriority="high"
+        />
+      </figure>
     )}
-    <Content />
+
+    <div class="post-body">
+      <ProgressRail title={post.title} target="#post-body" />
+      <div class="post-body__inner shell">
+        <div class="prose type-article-body" id="post-body">
+          <Content components={mdxComponents} />
+        </div>
+      </div>
+    </div>
+
+    <ArticleEnd locale={locale} tags={tags} url={absoluteUrl(post.url)} prev={prev} next={next} />
   </article>
-
-  {tags.length > 0 && (
-    <ul aria-label={t(locale, 'blog.tags')}>
-      {tags.map((tag) => (
-        <li>
-          <a href={localePath(locale, `/blog/tag/${tag}/`)}>{tag}</a>
-        </li>
-      ))}
-    </ul>
-  )}
-
-  <nav>
-    {prev && (
-      <a href={prev.url} rel="prev">
-        {t(locale, 'blog.post.prev')}: {prev.title}
-      </a>
-    )}
-    {next && (
-      <a href={next.url} rel="next">
-        {t(locale, 'blog.post.next')}: {next.title}
-      </a>
-    )}
-  </nav>
 </BaseLayout>
+
+<style>
+  .post {
+    display: block;
+  }
+
+  .post-cover {
+    max-width: min(920px, 100%);
+    margin-block: 0 clamp(2.25rem, 1.4rem + 3.4vw, 4.5rem);
+  }
+
+  .post-cover :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    object-position: 50% 35%;
+    background-color: var(--paper-raised);
+  }
+
+  .post-body {
+    position: relative;
+  }
+</style>

@@ -1,8 +1,10 @@
 ---
 import type { GetStaticPaths } from 'astro';
+import BlogHeader from '@/components/blog/BlogHeader.astro';
+import PostList from '@/components/blog/PostList.astro';
+import TagNav from '@/components/blog/TagNav.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { localeParam, locales, localePath, resolveLocale, t } from '@/i18n';
-import { formatDate } from '@/lib/dates';
 import { getAllTags, getPosts } from '@/lib/posts';
 import { breadcrumbSchema, collectionPageSchema } from '@/lib/seo/schema';
 
@@ -21,6 +23,10 @@ const { tag } = Astro.params;
 const path = `/blog/tag/${tag}/`;
 
 const posts = (await getPosts(locale)).filter((post) => post.tags.includes(tag));
+const tags = await getAllTags(locale);
+const count = t(locale, posts.length === 1 ? 'blog.tag.count.one' : 'blog.tag.count.other', {
+  count: posts.length,
+});
 
 // The tag page of the other locale exists only if that locale uses the tag.
 const otherLocales = locales.filter((l) => l !== locale);
@@ -53,16 +59,11 @@ for (const other of otherLocales) {
     ],
   }}
 >
-  <h1>{t(locale, 'blog.tag.title', { tag })}</h1>
-  <p>
-    <a href={localePath(locale, '/blog/')}>{t(locale, 'blog.tag.all')}</a>
-  </p>
-  <ul>
-    {posts.map((post) => (
-      <li>
-        <a href={post.url}>{post.title}</a>{' '}
-        <time datetime={post.date.toISOString()}>{formatDate(post.date, locale)}</time>
-      </li>
-    ))}
-  </ul>
+  <BlogHeader
+    title={t(locale, 'blog.tag.title', { tag })}
+    subtitle={count}
+    back={{ href: localePath(locale, '/blog/'), label: t(locale, 'blog.tag.all') }}
+  />
+  <TagNav locale={locale} tags={tags} active={tag} />
+  <PostList posts={posts} locale={locale} />
 </BaseLayout>

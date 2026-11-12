@@ -1,6 +1,7 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import getReadingTime from 'reading-time';
 import { localePath, locales, type Locale } from '@/i18n';
+import { monthKey } from '@/lib/dates';
 
 export interface PostSummary {
   id: string;
@@ -117,4 +118,26 @@ export async function getTranslations(post: PostSummary): Promise<PostSummary[]>
     (candidate) =>
       candidate.translationKey === post.translationKey && candidate.locale !== post.locale,
   );
+}
+
+/**
+ * `view-transition-name` shared by the title in a list row and the article title, so the
+ * title morphs between them. Must match the default of `PostRow` (components/ui/PostRow.astro).
+ */
+export function postTransitionName(post: Pick<PostSummary, 'locale' | 'slug'>): string {
+  return `post-${post.locale}-${post.slug}`.replace(/[^a-zA-Z0-9-]/g, '-');
+}
+
+/** Posts (already sorted newest first) grouped by calendar month, in order. */
+export function groupPostsByMonth(
+  posts: readonly PostSummary[],
+): { key: string; posts: PostSummary[] }[] {
+  const groups: { key: string; posts: PostSummary[] }[] = [];
+  for (const post of posts) {
+    const key = monthKey(post.date);
+    const last = groups.at(-1);
+    if (last?.key === key) last.posts.push(post);
+    else groups.push({ key, posts: [post] });
+  }
+  return groups;
 }

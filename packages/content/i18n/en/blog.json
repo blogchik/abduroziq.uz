@@ -1,19 +1,47 @@
 {
   "title": "Writing",
-  "intro": "Notes on building products, design and engineering.",
-  "empty": "Nothing published yet.",
+  "intro": "Notes on building products, design and code",
+  "empty": "The first post is being written.",
+  "emptyText": "New posts will appear here, in English and Uzbek.",
+  "emptyBadge": "Soon",
+  "rss": "RSS feed",
   "readingTime": "{minutes} min read",
   "draft": "Draft",
   "published": "Published {date}",
   "updated": "Updated {date}",
   "tags": "Tags",
+  "filter": {
+    "label": "Filter by tag",
+    "all": "All"
+  },
   "tag": {
-    "title": "Tagged \"{tag}\"",
-    "all": "All posts"
+    "title": "Tagged “{tag}”",
+    "all": "All posts",
+    "count": {
+      "one": "{count} post",
+      "other": "{count} posts"
+    }
   },
   "post": {
     "prev": "Previous post",
-    "next": "Next post"
+    "next": "Next post",
+    "more": "More entries",
+    "previousShort": "Previous",
+    "nextShort": "Next",
+    "copyLink": "Copy link",
+    "copied": "Link copied",
+    "copyFailed": "Could not copy",
+    "alsoIn": {
+      "en": "Read in English",
+      "uz": "Read in Uzbek"
+    },
+    "by": "By",
+    "tableLabel": "Table, scrollable",
+    "codeLabel": "{language} code, scrollable",
+    "codePlain": "Code, scrollable",
+    "footnotes": "Footnotes",
+    "footnoteBack": "Back to the text",
+    "note": "Note"
   },
   "language": {
     "en": "English",

@@ -42,3 +42,8 @@ export function isoDate(date: Date): string {
     day: '2-digit',
   }).format(date);
 }
+
+/** `YYYY-MM` in Tashkent time: the key posts are grouped under on the blog index. */
+export function monthKey(date: Date): string {
+  return isoDate(date).slice(0, 7);
+}
