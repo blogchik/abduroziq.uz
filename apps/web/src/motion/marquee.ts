@@ -3,10 +3,11 @@
  * the track's children (inert, hidden from assistive technology) until the loop is
  * seamless. `data-marquee-speed` is px per second (negative reverses), `data-marquee-scroll`
  * makes speed and direction follow the scroll velocity and ease back. Runs only while
- * on screen; static under reduced motion.
+ * on screen, pauses while hovered or while it contains focus (WCAG 2.2.2; the footer's
+ * motion switch stops it for good); static under reduced motion.
  */
 import { marquee as cfg } from './config';
-import { gsap, num, track } from './core';
+import { gsap, listen, num, track } from './core';
 import { scrollVelocity } from './root-state';
 
 function setup(el: HTMLElement): void {
@@ -26,6 +27,9 @@ function setup(el: HTMLElement): void {
   let dir = 1;
   let running = false;
   let alive = true;
+  let onScreen = false;
+  let hovered = false;
+  let focused = false;
 
   function build(): void {
     for (const clone of clones) clone.remove();
@@ -76,8 +80,33 @@ function setup(el: HTMLElement): void {
     else gsap.ticker.remove(tick);
   }
 
+  function update(): void {
+    run(onScreen && !hovered && !focused);
+  }
+
+  // Entries arrive in order; within one batch the last one is the current state.
   const io = new IntersectionObserver((entries) => {
-    run(entries.some((entry) => entry.isIntersecting));
+    const last = entries[entries.length - 1];
+    if (!last) return;
+    onScreen = last.isIntersecting;
+    update();
+  });
+  listen(el, 'pointerenter', (event) => {
+    if (event.pointerType === 'touch') return;
+    hovered = true;
+    update();
+  });
+  listen(el, 'pointerleave', () => {
+    hovered = false;
+    update();
+  });
+  listen(el, 'focusin', () => {
+    focused = true;
+    update();
+  });
+  listen(el, 'focusout', (event) => {
+    focused = event.relatedTarget instanceof Node && el.contains(event.relatedTarget);
+    update();
   });
   let frame = 0;
   let lastWidth = el.clientWidth;

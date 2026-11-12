@@ -97,6 +97,14 @@
 
   /* Focus ring colour; surfaces override it (on-accent on accent fills). */
   --focus-color: var(--ink);
+
+  /* Stacking order, lowest to highest: the sticky header, the follower preview, the skip
+     link, the page-transition panel, the custom cursor. */
+  --z-header: 40;
+  --z-follower: 60;
+  --z-skip: 100;
+  --z-wipe: 2147482000;
+  --z-cursor: 2147483000;
 }
 
 @media (width >= 48rem) {

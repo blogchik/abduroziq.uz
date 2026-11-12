@@ -43,7 +43,7 @@ export interface DeskState {
 
 const INTERACTIVE = 'a, button, input, select, textarea, label, [role="button"]';
 
-function setupDesk(desk: HTMLElement, reduced: boolean): void {
+function setupDesk(desk: HTMLElement, reduced: boolean, late: boolean): void {
   const objects: DeskObject[] = Array.from(
     desk.querySelectorAll<HTMLElement>('[data-draggable]'),
   ).map((el) => {
@@ -93,7 +93,7 @@ function setupDesk(desk: HTMLElement, reduced: boolean): void {
 
   // Drop-in entrance.
   const entrance = desk.getAttribute('data-desk-entrance');
-  if (!reduced && entrance !== null) {
+  if (!reduced && !late && entrance !== null) {
     const tl = gsap.timeline({ paused: true, delay: num(entrance, 0) });
     objects.forEach((o, i) => {
       const p = state.toPx(o);
@@ -168,7 +168,7 @@ function setupDesk(desk: HTMLElement, reduced: boolean): void {
     .catch((error: unknown) => console.error('[motion] desk dragging unavailable', error));
 }
 
-export function initDesks(reduced: boolean): void {
+export function initDesks(reduced: boolean, late = false): void {
   for (const desk of document.querySelectorAll<HTMLElement>('[data-desk]'))
-    setupDesk(desk, reduced);
+    setupDesk(desk, reduced, late);
 }

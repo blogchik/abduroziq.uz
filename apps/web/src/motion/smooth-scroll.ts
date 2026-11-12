@@ -9,13 +9,20 @@ import { finePointer, gsap, prefersReducedMotion, ScrollTrigger } from './core';
 
 let lenis: Lenis | undefined;
 let loading: Promise<void> | undefined;
+let raf: ((time: number) => void) | undefined;
 
-/** Creates the instance on the first page that wants it; later calls are no-ops. */
+/**
+ * Creates the instance on the first page that wants it; later calls are no-ops. A failed
+ * download is not cached: the next page tries again.
+ */
 export function initSmoothScroll(): Promise<void> {
   if (lenis || loading) return loading ?? Promise.resolve();
   if (prefersReducedMotion() || !finePointer()) return Promise.resolve();
   loading = import('lenis')
     .then(({ default: LenisClass }) => {
+      loading = undefined;
+      // Motion may have been switched off while the chunk was loading.
+      if (prefersReducedMotion() || !finePointer()) return;
       lenis = new LenisClass({
         lerp: smooth.lerp,
         wheelMultiplier: smooth.wheelMultiplier,
@@ -27,13 +34,27 @@ export function initSmoothScroll(): Promise<void> {
         allowNestedScroll: true,
       });
       lenis.on('scroll', ScrollTrigger.update);
-      gsap.ticker.add((time) => lenis?.raf(time * 1000));
+      raf = (time) => lenis?.raf(time * 1000);
+      gsap.ticker.add(raf);
       gsap.ticker.lagSmoothing(0);
     })
     .catch((error: unknown) => {
+      loading = undefined;
       console.error('[motion] smooth scroll unavailable', error);
     });
   return loading;
+}
+
+/** Removes smooth scrolling (motion switched off); `initSmoothScroll` can create it again. */
+export function destroySmoothScroll(): void {
+  if (!lenis) return;
+  if (raf) gsap.ticker.remove(raf);
+  raf = undefined;
+  lenis.destroy();
+  lenis = undefined;
+  // Back to GSAP's default lag smoothing (500ms threshold, 33ms adjusted lag).
+  gsap.ticker.lagSmoothing(500, 33);
+  document.documentElement.classList.remove('lenis', 'lenis-smooth', 'lenis-stopped');
 }
 
 /** Holds the page still (the mobile menu sheet is open). */

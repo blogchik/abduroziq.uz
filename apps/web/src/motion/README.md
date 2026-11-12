@@ -31,9 +31,19 @@ switch for `localStorage.motion`.
 
 ### `data-reveal="lines|words|chars|rise|fade"`
 
-Plays once when the element enters the viewport (`top 88%`); elements already on screen
-play as soon as the page is ready (after the page transition). Optional
-`data-reveal-delay="0.2"` (seconds).
+Plays once when the element enters the viewport (`top 88%`). An element already inside
+the viewport when the kit starts plays at once (after the page transition, without waiting
+for ScrollTrigger); a text reveal there rises as a whole when SplitText or the fonts are
+not ready yet, rather than staying hidden while they load. Elements above the viewport (a
+restored scroll position, also one restored after the kit started) are shown as they are.
+Optional `data-reveal-delay="0.2"` (seconds).
+
+**LCP:** do not put `data-reveal` on the page's largest-contentful-paint candidates: the
+main heading, the first image, the first rows of a list. A hidden element cannot be the
+LCP until it shows, so a reveal there costs seconds of LCP. Reveal what comes after.
+
+Splits use `aria: 'none'` (no `aria-label` on the element, no hidden pieces), so assistive
+tech reads the text as written while it is split.
 
 - `lines`: lines rise from behind a mask, 80ms stagger. `words`: words rise, 30ms stagger.
   `chars`: letters rise, 35ms stagger, `dur-4`. SplitText with `autoSplit` (re-splits on
@@ -62,12 +72,31 @@ Items fade and rise 16px with a 60ms stagger, batched as they enter (long lists 
 
 ### `data-cursor="link|open|read|drag|text|hide"` and `data-cursor-label`
 
-The cursor (fine pointers, full motion, no forced colours) picks its state from the
+The cursor (fine pointers, full motion, no forced colours, no `prefers-contrast: more`)
+picks its state from the
 closest `data-cursor`, else automatically: `a[href]` → `link` (`open` with the label
 `OPEN ↗` for external links, `target="_blank"` or `rel="external"`), buttons, labels and
 selects → `link`, text fields → `text` (native I-beam), long-form text inside `.prose`
 (or any `[data-cursor-text]`) → `text`. `drag` shows `DRAG`, and `DROP` while pressed.
 `read` is the accent pill. `hide` hides it and shows the native cursor.
+
+Default labels come from `common.json` (`common.cursor.*`, in the page's language):
+BaseLayout writes them to `<body data-cursor-labels>` as JSON. `data-cursor-label` on an
+element wins (and then also replaces `Drop` while pressed).
+
+### `data-surface="paper|accent|ink"` (cursor colour)
+
+The cursor has no blend mode: it is ink on paper, on-accent on the accent fill and paper on
+an ink band, with a 1px halo in the surface's own colour that keeps it readable over
+photos. The nearest ancestor of the hovered element decides, in this order: an explicit
+`data-surface`, the `surface-accent` / `surface-ink` utilities, its own opaque background
+(or an SVG shape's fill) compared with the `accent`, `ink` and `paper` tokens. Most
+markup needs nothing; add `data-surface` where the automatic answer is wrong (an image
+that is mostly dark on paper, say). The read pill keeps its accent fill everywhere.
+
+```html
+<div class="ticket" data-surface="accent">…</div>
+```
 
 ```html
 <a href="/blog/post/" data-cursor="read">…</a>
@@ -79,7 +108,8 @@ selects → `link`, text fields → `text` (native I-beam), long-form text insid
 The track's children are cloned (inert, `aria-hidden`) until the loop is seamless.
 `data-marquee-speed` in px per second (default 60; negative runs the other way),
 `data-marquee-scroll` makes speed and direction follow the scroll velocity and ease back.
-Runs only while on screen; static under reduced motion. The kit sets
+Runs only while on screen; pauses while hovered or while it contains focus; static under
+reduced motion and after the footer's motion switch is turned off. The kit sets
 `[data-marquee] { overflow: hidden }` and makes the track a `max-content` flex row.
 
 ```html
@@ -122,7 +152,9 @@ its own (or accept the objects in normal flow).
 ### `data-follower-scope` / `data-follower-item` / `data-follower-panel` / `data-follower-for`
 
 While an item is hovered (or focused), the panel follows the pointer with a soft lag and
-tilts with its velocity, showing only the child whose `data-follower-for` matches.
+tilts with its velocity, showing only the child whose `data-follower-for` matches. It sits
+32px beside the pointer (clear of the cursor's label), centred on it vertically, pivots on
+its near edge and never slides under the pointer while lagging.
 The panel is fixed, `pointer-events: none` and hidden by default; it never shows on
 coarse pointers or under reduced motion.
 
@@ -168,17 +200,37 @@ attribute value), springing back on leave. Fine pointers, full motion.
   The `site:menu` event (`detail.open`) stops and restarts it.
 - **Page transition**: a paper panel with an accent hairline wipes up over the old page,
   the swap happens underneath, the panel leaves, then the new page's entrances run.
-  No panel under reduced motion.
+  No panel under reduced motion. Links to files (an extension other than `.html`, such as
+  the RSS feeds) and `data-astro-reload` links never start the panel: the kit marks such
+  anchors `data-astro-reload` before the router sees the click. A page restored from the
+  back/forward cache gets the panel, the gate and the cursor back to idle.
+- **Shared-element morphs**: a `transition:name` starting with `post-` gets the
+  view-transition class `m-text`: the box morphs, the old and new text keep their natural
+  size and cross-fade in 200ms (no stretched, smeared snapshot).
+- **Motion switch**: the footer's `MOTION: ON / OFF` writes `localStorage.motion`, updates
+  `data-motion` and dispatches `site:motion`; the kit then leaves the page and enters it
+  again in the new mode (cursor, Lenis, marquees, reveals, desks and page callbacks), with
+  `late: true` so nothing on screen replays its entrance.
 - **Failsafe**: prepared (hidden) states live in `motion.css`, scoped to
-  `html.js[data-motion='full']`, and a CSS animation shows everything after 2.5s if the
-  kit never takes over.
+  `html.js[data-motion='full']`, and a CSS animation shows everything after 1s if the kit
+  never takes over (`reveal.failsafeMs`, keep both in sync). Once the kit has an element,
+  a watchdog completes its reveal if no animation frame runs (a view that reports itself
+  visible but never paints); the page-transition panel has the same watchdog, so a
+  navigation never waits on frames that do not come. In a hidden tab reveals jump to
+  their end.
 
 ## JavaScript API (`@/motion`)
 
 ```ts
-onPageEnter(cb: (ctx: { reduced: boolean }) => void | (() => void)): void;
+// `first`: the document's initial page; `late`: skip entrance choreography (a slow first
+// load the CSS failsafe has already shown, or the page entered again after a motion switch).
+onPageEnter(
+  cb: (ctx: { reduced: boolean; first: boolean; late: boolean }) => void | (() => void),
+): void;
 prefersReducedMotion(): boolean; // reads <html data-motion>
 splitLines(el: Element): { lines: Element[]; revert(): void }; // masked lines
+afterGate(fn: () => void): void; // runs once the page-transition panel has left
+export { dur, ease, cssEase }; // motion tokens
 export { gsap, ScrollTrigger };
 ```
 

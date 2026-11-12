@@ -5,15 +5,30 @@
  *
  * States (attribute `data-state` on the root): default, link, open, read, drag, text, hide.
  * Markup can force one with `data-cursor="…"` and change the label with `data-cursor-label`.
+ * The default labels come from `<body data-cursor-labels>` (JSON written by BaseLayout from
+ * common.json, so they follow the page's language).
+ *
+ * Colour (attribute `data-surface` on the root: paper, accent or ink) follows the surface
+ * under the pointer: ink on paper, on-accent on the accent fill, paper on ink. The nearest
+ * ancestor of the hovered element decides, in this order: an explicit
+ * `data-surface="paper|accent|ink"`, the `surface-accent` / `surface-ink` utilities, its own
+ * opaque background (or the fill of an SVG shape) compared with the accent and ink tokens.
+ * Off for `prefers-contrast: more` as well (the native cursor is kept).
  */
 import { cursor as cfg } from './config';
 import { applyTokenVars, fineMedia, forcedColorsMedia, gsap, prefersReducedMotion } from './core';
 
 type State = 'default' | 'link' | 'open' | 'read' | 'drag' | 'text' | 'hide';
 
+type Surface = 'paper' | 'accent' | 'ink';
+type Labels = { open: string; read: string; drag: string; drop: string };
+
 const STATES: readonly State[] = ['default', 'link', 'open', 'read', 'drag', 'text', 'hide'];
-const LABELS: Partial<Record<State, string>> = { open: 'Open ↗', read: 'Read', drag: 'Drag' };
-const PRESSED_DRAG_LABEL = 'Drop';
+const SURFACES: readonly Surface[] = ['paper', 'accent', 'ink'];
+/** English fallback when a page carries no `data-cursor-labels`. */
+const DEFAULT_LABELS: Labels = { open: 'Open', read: 'Read', drag: 'Drag', drop: 'Drop' };
+/** The cursor label is drawn with the system fallback for the arrow, as before. */
+const OPEN_SUFFIX = ' ↗';
 
 const TEXT_FIELDS =
   'textarea, [contenteditable]:not([contenteditable="false"]), input:not([type="button"], [type="submit"], [type="reset"], [type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"], [type="image"])';
@@ -37,6 +52,8 @@ let running = false;
 let pressed = false;
 let state: State = 'default';
 let label = '';
+let surface: Surface = 'paper';
+let probes: Record<Surface, HTMLElement>;
 
 const pointer = { x: -100, y: -100 };
 const dot = { x: -100, y: -100 };
@@ -51,7 +68,8 @@ function build(): HTMLDivElement {
     '<div class="m-cursor__ring"><span class="m-cursor__ring-shape"></span><span class="m-cursor__label"></span><span class="m-cursor__pill"></span></div>' +
     '<div class="m-cursor__dot"><span class="m-cursor__dot-shape"></span><span class="m-cursor__burst">' +
     Array.from({ length: 8 }, (_, i) => `<i style="--a:${i * 45}deg"><b></b></i>`).join('') +
-    '</span></div>';
+    '</span></div>' +
+    SURFACES.map((name) => `<i class="m-cursor__probe" data-probe="${name}"></i>`).join('');
   applyTokenVars(el);
   el.style.setProperty('--m-burst', `${cfg.burstMs}ms`);
   dotEl = el.querySelector<HTMLElement>('.m-cursor__dot')!;
@@ -59,6 +77,10 @@ function build(): HTMLDivElement {
   labelEl = el.querySelector<HTMLElement>('.m-cursor__label')!;
   pillEl = el.querySelector<HTMLElement>('.m-cursor__pill')!;
   burstEl = el.querySelector<HTMLElement>('.m-cursor__burst')!;
+  probes = Object.fromEntries(
+    SURFACES.map((name) => [name, el.querySelector<HTMLElement>(`[data-probe="${name}"]`)!]),
+  ) as Record<Surface, HTMLElement>;
+  el.dataset['surface'] = 'paper';
   return el;
 }
 
@@ -106,8 +128,9 @@ function setVisible(next: boolean): void {
 function render(): void {
   if (!root) return;
   root.dataset['state'] = state;
+  root.dataset['surface'] = surface;
   root.toggleAttribute('data-pressed', pressed);
-  const text = state === 'drag' && pressed ? PRESSED_DRAG_LABEL : label;
+  const text = state === 'drag' && pressed && !customLabel ? labels().drop : label;
   if (state === 'read') {
     pillEl.textContent = text;
     labelEl.textContent = '';
@@ -119,15 +142,138 @@ function render(): void {
   html.toggleAttribute('data-cursor-native', state === 'text' || state === 'hide');
 }
 
+/* ---------------------------------------------------------------- labels */
+
+let labelsBody: HTMLElement | undefined;
+let labelsCache: Labels = DEFAULT_LABELS;
+
+/** The page's labels (BaseLayout writes them per locale); re-read after every swap. */
+function labels(): Labels {
+  const body = document.body;
+  if (body === labelsBody) return labelsCache;
+  labelsBody = body;
+  labelsCache = DEFAULT_LABELS;
+  const raw = body.dataset['cursorLabels'];
+  if (raw) {
+    try {
+      labelsCache = { ...DEFAULT_LABELS, ...(JSON.parse(raw) as Partial<Labels>) };
+    } catch {
+      // Malformed attribute: keep the English defaults.
+    }
+  }
+  return labelsCache;
+}
+
+function defaultLabel(next: State): string {
+  const l = labels();
+  if (next === 'open') return l.open + OPEN_SUFFIX;
+  if (next === 'read') return l.read;
+  if (next === 'drag') return l.drag;
+  return '';
+}
+
+/* --------------------------------------------------------------- surfaces */
+
+type Rgba = [number, number, number, number];
+
+/** Parses a computed colour: `rgb()`, `rgba()` or `color(srgb …)` (what color-mix gives). */
+function parseColor(value: string): Rgba | undefined {
+  let m = /^rgba?\(([^)]+)\)$/.exec(value);
+  if (m?.[1]) {
+    const [r = 0, g = 0, b = 0, a = 1] = m[1]
+      .split(/[\s,/]+/)
+      .filter(Boolean)
+      .map(Number);
+    return [r, g, b, a];
+  }
+  m = /^color\(srgb ([^)]+)\)$/.exec(value);
+  if (m?.[1]) {
+    const [r = 0, g = 0, b = 0, a = 1] = m[1]
+      .split(/[\s/]+/)
+      .filter(Boolean)
+      .map(Number);
+    return [r * 255, g * 255, b * 255, a];
+  }
+  return undefined;
+}
+
+function luminance([r, g, b]: Rgba): number {
+  const lin = (c: number) => {
+    const v = c / 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+}
+
+function contrast(a: Rgba, b: Rgba): number {
+  const la = luminance(a);
+  const lb = luminance(b);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+let refsTheme: string | undefined;
+let refs: Record<Surface, Rgba> | undefined;
+
+/** The page's accent, ink and paper as computed colours (they change with the theme). */
+function references(): Record<Surface, Rgba> | undefined {
+  const theme = html.dataset['theme'] ?? '';
+  if (refs && refsTheme === theme) return refs;
+  const read = (name: Surface) => parseColor(getComputedStyle(probes[name]).color);
+  const paper = read('paper');
+  const accent = read('accent');
+  const ink = read('ink');
+  if (!paper || !accent || !ink) return undefined;
+  refsTheme = theme;
+  refs = { paper, accent, ink };
+  return refs;
+}
+
+/** Which surface an opaque colour is: the accent, or whichever of paper / ink it is closer to. */
+function classify(color: Rgba): Surface {
+  const r = references();
+  if (!r) return 'paper';
+  const [ar, ag, ab] = r.accent;
+  if (Math.abs(color[0] - ar) + Math.abs(color[1] - ag) + Math.abs(color[2] - ab) < 24) {
+    return 'accent';
+  }
+  // The cursor is drawn in ink by default: switch to paper where paper reads better.
+  return contrast(r.paper, color) > contrast(r.ink, color) ? 'ink' : 'paper';
+}
+
+const SHAPES = 'path, rect, circle, ellipse, polygon, polyline, line';
+
+function surfaceOf(target: Element | null): Surface {
+  for (let node = target; node && node !== html; node = node.parentElement) {
+    const explicit = node.getAttribute('data-surface');
+    if (explicit === 'paper' || explicit === 'accent' || explicit === 'ink') return explicit;
+    if (node.classList.contains('surface-accent')) return 'accent';
+    if (node.classList.contains('surface-ink')) return 'ink';
+    const style = getComputedStyle(node);
+    let own: Rgba | undefined;
+    if (node instanceof SVGElement) {
+      if (node.matches(SHAPES)) own = parseColor(style.fill);
+    } else own = parseColor(style.backgroundColor);
+    if (own && own[3] >= 0.5) return classify(own);
+  }
+  return 'paper';
+}
+
+/* ------------------------------------------------------------------ state */
+
+/** True while the label comes from `data-cursor-label` (it then also replaces `Drop`). */
+let customLabel = false;
+
 function resolve(target: EventTarget | null): void {
   const el = target instanceof Element ? target : null;
   let next: State = 'default';
   let nextLabel = '';
+  let custom = false;
   const explicit = el?.closest<HTMLElement>('[data-cursor]');
   if (explicit) {
     const value = explicit.dataset['cursor'] as State;
     next = STATES.includes(value) ? value : 'default';
-    nextLabel = explicit.dataset['cursorLabel'] ?? LABELS[next] ?? '';
+    custom = explicit.dataset['cursorLabel'] !== undefined;
+    nextLabel = explicit.dataset['cursorLabel'] ?? defaultLabel(next);
   } else if (el) {
     const anchor = el.closest<HTMLAnchorElement>('a[href]');
     if (el.closest(TEXT_FIELDS)) next = 'text';
@@ -137,13 +283,17 @@ function resolve(target: EventTarget | null): void {
         anchor.relList.contains('external') ||
         (anchor.host !== '' && anchor.host !== location.host);
       next = external ? 'open' : 'link';
-      nextLabel = external ? (LABELS.open ?? '') : '';
+      nextLabel = external ? defaultLabel('open') : '';
     } else if (el.closest(CLICKABLE)) next = 'link';
     else if (el.closest(LONG_FORM)) next = 'text';
   }
-  if (next === state && nextLabel === label) return;
+  const nextSurface = surfaceOf(el);
+  if (next === state && nextLabel === label && nextSurface === surface && custom === customLabel)
+    return;
   state = next;
   label = nextLabel;
+  customLabel = custom;
+  surface = nextSurface;
   render();
 }
 
@@ -203,8 +353,25 @@ function onBlur(): void {
 
 /* ----------------------------------------------------------------- public */
 
+const moreContrastMedia = window.matchMedia('(prefers-contrast: more)');
+
 function shouldEnable(): boolean {
-  return fineMedia.matches && !forcedColorsMedia.matches && !prefersReducedMotion();
+  return (
+    fineMedia.matches &&
+    !forcedColorsMedia.matches &&
+    !moreContrastMedia.matches &&
+    !prefersReducedMotion()
+  );
+}
+
+/** The page scrolled under a still pointer: re-read what is under it (once per frame). */
+let scrollFrame = 0;
+function onScroll(): void {
+  if (!visible || scrollFrame) return;
+  scrollFrame = requestAnimationFrame(() => {
+    scrollFrame = 0;
+    refreshCursorTarget();
+  });
 }
 
 function enable(): void {
@@ -220,6 +387,7 @@ function enable(): void {
   document.addEventListener('pointercancel', onUp, { passive: true });
   html.addEventListener('mouseleave', onLeaveWindow);
   window.addEventListener('blur', onBlur);
+  window.addEventListener('scroll', onScroll, { passive: true });
 }
 
 function disable(): void {
@@ -238,6 +406,9 @@ function disable(): void {
   document.removeEventListener('pointercancel', onUp);
   html.removeEventListener('mouseleave', onLeaveWindow);
   window.removeEventListener('blur', onBlur);
+  window.removeEventListener('scroll', onScroll);
+  cancelAnimationFrame(scrollFrame);
+  scrollFrame = 0;
 }
 
 /** Turns the cursor on or off for the current conditions. Safe to call on every page. */
@@ -257,7 +428,38 @@ export function restoreCursor(): void {
   pressed = false;
   state = 'default';
   label = '';
+  customLabel = false;
+  surface = 'paper';
   render();
+}
+
+/**
+ * Back to idle (a page restored from the back/forward cache): no press, default state, hidden
+ * until the pointer moves again, and the conditions checked anew.
+ */
+export function resetCursor(): void {
+  updateCursor();
+  if (!root) return;
+  pressed = false;
+  state = 'default';
+  label = '';
+  customLabel = false;
+  surface = 'paper';
+  stop();
+  setVisible(false);
+  render();
+  if (enabled) html.setAttribute('data-cursor-active', '');
+}
+
+/**
+ * How far right of the pointer the cursor draws (the ring, its label or the read pill), in
+ * px; 0 while the cursor is off or hidden. The follower panel keeps clear of it.
+ */
+export function cursorExtent(): number {
+  if (!enabled || !visible || !root) return 0;
+  if (state === 'read') return pillEl.offsetWidth / 2;
+  if (root.hasAttribute('data-label')) return labelEl.offsetLeft + labelEl.offsetWidth;
+  return 18;
 }
 
 /** Re-reads the element under the pointer (after a swap the DOM changed under it). */
@@ -273,4 +475,5 @@ export function watchCursorConditions(): void {
   watching = true;
   fineMedia.addEventListener('change', updateCursor);
   forcedColorsMedia.addEventListener('change', updateCursor);
+  moreContrastMedia.addEventListener('change', updateCursor);
 }

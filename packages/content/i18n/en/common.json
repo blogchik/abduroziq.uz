@@ -35,6 +35,21 @@
     "rights": "All rights reserved.",
     "backToTop": "Back to top"
   },
+  "motion": {
+    "label": "Motion",
+    "on": "On",
+    "off": "Off"
+  },
+  "cursor": {
+    "open": "Open",
+    "read": "Read",
+    "drag": "Drag",
+    "drop": "Drop"
+  },
+  "tag": {
+    "countOne": "{n} post",
+    "countOther": "{n} posts"
+  },
   "notFound": {
     "title": "Page not found",
     "text": "There is nothing at this address.",

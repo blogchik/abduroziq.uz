@@ -41,7 +41,7 @@ export const reveal = {
   /** ScrollTrigger start for reveals. */
   start: 'top 88%',
   /** After this long without the kit, CSS shows everything (keep in sync with motion.css). */
-  failsafeMs: 2500,
+  failsafeMs: 1000,
 } as const;
 
 export const cursor = {
@@ -83,7 +83,7 @@ export const desk = {
   settleKeep: 0.25,
   maxSettle: 6,
   resetStagger: 0.06,
-  entranceStagger: 0.12,
+  entranceStagger: 0.08,
   entranceDrop: 140,
 } as const;
 

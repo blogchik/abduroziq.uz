@@ -1,20 +1,29 @@
 ---
+import type { HTMLAttributes } from 'astro/types';
 import Arrow from '@/components/ui/Arrow.astro';
 import Tag from '@/components/ui/Tag.astro';
 import { monthShort, year } from '@/components/ui/date-parts';
 import { t, type Locale } from '@/i18n';
-import { formatDay, formatWeekdayShort, isoDate } from '@/lib/dates';
-import type { PostSummary } from '@/lib/posts';
+import { formatDate, formatDay, formatWeekdayShort, isoDate } from '@/lib/dates';
+import { postTransitionName, type PostSummary } from '@/lib/posts';
 
 /**
  * One post in a list (DESIGN 5.1): date block, title + description + tags, arrow. The whole
  * row is one link with the `read` cursor. A post written in the other language carries a
  * mono badge and `lang` on its text.
  *
+ * The link is named by the title and described by the date and the description (not the
+ * whole row run together); the date reads as one phrase (`Thu, 12 November 2026`).
+ * Below 30rem the date block becomes one mono line above a full-width title
+ * (`THU · 12 NOV 2026`).
+ *
  * Render rows inside a list with `as="li"` (or as `article`s in a plain container): every
- * row draws the hairline above itself, the last one also the hairline below.
+ * row draws the hairline above itself, the last one also the hairline below. Any other
+ * attribute (`data-*`, `id`, `style`, …) goes on the root element.
  */
-interface Props {
+type RootAttributes = Omit<HTMLAttributes<'article'>, 'class' | 'class:list'>;
+
+interface Props extends RootAttributes {
   post: PostSummary;
   /** Locale of the page (dates and labels); the post may be in the other one. */
   locale: Locale;
@@ -33,8 +42,9 @@ const {
   locale,
   headingLevel = 3,
   as: Root = 'article',
-  transitionName = `post-${post.locale}-${post.slug}`.replace(/[^a-zA-Z0-9-]/g, '-'),
+  transitionName = postTransitionName(post),
   class: className,
+  ...rest
 } = Astro.props;
 
 const Heading = `h${headingLevel}` as 'h2' | 'h3' | 'h4';
@@ -42,25 +52,50 @@ const foreign = post.locale !== locale;
 const weekday = formatWeekdayShort(post.date, locale);
 const day = formatDay(post.date, locale);
 const month = `${monthShort(post.date, locale)} ${year(post.date, locale)}`;
+// Ids for the link's name and description; unique per page (a post appears once per list,
+// and the page locale tells the styleguide's two lists apart).
+const id = `post-row-${locale}-${postTransitionName(post)}`;
 ---
 
-<Root class:list={['post-row', className]}>
-  <a class="post-row__link" href={post.url} hreflang={post.locale} data-cursor="read">
-    <time class="post-row__date" datetime={isoDate(post.date)}>
-      <span class="type-label post-row__weekday">{weekday}</span>
-      <span class="type-numeral post-row__day">{day}</span>
-      <span class="type-label post-row__month">{month}</span>
+<Root class:list={['post-row', className]} {...rest}>
+  <a
+    class="post-row__link"
+    href={post.url}
+    hreflang={post.locale}
+    data-cursor="read"
+    aria-labelledby={`${id}-title`}
+    aria-describedby={`${id}-date ${id}-desc`}
+  >
+    <time class="post-row__date" datetime={isoDate(post.date)} id={`${id}-date`}>
+      <span class="sr-only">{`${weekday}, ${formatDate(post.date, locale)}`}</span>
+      <span class="type-label post-row__weekday" aria-hidden="true">
+        {weekday}
+      </span>
+      <span class="type-numeral post-row__day" aria-hidden="true">
+        {day}
+      </span>
+      <span class="type-label post-row__month" aria-hidden="true">
+        {month}
+      </span>
     </time>
 
     <div class="post-row__body" lang={foreign ? post.locale : undefined}>
       {transitionName ? (
-        <Heading class="type-title post-row__title" transition:name={transitionName}>
+        <Heading
+          class="type-title post-row__title"
+          id={`${id}-title`}
+          transition:name={transitionName}
+        >
           {post.title}
         </Heading>
       ) : (
-        <Heading class="type-title post-row__title">{post.title}</Heading>
+        <Heading class="type-title post-row__title" id={`${id}-title`}>
+          {post.title}
+        </Heading>
       )}
-      <p class="type-body post-row__desc">{post.description}</p>
+      <p class="type-body post-row__desc" id={`${id}-desc`}>
+        {post.description}
+      </p>
       {(post.tags.length > 0 || foreign) && (
         <div class="post-row__meta">
           {foreign && (
@@ -189,5 +224,43 @@ const month = `${monthShort(post.date, locale)} ${year(post.date, locale)}`;
 
   .post-row__link:focus-visible {
     outline-offset: -2px;
+  }
+
+  /* Narrow screens: the date is one mono line (`THU · 12 NOV 2026`) above a full-width
+     title, so long (Uzbek) titles and descriptions get the whole width. */
+  @media (width < 30rem) {
+    .post-row__link {
+      grid-template-columns: minmax(0, 1fr) auto;
+      row-gap: 0.75rem;
+    }
+
+    .post-row__date {
+      grid-column: 1 / -1;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0 0.6em;
+    }
+
+    .post-row__weekday::after {
+      content: '·' / '';
+      margin-inline-start: 0.6em;
+    }
+
+    /* The day numeral takes the label style of its neighbours. */
+    .post-row__day {
+      font-family: var(--font-mono);
+      font-size: var(--fs-label);
+      font-weight: 500;
+      font-stretch: normal;
+      line-height: 1.3;
+      letter-spacing: 0.08em;
+      color: var(--ink-soft);
+    }
+
+    .post-row__title,
+    .post-row__arrow {
+      margin-block-start: 0;
+    }
   }
 </style>

@@ -1,8 +1,12 @@
 ---
+import { localeFromPath, t } from '@/i18n';
+
 /**
  * Outlined mono chip (1px rule border, pill radius). A link when `href` is given, otherwise
  * plain text (use that form inside other links, such as post rows). `active` fills it with
- * ink and marks the link as the current page.
+ * ink and marks the link as the current page. A `count` is read out as `design, 3 posts`
+ * (localised) rather than `design3`. Forced colours: the active chip uses the system's
+ * selected-item colours.
  */
 interface Props {
   label: string;
@@ -15,6 +19,17 @@ interface Props {
 
 const { label, href, active = false, count, class: className } = Astro.props;
 const Element = href ? 'a' : 'span';
+const locale = localeFromPath(Astro.url.pathname);
+const countLabel =
+  count === undefined
+    ? undefined
+    : t(
+        locale,
+        new Intl.PluralRules(locale).select(count) === 'one'
+          ? 'common.tag.countOne'
+          : 'common.tag.countOther',
+        { n: count },
+      );
 ---
 
 <Element
@@ -23,7 +38,14 @@ const Element = href ? 'a' : 'span';
   aria-current={href && active ? 'page' : undefined}
 >
   <span>{label}</span>
-  {count !== undefined && <span class="tag__count">{count}</span>}
+  {count !== undefined && (
+    <>
+      <span class="tag__count" aria-hidden="true">
+        {count}
+      </span>
+      <span class="sr-only">{`, ${countLabel}`}</span>
+    </>
+  )}
 </Element>
 
 <style>
@@ -61,5 +83,18 @@ const Element = href ? 'a' : 'span';
 
   .tag.is-active .tag__count {
     color: color-mix(in srgb, var(--paper) 70%, var(--ink));
+  }
+
+  @media (forced-colors: active) {
+    .tag.is-active {
+      forced-color-adjust: none;
+      border-color: SelectedItem;
+      background-color: SelectedItem;
+      color: SelectedItemText;
+    }
+
+    .tag.is-active .tag__count {
+      color: SelectedItemText;
+    }
   }
 </style>
