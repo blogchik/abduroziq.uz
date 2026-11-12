@@ -5,7 +5,8 @@
   "description": "Site data, UI strings and posts. Content is (c) Jabborov Abduroziq, all rights reserved.",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./assets/*": "./assets/*"
   },
   "scripts": {
     "lint": "eslint .",

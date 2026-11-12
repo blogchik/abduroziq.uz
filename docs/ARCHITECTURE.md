@@ -309,10 +309,22 @@ that hide or offset content are scoped to `html.js[data-motion='full']`.
 Exports for page-specific choreography:
 
 ```ts
-export function onPageEnter(cb: (ctx: { reduced: boolean }) => void | (() => void)): void; // returned function runs on leave
+// `first`: the document's initial page; `late`: that load was slow, skip entrance choreography.
+export function onPageEnter(
+  cb: (ctx: { reduced: boolean; first: boolean; late: boolean }) => void | (() => void),
+): void; // the returned function runs on leave
 export function prefersReducedMotion(): boolean;
 export function splitLines(el: Element): { lines: Element[]; revert(): void };
+export function afterGate(fn: () => void): void; // runs once the page-transition panel has left
+export { dur, ease, cssEase };                   // motion tokens (DESIGN 2.4)
 export { gsap, ScrollTrigger };
+```
+
+Page code imports from `@/motion` only, never from the kit's internal modules.
+
+```ts
+// packages/content also exposes its assets:
+import portrait from '@abduroziq/content/assets/portrait.jpg';
 ```
 
 Rules: with JavaScript disabled or `data-motion="reduced"` every element is visible in its

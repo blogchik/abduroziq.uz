@@ -40,8 +40,7 @@ export const profile: Profile = {
       { kind: 'text', value: ' Product ' },
       { kind: 'capsule', id: 'craft' },
       { kind: 'text', value: ' ' },
-      { kind: 'em', value: 'Engineer' },
-      { kind: 'text', value: 'man' },
+      { kind: 'em', value: 'Engineerman' },
     ],
   },
   support: {

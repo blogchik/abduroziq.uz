@@ -8,7 +8,8 @@
  * the transition panel, Lenis and the scroll listener persist for the session.
  *
  * Public exports (keep them stable): `onPageEnter`, `prefersReducedMotion`, `splitLines`,
- * `gsap`, `ScrollTrigger`.
+ * `afterGate`, the motion tokens (`dur`, `ease`, `cssEase`), `gsap`, `ScrollTrigger`.
+ * Page code imports from this entry only, never from the kit's internal modules.
  */
 import { reveal } from './config';
 import {
@@ -40,11 +41,19 @@ import { loadSplitText, splitLines } from './split';
 import { finishTransition, installTransitions, restorePanel } from './transition';
 
 type Cleanup = () => void;
-type PageEnterCallback = (ctx: { reduced: boolean }) => void | Cleanup;
+/**
+ * `first` is true only for the document's initial page (not for client-side navigations);
+ * `late` is true when that initial load was slow enough for the CSS failsafe to have shown
+ * the page already, so entrance choreography should be skipped.
+ */
+type PageContext = { reduced: boolean; first: boolean; late: boolean };
+type PageEnterCallback = (ctx: PageContext) => void | Cleanup;
 
 const callbacks = new Set<PageEnterCallback>();
 let entered = false;
 let firstLoad = true;
+let pageFirst = false;
+let pageLate = false;
 
 /** SplitText is ready before page callbacks run, so they can call `splitLines`. */
 async function callbacksReady(): Promise<void> {
@@ -60,7 +69,11 @@ function run(cb: PageEnterCallback): void {
   void callbacksReady().then(() => {
     if (!isCurrent(page)) return;
     try {
-      const cleanup = inPage(() => cb({ reduced: prefersReducedMotion() }));
+      // Keep the cleanup out of gsap.context's own revert list, or it would run twice.
+      let cleanup: void | Cleanup = undefined;
+      inPage(() => {
+        cleanup = cb({ reduced: prefersReducedMotion(), first: pageFirst, late: pageLate });
+      });
       if (typeof cleanup === 'function') track(cleanup);
     } catch (error) {
       console.error('[motion] onPageEnter callback failed', error);
@@ -94,6 +107,8 @@ function enter(): void {
   const reduced = prefersReducedMotion();
   // On a very slow first load the CSS failsafe has already shown the page.
   const late = firstLoad && performance.now() > reveal.failsafeMs - 150;
+  pageFirst = firstLoad;
+  pageLate = late;
   firstLoad = false;
 
   beginPage();
@@ -146,4 +161,6 @@ document.addEventListener('site:menu', onMenu);
 if (document.readyState !== 'loading') enter();
 else document.addEventListener('DOMContentLoaded', enter, { once: true });
 
+export { afterGate } from './core';
+export { cssEase, dur, ease } from './config';
 export { gsap, prefersReducedMotion, ScrollTrigger, splitLines };
