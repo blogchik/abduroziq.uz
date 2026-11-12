@@ -137,9 +137,11 @@ Replaces the system cursor on fine pointers only. One small element with states:
 | text | inputs, long-form article text | hidden; the native I-beam shows |
 
 The dot follows the pointer with a short lerp (about 0.22); the ring lags slightly more.
-Colour uses `mix-blend-mode: difference` so it stays visible on paper, ink and accent.
+Its colour follows the surface under the pointer: ink on paper, `on-accent` on accent fills,
+paper on ink, with a 1px halo in the surface colour so it also reads over photos. (A blend
+mode is not used: it turns the cursor blue on the accent.)
 It hides when the pointer leaves the window, and is fully disabled (native cursor kept) on
-coarse pointers and under `prefers-reduced-motion`.
+coarse pointers, under `prefers-reduced-motion`, `prefers-contrast: more` and forced colours.
 
 ### 3.3 Footer (section `04 — Contact`)
 
@@ -151,7 +153,9 @@ A full-bleed **accent** block, text in `on-accent`:
 - Right: social links as a mono list (GitHub, Telegram, LinkedIn, Instagram), each with `↗`.
 - Tagline `Think beyond limits.` in `hand` style, slightly rotated.
 - Bottom: the giant **name** again, clipped by the bottom edge, letters rising on scroll.
-- A `BACK TO TOP ↑` label link.
+- A `BACK TO TOP ↑` label link, and next to it a `MOTION: ON / OFF` switch that stops every
+  looping or decorative motion on the site (the tape, capsule loop, pulsing dots, cursor,
+  smooth scrolling, reveals) and remembers the choice.
 
 ### 3.4 Page transition
 
@@ -213,7 +217,7 @@ Two or three objects carry a hand-drawn arrow and a short `hand` note (as in the
 While dragged an object lifts (stronger shadow, +3% scale), tilts with its velocity and
 comes to rest with a small settle. Double-click resets the desk to its start layout.
 
-Mobile: the desk becomes its own band under the meta bar, 320px high, with four objects
+Mobile: the desk becomes its own band under the meta bar, 280px high, with four objects
 (sticky note, polaroid, piala, cursor flag), still draggable by touch.
 
 The desk is decoration: hidden from assistive technology, and nothing essential is
@@ -317,13 +321,14 @@ A classic, calm reading page.
 
 ### 7.1 Entrance sequence (home, first load)
 
-Total at most 1.8s, starting immediately; text is visible in the HTML before it.
+Total about 1.9s, starting immediately. The sentence is the page's largest paint: it is
+simply there from the first frame and is never hidden or moved. Nothing waits for fonts.
 
-1. 0ms: sentence lines rise from behind a mask, 80ms stagger, `dur-3`.
-2. 300ms: capsules pop in with the spring, 120ms stagger.
-3. 500ms: the name's letters rise from the baseline, 35ms stagger, `dur-4`.
-4. 900ms: the label strip wipes in from the left, then its micro text fades in.
-5. 1100ms: desk objects drop in one after another, land with a small rotation settle.
+1. 0ms: capsules pop in with the spring, 120ms stagger; the support line rises.
+2. 300ms: the name's letters rise from the baseline, 35ms stagger, `dur-4`.
+3. 700ms: the label strip's print and the meta bar fade in.
+4. 750ms: desk objects drop in one after another (80ms stagger), land with a small
+   rotation settle.
 
 ### 7.2 On scroll
 
@@ -339,8 +344,12 @@ Total at most 1.8s, starting immediately; text is visible in the HTML before it.
   simply present), no smooth scrolling, no cursor replacement, no tape motion, no
   parallax. Dragging desk objects still works but without inertia.
 - No animation may run while its element is off screen.
-- Budget: home page JavaScript at most about 110KB gzip in total; fonts at most about
-  180KB in total; Lighthouse performance 95+ on mobile.
+- Largest-paint candidates (a page's main heading, its first image, the first rows of a
+  list) never carry a reveal. Content that is prepared for a reveal is shown by a CSS
+  failsafe after 1s if the motion kit has not taken over.
+- Budget: home page JavaScript at most about 110KB gzip in total; fonts about 215KB on
+  the home page (Bricolage Grotesque keeps all its axes; the serif is shipped as small
+  static cuts); Lighthouse performance 95+ on mobile.
 
 ## 8. Accessibility
 

@@ -234,12 +234,15 @@ interface Props {
   description: string;
   seo?: Partial<SeoProps>;
   mainClass?: string;
+  flush?: boolean;              // the footer sits flush against the page (no top margin)
 }
 ```
 
-It renders `<html lang>`, the head (Seo, theme bootstrap script, `<ClientRouter />`), the
-skip link, Header, `<main id="main">`, Footer and the motion entry script. Fonts come from
-Fontsource CSS imported in `styles/global.css`.
+It renders `<html lang>`, the head (font preloads, Seo, the root-state script,
+`<ClientRouter />`), the skip link, Header, `<main id="main">`, Footer and the motion entry
+script. Fonts are declared in `styles/fonts.css`: Bricolage Grotesque and Geist Mono from
+their Fontsource packages, Newsreader and Caveat as static cuts in `src/assets/fonts/`
+(built by `scripts/build-fonts.py`).
 
 The language switch in the Header keeps the current path, unless `seo.alternates` is given
 (translated posts live at different paths); a locale without an equivalent page links to
@@ -256,7 +259,8 @@ interface SeoProps {
   article?: { publishedTime: Date; modifiedTime?: Date; tags: string[] };
   alternateLocales?: Locale[];                  // defaults to all locales; a post passes only its own unless translated
   alternates?: { locale: Locale; href: string }[]; // explicit alternate URLs (translated posts); wins over alternateLocales
-  noindex?: boolean;
+  noindex?: boolean;                            // page-level: emits `noindex, follow`
+  canonical?: boolean;                          // `false` omits canonical, og:url and hreflang (the 404 page)
   jsonLd?: object | object[];
 }
 ```
@@ -302,6 +306,16 @@ Root state on `<html>`:
   (a testing aid). The kit's `prefersReducedMotion()` reads this attribute.
 - Maintained by the kit while the page is used: `data-scroll-dir="up|down"` and
   `data-scrolled` (present after 80px).
+- The footer's motion switch stores the choice in `localStorage.motion`, updates
+  `data-motion` and dispatches `site:motion`; the kit re-initialises the page in the new
+  mode.
+
+Surfaces: an element with `data-surface="paper|accent|ink"` (or the `surface-accent` /
+`surface-ink` utilities) tells the cursor which colour to use over it.
+
+Links to files (feeds, images) and links with `data-astro-reload` bypass the client router
+and the transition panel. Elements prepared for a reveal are shown by a CSS failsafe after
+1s if the kit has not taken over; largest-paint candidates must not carry `data-reveal`.
 
 The kit's own CSS lives in `src/motion/motion.css`, imported by BaseLayout. Rules there
 that hide or offset content are scoped to `html.js[data-motion='full']`.

@@ -37,7 +37,9 @@ const { lat, lon } = profile.location;
       <Sentence locale={locale} id="hero-title" />
     </div>
     <p class="hero__support type-body" data-hero-part="support">
-      <span class="hero__support-text" data-hero-support>{profile.support[locale]}</span>
+      <span class="hero__support-text" data-hero-support>
+        {profile.support[locale]}
+      </span>
     </p>
 
     <div class="hero__name" data-hero-part="name">

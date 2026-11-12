@@ -130,7 +130,11 @@ function buildEntrance(hero: HTMLElement): gsap.core.Timeline {
 
   const stripIn = gsap
     .timeline({ paused: true, onComplete: clear([...print, ...meta]) })
-    .to(print, { clipPath: 'inset(0% 0% 0% 0%)', duration: dur[2], ease: ease.inOut, stagger: 0.06 }, 0)
+    .to(
+      print,
+      { clipPath: 'inset(0% 0% 0% 0%)', duration: dur[2], ease: ease.inOut, stagger: 0.06 },
+      0,
+    )
     .to(meta, { opacity: 1, y: 0, duration: dur[3], ease: ease.out }, 0.2);
   schedule(entrance, stripIn, strip[0], 0.9);
 

@@ -1,7 +1,10 @@
 ---
 import { ClientRouter } from 'astro:transitions';
 import bricolageUrl from '@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-standard-normal.woff2?url';
-import newsreaderUrl from '@fontsource-variable/newsreader/files/newsreader-latin-standard-normal.woff2?url';
+import serifDisplay300 from '@/assets/fonts/newsreader-display-300.woff2?url';
+import serifDisplay300Italic from '@/assets/fonts/newsreader-display-300-italic.woff2?url';
+import serifDisplay400 from '@/assets/fonts/newsreader-display-400.woff2?url';
+import serifText400 from '@/assets/fonts/newsreader-text-400.woff2?url';
 import geistMonoUrl from '@fontsource/geist-mono/files/geist-mono-latin-500-normal.woff2?url';
 import Footer from '@/components/chrome/Footer.astro';
 import Header from '@/components/chrome/Header.astro';
@@ -56,8 +59,14 @@ const switchHrefs = Object.fromEntries(
 
 // Above-the-fold fonts: Bricolage (body, names, titles) and the mono labels on every page;
 // the serif only where it opens the page (the home sentence, a post's title).
-const serifFirst = path === '/' || /^\/blog\/(?!tag\/)[^/]+\/$/.test(path);
-const preloads = [bricolageUrl, geistMonoUrl, ...(serifFirst ? [newsreaderUrl] : [])];
+const isHome = path === '/';
+const isPost = /^\/blog\/(?!tag\/)[^/]+\/$/.test(path);
+const serifPreloads = isHome
+  ? [serifDisplay300, serifDisplay300Italic]
+  : isPost
+    ? [serifDisplay400, serifText400]
+    : [];
+const preloads = [bricolageUrl, geistMonoUrl, ...serifPreloads];
 ---
 
 <!doctype html>

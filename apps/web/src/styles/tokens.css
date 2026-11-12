@@ -151,8 +151,8 @@
   --font-display-condensed:
     'Bricolage Grotesque Variable', 'Bricolage Condensed Fallback', ui-sans-serif, system-ui,
     sans-serif;
-  --font-serif: 'Newsreader Variable', 'Newsreader Fallback', Georgia, serif;
-  --font-serif-display: 'Newsreader Variable', 'Newsreader Display Fallback', Georgia, serif;
+  --font-serif: 'Newsreader Text', 'Newsreader Fallback', Georgia, serif;
+  --font-serif-display: 'Newsreader Display', 'Newsreader Display Fallback', Georgia, serif;
   --font-mono: 'Geist Mono', 'Geist Mono Fallback', ui-monospace, monospace;
   --font-hand: 'Caveat', 'Caveat Fallback', cursive;
 
