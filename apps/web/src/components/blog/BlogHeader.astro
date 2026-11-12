@@ -1,0 +1,69 @@
+---
+import ArrowLink from '@/components/ui/ArrowLink.astro';
+
+/**
+ * Page head of the blog index and tag pages (DESIGN 5.2): the title in `display` with the
+ * mono subtitle level with its baseline on the right. A tag page adds a way back.
+ */
+interface Props {
+  title: string;
+  subtitle: string;
+  back?: { href: string; label: string };
+}
+
+const { title, subtitle, back } = Astro.props;
+---
+
+<header class="blog-head shell">
+  {back && (
+    <p class="blog-head__back" data-reveal="fade">
+      <ArrowLink href={back.href} label={back.label} direction="left" arrowFirst />
+    </p>
+  )}
+  <div class="blog-head__row">
+    <h1 class="type-display blog-head__title" data-reveal="rise">
+      {title}
+    </h1>
+    <p class="type-label blog-head__sub" data-reveal="fade" data-reveal-delay="0.25">
+      {subtitle}
+    </p>
+  </div>
+</header>
+
+<style>
+  .blog-head {
+    padding-block-start: clamp(2.5rem, 1.4rem + 4.6vw, 6.5rem);
+  }
+
+  .blog-head__back {
+    margin: 0 0 1.5rem;
+  }
+
+  .blog-head__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem var(--col-gap);
+  }
+
+  .blog-head__title {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+  }
+
+  .blog-head__sub {
+    margin: 0;
+    max-width: 26em;
+    color: var(--ink-soft);
+    text-wrap: balance;
+  }
+
+  @media (width >= 64rem) {
+    .blog-head__sub {
+      text-align: end;
+    }
+  }
+</style>

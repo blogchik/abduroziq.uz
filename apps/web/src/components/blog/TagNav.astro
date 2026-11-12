@@ -1,0 +1,55 @@
+---
+import Tag from '@/components/ui/Tag.astro';
+import { localePath, t, type Locale } from '@/i18n';
+
+/**
+ * Tag chips under the page title (DESIGN 5.2): `ALL` first, then every tag with its post
+ * count. Each chip links to a static tag page; `active` marks the current one.
+ */
+interface Props {
+  locale: Locale;
+  tags: { tag: string; count: number }[];
+  active?: string;
+}
+
+const { locale, tags, active } = Astro.props;
+---
+
+{tags.length > 0 && (
+  <nav class="tag-nav shell" aria-label={t(locale, 'blog.filter.label')}>
+    <ul class="tag-nav__list">
+      <li>
+        <Tag
+          label={t(locale, 'blog.filter.all')}
+          href={localePath(locale, '/blog/')}
+          active={active === undefined}
+        />
+      </li>
+      {tags.map(({ tag, count }) => (
+        <li>
+          <Tag
+            label={tag}
+            count={count}
+            href={localePath(locale, `/blog/tag/${tag}/`)}
+            active={tag === active}
+          />
+        </li>
+      ))}
+    </ul>
+  </nav>
+)}
+
+<style>
+  .tag-nav {
+    margin-block-start: clamp(1.75rem, 1.2rem + 2vw, 3rem);
+  }
+
+  .tag-nav__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+</style>

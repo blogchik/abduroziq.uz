@@ -1,0 +1,20 @@
+---
+/**
+ * A quote set apart from the text, with an optional attribution. Plain Markdown quotes
+ * (`> text`) get the same look; use this component when you want a named source.
+ * On desktop it hangs 120px outside the column to the right (`prose.css`).
+ */
+interface Props {
+  cite?: string;
+  class?: string;
+}
+
+const { cite, class: className } = Astro.props;
+---
+
+<figure class:list={['pull-quote', className]} data-reveal="rise">
+  <blockquote>
+    <slot />
+  </blockquote>
+  {cite && <figcaption class="pull-quote__cite type-label">{cite}</figcaption>}
+</figure>

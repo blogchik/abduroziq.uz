@@ -1,0 +1,42 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import { localeFromPath, t } from '@/i18n';
+
+/**
+ * `h2`, `h3` and `h4` of an MDX post. Astro gives every heading an id; the heading text
+ * becomes a link to it (a permalink). `h2` is numbered by CSS counters (`prose.css`): the
+ * mono number and short rule live in the decorative `.prose-mark` span. The visually hidden
+ * footnotes heading of GFM stays plain and gets its text in the page language.
+ */
+interface Props extends HTMLAttributes<'h2'> {
+  level: 2 | 3 | 4;
+}
+
+const { level, id, class: className, ...rest } = Astro.props;
+const Tag = `h${level}` as 'h2' | 'h3' | 'h4';
+const plain = typeof className === 'string' && className.includes('sr-only');
+const footnotes = id === 'footnote-label';
+const locale = localeFromPath(Astro.url.pathname);
+---
+
+{plain ? (
+  <Tag {...rest} id={id} class={className}>
+    {footnotes ? t(locale, 'blog.post.footnotes') : <slot />}
+  </Tag>
+) : (
+  <Tag
+    {...rest}
+    id={id}
+    class:list={['prose-heading', `prose-${Tag}`, className]}
+    data-reveal="rise"
+  >
+    {level === 2 && <span class="prose-mark" aria-hidden="true" />}
+    {id ? (
+      <a class="prose-anchor" href={`#${id}`}>
+        <slot />
+      </a>
+    ) : (
+      <slot />
+    )}
+  </Tag>
+)}

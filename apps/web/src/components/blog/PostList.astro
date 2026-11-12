@@ -1,0 +1,70 @@
+---
+import EmptyState from './EmptyState.astro';
+import MonthTab from '@/components/ui/MonthTab.astro';
+import PostRow from '@/components/ui/PostRow.astro';
+import type { Locale } from '@/i18n';
+import { groupPostsByMonth, type PostSummary } from '@/lib/posts';
+
+/**
+ * Posts grouped by month (DESIGN 5.2): an ink tab per month, then one `PostRow` per post
+ * inside a list. Rows reveal in a staggered rise. With no posts it renders the empty state.
+ */
+interface Props {
+  posts: PostSummary[];
+  locale: Locale;
+}
+
+const { posts, locale } = Astro.props;
+const groups = groupPostsByMonth(posts);
+---
+
+<div class="post-list shell">
+  {groups.length === 0 ? (
+    <EmptyState locale={locale} />
+  ) : (
+    groups.map((group) => (
+      <section class="post-list__group">
+        <MonthTab date={group.posts[0]!.date} locale={locale} />
+        <ul class="post-list__rows" data-reveal-group>
+          {group.posts.map((post) => (
+            <li class="post-list__item" data-reveal-item>
+              <PostRow post={post} locale={locale} as="div" />
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))
+  )}
+</div>
+
+<style>
+  .post-list {
+    margin-block-start: clamp(2.5rem, 1.5rem + 4vw, 5rem);
+    padding-block-end: var(--section);
+  }
+
+  .post-list__group + .post-list__group {
+    margin-block-start: clamp(3rem, 2rem + 4vw, 6rem);
+  }
+
+  .post-list__rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* PostRow draws a hairline above itself and, as the last child, below itself. Each row sits
+     in its own <li> here, so only the last row of a group keeps the closing hairline. */
+  .post-list__item :global(.post-row) {
+    border-block-end: 0;
+  }
+
+  .post-list__item:last-child :global(.post-row) {
+    border-block-end: var(--hairline) solid var(--rule);
+  }
+
+  /* The month tab already sits on a 2px ink rule: the first row needs no hairline of its own. */
+  .post-list__item:first-child :global(.post-row) {
+    border-block-start: 0;
+  }
+</style>

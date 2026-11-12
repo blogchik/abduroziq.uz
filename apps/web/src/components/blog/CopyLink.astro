@@ -1,0 +1,134 @@
+---
+import { t, type Locale } from '@/i18n';
+
+/**
+ * `COPY LINK`: copies the canonical URL of the post. The result is announced through a polite
+ * live region and also shown as text next to the button for a moment. Hidden without
+ * JavaScript, where it could not work. One delegated listener serves every page (module
+ * scripts run once per session with the client router).
+ */
+interface Props {
+  locale: Locale;
+  url: string;
+}
+
+const { locale, url } = Astro.props;
+---
+
+<div
+  class="copy-link"
+  data-copy-link
+  data-copy-url={url}
+  data-label-copied={t(locale, 'blog.post.copied')}
+  data-label-failed={t(locale, 'blog.post.copyFailed')}
+>
+  <button type="button" class="copy-link__button type-label" data-copy-button>
+    {t(locale, 'blog.post.copyLink')}
+  </button>
+  <span
+    class="copy-link__status type-label"
+    role="status"
+    aria-live="polite"
+    data-copy-status
+  ></span>
+</div>
+
+<script>
+  const RESET_MS = 2400;
+
+  async function writeClipboard(text: string): Promise<boolean> {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // The Clipboard API is blocked in some embedded browsers: copy a selection instead.
+      const field = document.createElement('textarea');
+      field.value = text;
+      field.setAttribute('readonly', '');
+      field.style.cssText = 'position:fixed;inset-block-start:0;opacity:0;pointer-events:none';
+      document.body.append(field);
+      field.select();
+      let ok: boolean;
+      try {
+        ok = document.execCommand('copy');
+      } catch {
+        ok = false;
+      }
+      field.remove();
+      return ok;
+    }
+  }
+
+  document.addEventListener('click', async (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    const button = target?.closest<HTMLButtonElement>('[data-copy-button]');
+    const root = button?.closest<HTMLElement>('[data-copy-link]');
+    if (!button || !root) return;
+
+    const status = root.querySelector<HTMLElement>('[data-copy-status]');
+    const ok = await writeClipboard(root.dataset['copyUrl'] ?? location.href);
+    const message = (ok ? root.dataset['labelCopied'] : root.dataset['labelFailed']) ?? '';
+
+    // Clear first so a repeated press is announced again.
+    if (status) {
+      status.textContent = '';
+      requestAnimationFrame(() => {
+        status.textContent = message;
+      });
+    }
+    root.toggleAttribute('data-copied', ok);
+    root.toggleAttribute('data-failed', !ok);
+
+    window.clearTimeout(Number(root.dataset['copyTimer'] ?? 0));
+    root.dataset['copyTimer'] = String(
+      window.setTimeout(() => {
+        if (status) status.textContent = '';
+        root.removeAttribute('data-copied');
+        root.removeAttribute('data-failed');
+      }, RESET_MS),
+    );
+  });
+</script>
+
+<style>
+  .copy-link {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.9rem;
+  }
+
+  /* Without JavaScript there is nothing to copy with. */
+  :global(html:not(.js)) .copy-link {
+    display: none;
+  }
+
+  .copy-link__button {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.25em;
+    padding: 0.42em 0.95em 0.38em;
+    border: var(--hairline) solid var(--ink);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    transition:
+      background-color var(--dur-1) var(--ease-out),
+      color var(--dur-1) var(--ease-out);
+  }
+
+  .copy-link__button:hover {
+    background-color: var(--ink);
+    color: var(--paper);
+  }
+
+  .copy-link__status {
+    min-width: 0;
+    color: var(--accent-text);
+  }
+
+  .copy-link[data-failed] .copy-link__status {
+    color: var(--ink-soft);
+  }
+</style>

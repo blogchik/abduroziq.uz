@@ -1,0 +1,156 @@
+---
+import { Image } from 'astro:assets';
+import { profile } from '@abduroziq/content';
+import ArrowLink from '@/components/ui/ArrowLink.astro';
+import { localePath, t, type Locale } from '@/i18n';
+import { formatDate, isoDate } from '@/lib/dates';
+import { postTransitionName, type PostSummary } from '@/lib/posts';
+import portrait from '../../../../../packages/content/assets/portrait.jpg';
+
+/**
+ * Centred article header (DESIGN 5.3): a mono meta line (date, reading time, language), a link
+ * to the other-language version when there is one, the title in `article-title` (it carries
+ * the same `view-transition-name` as its row in the lists, so it morphs), and the author row
+ * with the small round portrait.
+ *
+ * The title is not revealed by the motion kit: it is the target of the shared-element
+ * transition and must be in its final state in the first frame.
+ */
+interface Props {
+  post: PostSummary;
+  locale: Locale;
+  draft?: boolean;
+  translation?: PostSummary | undefined;
+}
+
+const { post, locale, draft = false, translation } = Astro.props;
+
+// "Abduroziq Jabborov": the profile stores the name surname first.
+const [family = '', ...given] = profile.fullName.split(' ');
+const authorName = [...given, family].join(' ');
+---
+
+<header class="article-head shell">
+  <p class="type-label article-head__meta" data-reveal="fade">
+    <time datetime={isoDate(post.date)}>{formatDate(post.date, locale)}</time>
+    <span class="article-head__sep" aria-hidden="true">
+      /
+    </span>
+    <span>{t(locale, 'blog.readingTime', { minutes: post.readingMinutes })}</span>
+    <span class="article-head__sep" aria-hidden="true">
+      /
+    </span>
+    <span>{t(locale, `blog.language.${post.locale}`)}</span>
+    {post.updated && (
+      <>
+        <span class="article-head__sep" aria-hidden="true">
+          /
+        </span>
+        <span>{t(locale, 'blog.updated', { date: formatDate(post.updated, locale) })}</span>
+      </>
+    )}
+    {draft && (
+      <>
+        <span class="article-head__sep" aria-hidden="true">
+          /
+        </span>
+        <span class="article-head__draft">{t(locale, 'blog.draft')}</span>
+      </>
+    )}
+  </p>
+
+  {translation && (
+    <p class="article-head__translation" data-reveal="fade" data-reveal-delay="0.1">
+      <ArrowLink
+        href={translation.url}
+        hreflang={translation.locale}
+        label={t(locale, `blog.post.alsoIn.${translation.locale}`)}
+      />
+    </p>
+  )}
+
+  <h1 class="type-article-title article-head__title" transition:name={postTransitionName(post)}>
+    {post.title}
+  </h1>
+
+  <p class="article-head__author" data-reveal="fade" data-reveal-delay="0.15">
+    <a class="article-head__author-link type-label" href={localePath(locale, '/')} rel="author">
+      <Image
+        class="article-head__portrait"
+        src={portrait}
+        alt=""
+        width={56}
+        height={56}
+        loading="eager"
+      />
+      <span class="sr-only">{t(locale, 'blog.post.by')} </span>
+      <span>{authorName}</span>
+    </a>
+  </p>
+</header>
+
+<style>
+  .article-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-block-start: clamp(3rem, 1.6rem + 5.4vw, 7rem);
+    padding-block-end: clamp(2.25rem, 1.4rem + 3.4vw, 4.5rem);
+    text-align: center;
+  }
+
+  .article-head__meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem 0.8rem;
+    margin: 0;
+    color: var(--ink-soft);
+  }
+
+  /* The slashes only separate items that share a line: on a phone the gap does the work. */
+  .article-head__sep {
+    display: none;
+    color: var(--rule);
+  }
+
+  @media (width >= 40rem) {
+    .article-head__sep {
+      display: inline;
+    }
+  }
+
+  .article-head__draft {
+    color: var(--accent-text);
+  }
+
+  .article-head__translation {
+    margin: 0.9rem 0 0;
+  }
+
+  .article-head__title {
+    margin: clamp(1.25rem, 0.9rem + 1.4vw, 2.25rem) 0 0;
+    max-width: 12em;
+    overflow-wrap: anywhere;
+  }
+
+  .article-head__author {
+    margin: clamp(1.5rem, 1rem + 2vw, 2.5rem) 0 0;
+  }
+
+  .article-head__author-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .article-head__author-link :global(.article-head__portrait) {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-pill);
+    object-fit: cover;
+    background-color: var(--paper-raised);
+  }
+</style>
