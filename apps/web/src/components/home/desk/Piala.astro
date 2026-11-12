@@ -180,9 +180,13 @@ const bolls = Array.from({ length: 8 }, (_, i) => i * 45);
     opacity: 0;
   }
 
+  /* No wider than about the bowl: a longer label (Uzbek) takes two centred lines instead of
+     widening the object and pushing it off its place on the desk. */
   .piala__count {
+    max-width: 10.5em;
     margin: 0;
     color: var(--ink-soft);
-    white-space: nowrap;
+    text-align: center;
+    text-wrap: balance;
   }
 </style>

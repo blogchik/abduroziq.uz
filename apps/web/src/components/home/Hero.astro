@@ -15,11 +15,11 @@ import Sentence from './Sentence.astro';
  * supporting line, the giant name, the label strip and the meta bar, with the desk lying
  * over the whole block on wide screens and in its own band below it on small ones.
  *
- * Live data (Tashkent sky, clock, month) is painted by the inline script at the end of the
- * section, before first paint, and kept current by `hero.ts`, which also runs the entrance
- * (DESIGN 7.1). `data-hero-part` marks what the entrance brings in: those parts are held
- * back by CSS only while JavaScript and full motion are on, with the same 2.5s failsafe as
- * the motion kit.
+ * Live data (Tashkent sky, clock, month, year) is painted by the inline script at the end
+ * of the section, before first paint, and kept current by `hero.ts`, which also runs the
+ * entrance (DESIGN 7.1). The sentence, the supporting line and the name are painted with
+ * the first frame; only the strip's print and the meta bar are held back by CSS, and only
+ * while JavaScript and full motion are on, with the same 2.5s failsafe as the motion kit.
  */
 interface Props {
   locale: Locale;
@@ -29,15 +29,15 @@ const { locale } = Astro.props;
 const { lat, lon } = profile.location;
 ---
 
-<section class="hero" data-hero>
+<section class="hero" data-hero aria-labelledby="hero-title">
   <Container class="hero__shell">
     <SectionLabel number={0} name={t(locale, 'home.hero.label')} data-hero-part="label" />
 
     <div class="hero__sentence" data-hero-part="sentence">
-      <Sentence locale={locale} />
+      <Sentence locale={locale} id="hero-title" />
     </div>
     <p class="hero__support type-body" data-hero-part="support">
-      {profile.support[locale]}
+      <span class="hero__support-text" data-hero-support>{profile.support[locale]}</span>
     </p>
 
     <div class="hero__name" data-hero-part="name">
@@ -51,7 +51,7 @@ const { lat, lon } = profile.location;
     </div>
 
     <div class="hero__desk">
-      <Desk locale={locale} variant="hero" entrance={1.1} />
+      <Desk locale={locale} variant="hero" entrance={0.75} />
     </div>
     <Desk locale={locale} variant="band" entrance={0.15} class="hero__band" />
   </Container>
@@ -102,7 +102,7 @@ const { lat, lon } = profile.location;
       // The band's objects wait for the rest of the entrance only if they are on screen.
       const band = hero.querySelector('[data-desk-variant="band"]');
       if (band && band.getBoundingClientRect().top < innerHeight) {
-        band.setAttribute('data-desk-entrance', '1.1');
+        band.setAttribute('data-desk-entrance', '0.75');
       }
     })();
   </script>
@@ -115,7 +115,7 @@ const { lat, lon } = profile.location;
 <style>
   .hero {
     position: relative;
-    padding-block-start: clamp(1.75rem, 1.2rem + 2.4vw, 3.5rem);
+    padding-block-start: clamp(1.25rem, 1rem + 1.1vw, 2rem);
   }
 
   .hero :global(.hero__shell) {
@@ -124,7 +124,7 @@ const { lat, lon } = profile.location;
 
   /* The sentence: three lines on desktop, about 9 of 12 columns. */
   .hero__sentence {
-    margin-block-start: clamp(1.5rem, 1.1rem + 1.8vw, 2.75rem);
+    margin-block-start: clamp(1rem, 0.85rem + 0.7vw, 1.5rem);
   }
 
   .hero__sentence :global(.sentence) {
@@ -136,12 +136,19 @@ const { lat, lon } = profile.location;
 
   .hero__support {
     max-width: 23em; /* about 46ch; em, so it does not move when the font swaps */
-    margin: clamp(1.25rem, 1rem + 1.1vw, 2rem) 0 0;
+    margin: clamp(0.9rem, 0.8rem + 0.5vw, 1.25rem) 0 0;
     color: var(--ink-soft);
+    /* The mask the line rises from (hero.ts). */
+    overflow: clip;
   }
 
+  .hero__support-text {
+    display: block;
+  }
+
+  /* The tail of the Q stops short of the strip with a clear gap, never just touching it. */
   .hero__name {
-    margin-block-start: clamp(3rem, 1.6rem + 6.2vw, 5.5rem);
+    margin-block: clamp(2.5rem, 1.9rem + 2.6vw, 3.5rem) 0.5rem;
   }
 
   /* ------------------------------------------------------------------ desks */
@@ -177,17 +184,30 @@ const { lat, lon } = profile.location;
       max-width: min(11.2em, 74.6%);
     }
 
-    /* Room around the supporting line for the objects that lie there. */
     .hero__name {
-      margin-block-start: clamp(8.5rem, 2rem + 9vw, 10.5rem);
+      margin-block-start: 3.5rem;
+    }
+  }
+
+  /* Short desktop screens (1280x720): a little less air, so the name stands on the fold
+     whole instead of being cut through its letters. */
+  @media (width >= 64rem) and (height <= 50rem) {
+    .hero {
+      padding-block-start: 1rem;
+    }
+
+    .hero__name {
+      margin-block-start: 3rem;
     }
   }
 
   /* --------------------------------------------------------------- entrance */
 
-  /* Held back until hero.ts takes over (it sets `data-hero-ready` in the same task in
-     which it applies the start poses). Never without JavaScript or under reduced motion. */
-  :global(html.js[data-motion='full']) .hero:not([data-hero-ready]) [data-hero-part] {
+  /* Only the strip's print and the meta bar wait for hero.ts (it sets `data-hero-ready` in
+     the same task in which it applies the start poses); the text above them is painted at
+     once. Never without JavaScript or under reduced motion. */
+  :global(html.js[data-motion='full']) .hero:not([data-hero-ready]) :global([data-strip-part]),
+  :global(html.js[data-motion='full']) .hero:not([data-hero-ready]) [data-hero-part='meta'] {
     opacity: 0;
     animation: m-failsafe 0.01s linear 2.5s forwards;
   }

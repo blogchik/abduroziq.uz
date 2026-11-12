@@ -1,6 +1,6 @@
 ---
 import { profile } from '@abduroziq/content';
-import { t, type Locale } from '@/i18n';
+import { locales, t, type Locale } from '@/i18n';
 import CursorFlag from './CursorFlag.astro';
 import DeskObject from './DeskObject.astro';
 import DeskTicket from './DeskTicket.astro';
@@ -15,9 +15,10 @@ import StickyNote from './StickyNote.astro';
  *
  *  - `hero`: six objects in the free space of the hero (right of the sentence and around the
  *    supporting line). The desk is the whole hero box; poses are percent of it.
- *  - `band`: the mobile and tablet version, its own 320px band with four objects.
+ *  - `band`: the mobile and tablet version, its own 280px band with four objects.
  *  - `notfound` and `notfound-band`: three objects to throw on the 404 page, over the whole
- *    ink band on wide screens and in a band of their own on small ones.
+ *    ink band on wide screens and in a band of their own on small ones. The one 404 page
+ *    serves every locale, so its note is printed in each (`data-nf-lang`, see 404.astro).
  *
  * Decoration only: hidden from assistive technology, nothing in it is focusable.
  */
@@ -42,18 +43,18 @@ const { locale, variant, entrance, class: className } = Astro.props;
 
 const layouts: Record<Props['variant'], Pose[]> = {
   hero: [
-    { kind: 'polaroid', x: 84.9, y: 2.9, rotate: 5 },
-    { kind: 'sticky', x: 77.1, y: 24, rotate: -4 },
-    { kind: 'flag', x: 64.5, y: 4, rotate: 0 },
-    { kind: 'ticket', x: 37, y: 47.5, rotate: -5 },
-    { kind: 'keycap', x: 62.5, y: 48.5, rotate: 9 },
-    { kind: 'piala', x: 86, y: 42.5, rotate: 0 },
+    { kind: 'polaroid', x: 85.5, y: 1.5, rotate: 5 },
+    { kind: 'sticky', x: 72.5, y: 7.4, rotate: -4 },
+    { kind: 'flag', x: 43, y: 41.5, rotate: 0 },
+    { kind: 'ticket', x: 61.3, y: 40, rotate: -5 },
+    { kind: 'keycap', x: 66, y: 3.9, rotate: 9 },
+    { kind: 'piala', x: 91, y: 27, rotate: 0 },
   ],
   band: [
     { kind: 'sticky', x: 2, y: 5, rotate: -5 },
     { kind: 'polaroid', x: 62, y: 2, rotate: 6 },
-    { kind: 'piala', x: 27, y: 44, rotate: 0 },
-    { kind: 'flag', x: 66, y: 86, rotate: 0 },
+    { kind: 'piala', x: 30, y: 51, rotate: 0 },
+    { kind: 'flag', x: 60, y: 75, rotate: 0 },
   ],
   notfound: [
     { kind: 'sticky', x: 67, y: 7, rotate: 5 },
@@ -67,6 +68,8 @@ const layouts: Record<Props['variant'], Pose[]> = {
   ],
 };
 
+// The year of the build, a sensible static value; the hero's inline script corrects it to
+// the visitor's (Tashkent) year before first paint.
 const year = new Date().getFullYear();
 const notFound = variant.startsWith('notfound');
 ---
@@ -80,9 +83,16 @@ const notFound = variant.startsWith('notfound');
 >
   {layouts[variant].map((pose) => (
     <DeskObject kind={pose.kind} x={pose.x} y={pose.y} rotate={pose.rotate}>
-      {pose.kind === 'sticky' && (
-        <StickyNote text={notFound ? t(locale, 'home.notFound.note') : profile.desk.stickyNote} />
-      )}
+      {pose.kind === 'sticky' &&
+        (notFound ? (
+          <StickyNote>
+            {locales.map((lang) => (
+              <span data-nf-lang={lang}>{t(lang, 'home.notFound.note')}</span>
+            ))}
+          </StickyNote>
+        ) : (
+          <StickyNote text={profile.desk.stickyNote} />
+        ))}
       {pose.kind === 'polaroid' && <Polaroid caption={profile.desk.polaroidCaption} />}
       {pose.kind === 'ticket' && (
         <>
@@ -137,7 +147,7 @@ const notFound = variant.startsWith('notfound');
   /* Objects are a little smaller where there is less room. */
   .desk--band {
     --desk-k: 0.82;
-    height: 320px;
+    height: 280px;
   }
 
   .desk--notfound-band {
@@ -145,9 +155,15 @@ const notFound = variant.startsWith('notfound');
     height: 240px;
   }
 
-  @media (width < 80rem) {
+  @media (width < 90rem) {
     .desk--hero {
       --desk-k: 0.84;
+    }
+  }
+
+  @media (width < 80rem) {
+    .desk--hero {
+      --desk-k: 0.72;
     }
   }
 
@@ -198,6 +214,12 @@ const notFound = variant.startsWith('notfound');
     gap: 4px;
   }
 
+  /* The Uzbek sentence ends in a long italic word right above the ticket (and its note is
+     longer): no room for the ticket's note there. */
+  .desk--hero .note--ticket:lang(uz) {
+    display: none;
+  }
+
   .note--ticket .note__arrow {
     width: 34px;
     margin-block-start: 14px;
@@ -225,9 +247,16 @@ const notFound = variant.startsWith('notfound');
     rotate: -4deg;
   }
 
-  /* Below 1440px the cursor flag lies close to the sentence: no room for its note. */
+  /* Below 1440px the cursor flag lies close to the name: no room for its note. Below 1280px
+     the ticket lies right under the piala's note: no room for its own either. */
   @media (width < 90rem) {
     .note--flag {
+      display: none;
+    }
+  }
+
+  @media (width < 80rem) {
+    .desk--hero .note--ticket {
       display: none;
     }
   }
