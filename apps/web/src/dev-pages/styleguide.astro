@@ -1,13 +1,877 @@
 ---
+/**
+ * /styleguide/ (development only): every token and primitive of the design system, in both
+ * languages. The reference for anyone building pages; keep it in sync with components/ui.
+ */
+import Arrow from '@/components/ui/Arrow.astro';
+import ArrowLink from '@/components/ui/ArrowLink.astro';
+import Barcode from '@/components/ui/Barcode.astro';
+import Capsule from '@/components/ui/Capsule.astro';
+import Container from '@/components/ui/Container.astro';
+import GiantName from '@/components/ui/GiantName.astro';
+import MonthTab from '@/components/ui/MonthTab.astro';
+import PostRow from '@/components/ui/PostRow.astro';
+import SectionLabel from '@/components/ui/SectionLabel.astro';
+import StatusDot from '@/components/ui/StatusDot.astro';
+import Tag from '@/components/ui/Tag.astro';
+import Tape from '@/components/ui/Tape.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import type { PostSummary } from '@/lib/posts';
+
+const colours = [
+  { token: 'paper', light: '#ECEAE5', dark: '#121110', use: 'page background' },
+  { token: 'paper-raised', light: '#F6F4F0', dark: '#1B1A17', use: 'hovered rows, code, desk' },
+  { token: 'ink', light: '#141310', dark: '#EFECE6', use: 'text, full rules, ink band' },
+  { token: 'ink-soft', light: '#5C574E', dark: '#9C968A', use: 'secondary text' },
+  { token: 'rule', light: '#D2CEC6', dark: '#2C2A26', use: 'hairlines' },
+  { token: 'accent', light: '#E28413', dark: '#E28413', use: 'fills only' },
+  { token: 'accent-text', light: '#9C5200', dark: '#E28413', use: 'accent text on paper' },
+  { token: 'on-accent', light: '#141310', dark: '#141310', use: 'text on accent' },
+];
+
+const typeScale = [
+  {
+    cls: 'type-sentence',
+    meta: 'Newsreader 300 · 36→92 · 1.04 · −0.02em',
+    en: "I'm <em>Abduroziq</em>, a Product <em>Engineer</em>",
+    uz: "Ismim <em>Abduroziq</em>, oʻzbek gʻoyalari, o'zbek g'oyalari",
+  },
+  {
+    cls: 'type-display',
+    meta: 'Bricolage wdth 75 · 400 · 56→168 · 0.86 · upper',
+    en: 'Writing',
+    uz: "Yozuvlar oʻgʻ o'g'",
+  },
+  {
+    cls: 'type-numeral',
+    meta: 'Bricolage wdth 75 · 300 · 44→72 · 0.9',
+    en: '04 12 28',
+    uz: '09 17 31',
+  },
+  {
+    cls: 'type-title',
+    meta: 'Bricolage 500 · 24→40 · 1.08 · −0.02em',
+    en: 'Designing the label strip',
+    uz: "Gʻoya va kod oʻrtasida, g'oya va kod o'rtasida",
+  },
+  {
+    cls: 'type-lead',
+    meta: 'Bricolage 400 · 22→34 · 1.22 · −0.015em',
+    en: 'I work where design and engineering meet.',
+    uz: "Dizayn va muhandislik uchrashgan joyda ishlayman: oʻylab, o'ylab.",
+  },
+  {
+    cls: 'type-body',
+    meta: 'Bricolage 400 · 16→18 · 1.55',
+    en: 'I design and build products, from Figma to production. Every word is in the HTML and readable with JavaScript off.',
+    uz: "Mahsulotlarni Figmadan production'gacha loyihalayman va yarataman. Oʻzbekcha harflar: oʻ gʻ, o' g'.",
+  },
+  {
+    cls: 'type-article-title',
+    meta: 'Newsreader 400 · 34→64 · 1.06 · −0.015em',
+    en: 'Notes on building a quiet website',
+    uz: "Sokin veb-sayt qurish haqida qaydlar: gʻisht, g'isht",
+  },
+  {
+    cls: 'type-article-body',
+    meta: 'Newsreader 400 · opsz auto · 19→21 · 1.6',
+    en: 'A classic, calm reading page. The serif sets long text at a comfortable measure, with hanging punctuation and pretty wrapping.',
+    uz: "Klassik, sokin oʻqish sahifasi. Uzun matn qulay kenglikda, chiroyli koʻchirish bilan: o'qish, ko'chirish.",
+  },
+  {
+    cls: 'type-label',
+    meta: 'Geist Mono 500 · 11→12 · 1.3 · 0.08em · upper',
+    en: 'Notes on building products',
+    uz: "Oʻzbekiston · O'zbekiston",
+  },
+  {
+    cls: 'type-micro',
+    meta: 'Geist Mono 400 · 9→10 · 1.25 · 0.04em · upper',
+    en: 'Handle with curiosity · this side up',
+    uz: "Ehtiyot boʻling · ehtiyot bo'ling",
+  },
+  {
+    cls: 'type-hand',
+    meta: 'Caveat 500 · 20→26 · 1.1',
+    en: 'Think beyond limits.',
+    uz: "Avval choy. Oʻylab koʻr, o'ylab ko'r.",
+  },
+];
+
+const day = (iso: string) => new Date(`${iso}T09:00:00+05:00`);
+const posts: PostSummary[] = [
+  {
+    id: 'en/label-and-desk',
+    slug: 'label-and-desk',
+    locale: 'en',
+    url: '/blog/label-and-desk/',
+    title: 'Label and desk: designing a quiet personal site',
+    description: 'How one accent, three loud ideas and a lot of hairlines became a design system.',
+    date: day('2026-11-12'),
+    tags: ['design', 'astro'],
+    readingMinutes: 6,
+  },
+  {
+    id: 'uz/salom-dunyo',
+    slug: 'salom-dunyo',
+    locale: 'uz',
+    url: '/uz/blog/salom-dunyo/',
+    title: 'Salom, dunyo: birinchi yozuv va oʻzbekcha harflar',
+    description: "Nega sayt ikki tilda va bu dizaynga qanday ta'sir qildi.",
+    date: day('2026-11-03'),
+    tags: ['uzbek', 'i18n', 'typography'],
+    readingMinutes: 4,
+  },
+];
 ---
 
 <BaseLayout
   locale="en"
   path="/styleguide/"
   title="Styleguide"
-  description="Development only styleguide placeholder page."
+  description="Development only: tokens and primitives of the abduroziq.uz design system."
   seo={{ noindex: true }}
+  mainClass="sg"
 >
-  <h1>Styleguide (placeholder)</h1>
+  <Container class="sg-intro">
+    <SectionLabel number="00" name="Design system" />
+    <h1 class="type-display sg-intro__title">Styleguide</h1>
+    <p class="type-lead sg-intro__lead">
+      Label &amp; Desk: ink on paper, hairlines, one accent. Every token and primitive in one place.
+      Open it in light and dark, at 360, 768 and 1440.
+    </p>
+    <ul class="sg-toc type-label">
+      <li>
+        <a href="#colour">01 Colour</a>
+      </li>
+      <li>
+        <a href="#type">02 Type</a>
+      </li>
+      <li>
+        <a href="#space">03 Space &amp; shape</a>
+      </li>
+      <li>
+        <a href="#motion">04 Motion</a>
+      </li>
+      <li>
+        <a href="#primitives">05 Primitives</a>
+      </li>
+      <li>
+        <a href="#chrome">06 Chrome</a>
+      </li>
+    </ul>
+  </Container>
+
+  <!-- 01 Colour -->
+  <Container as="section" class="sg-section" id="colour">
+    <SectionLabel as="h2" number={1} name="Colour" />
+    <p class="sg-note type-body">
+      Accent is a fill first. Text on accent is always <code>on-accent</code>; accent-coloured text
+      on paper uses <code>accent-text</code>. Utilities: <code>bg-paper</code>,{' '}
+      <code>text-ink-soft</code>, <code>border-rule</code>, ... Surfaces:{' '}
+      <code>surface-accent</code>, <code>surface-ink</code>.
+    </p>
+    <div class="sg-table">
+      <div class="sg-row sg-row--head type-label">
+        <span>Swatch</span>
+        <span>Token</span>
+        <span>Light</span>
+        <span>Dark</span>
+        <span>Use</span>
+      </div>
+      {colours.map((c) => (
+        <div class="sg-row">
+          <span class="sg-swatch" style={{ background: `var(--${c.token})` }} />
+          <span class="type-label">{c.token}</span>
+          <span class="type-label sg-soft">{c.light}</span>
+          <span class="type-label sg-soft">{c.dark}</span>
+          <span class="type-body sg-soft">{c.use}</span>
+        </div>
+      ))}
+    </div>
+    <div class="sg-surfaces">
+      <div class="surface-accent sg-surface">
+        <SectionLabel number={4} name="surface-accent" />
+        <p class="type-title">Text, labels and rules turn on-accent.</p>
+        <ArrowLink href="#colour" label="A link on accent" />
+      </div>
+      <div class="surface-ink sg-surface">
+        <SectionLabel number={9} name="surface-ink" />
+        <p class="type-title">The ink band: the other theme on ink.</p>
+        <ArrowLink href="#colour" label="A link on ink" />
+      </div>
+    </div>
+  </Container>
+
+  <!-- 02 Type -->
+  <Container as="section" class="sg-section" id="type">
+    <SectionLabel as="h2" number={2} name="Type" />
+    <p class="sg-note type-body">
+      Utilities <code>type-*</code>, fluid between 360 and 1440px. Each specimen shows English, then
+      Uzbek with both <code>oʻ gʻ</code> (U+02BB) and <code>o' g'</code> (apostrophe).
+    </p>
+    {typeScale.map((s) => (
+      <div class="sg-type">
+        <div class="sg-type__meta">
+          <span class="type-label">{s.cls}</span>
+          <span class="type-label sg-soft">{s.meta}</span>
+        </div>
+        <div class="sg-type__specimens">
+          <p class={s.cls} set:html={s.en} />
+          <p class={s.cls} lang="uz" set:html={s.uz} />
+        </div>
+      </div>
+    ))}
+    <div class="sg-type">
+      <div class="sg-type__meta">
+        <span class="type-label">type-name</span>
+        <span class="type-label sg-soft">
+          Bricolage 500 · opsz 96 · fit to width · 0.8 · −0.045em
+        </span>
+      </div>
+      <div class="sg-type__specimens">
+        <GiantName as="div" />
+      </div>
+    </div>
+  </Container>
+
+  <!-- 03 Space & shape -->
+  <Container as="section" class="sg-section" id="space">
+    <SectionLabel as="h2" number={3} name="Space & shape" />
+    <p class="sg-note type-body">
+      <code>shell</code> (or <code>&lt;Container&gt;</code>): max 1440px, side padding 16 / 24 /
+      40px. <code>grid-12</code>: 12 columns, gap 16 / 24px. <code>section-y</code> or{' '}
+      <code>pt-section</code>: 96 → 176px between sections. <code>hairline</code>,{' '}
+      <code>hairline-b</code>, <code>hairline-ink</code>: 1px rules. <code>full-bleed</code>: breaks
+      out to the viewport.
+    </p>
+    <div class="grid-12 sg-grid" aria-hidden="true">
+      {Array.from({ length: 12 }, (_, i) => (
+        <span class="type-label">{i + 1}</span>
+      ))}
+    </div>
+    <div class="grid-12 sg-grid-demo">
+      <div class="sg-span" style="grid-column: 1 / span 2">
+        <span class="type-label">label 1–2</span>
+      </div>
+      <div class="sg-span" style="grid-column: 4 / span 8">
+        <span class="type-label">content 4–11</span>
+      </div>
+    </div>
+    <div class="sg-shapes">
+      <div class="sg-shape">
+        <div class="sg-rhythm" aria-hidden="true"></div>
+        <span class="type-label">--section</span>
+      </div>
+      <div class="sg-shape">
+        <div class="sg-radius sg-radius--0" aria-hidden="true"></div>
+        <span class="type-label">radius 0 · strips, rows</span>
+      </div>
+      <div class="sg-shape">
+        <div class="sg-radius sg-radius--pill" aria-hidden="true"></div>
+        <span class="type-label">--radius-pill · chips</span>
+      </div>
+      <div class="sg-shape">
+        <div class="sg-radius sg-radius--card" aria-hidden="true"></div>
+        <span class="type-label">--radius-card + --shadow-desk</span>
+      </div>
+    </div>
+  </Container>
+
+  <!-- 04 Motion -->
+  <Container as="section" class="sg-section" id="motion">
+    <SectionLabel as="h2" number={4} name="Motion" />
+    <p class="sg-note type-body">
+      Hover the rows. <code>--dur-1</code> 160ms, <code>--dur-2</code> 320ms, <code>--dur-3</code>{' '}
+      700ms, <code>--dur-4</code> 1100ms; <code>--ease-out</code>, <code>--ease-in-out</code>. Under
+      reduced motion dur-2…4 become 0ms. Animation behaviour belongs to the motion kit.
+    </p>
+    <div class="sg-motion">
+      {[
+        ['dur-1', 'ease-out'],
+        ['dur-2', 'ease-out'],
+        ['dur-3', 'ease-out'],
+        ['dur-4', 'ease-in-out'],
+      ].map(([dur, ease]) => (
+        <div class="sg-motion__row" style={{ '--d': `var(--${dur})`, '--e': `var(--${ease})` }}>
+          <span class="type-label">
+            {dur} · {ease}
+          </span>
+          <span class="sg-motion__track">
+            <span class="sg-motion__dot" />
+          </span>
+        </div>
+      ))}
+    </div>
+  </Container>
+
+  <!-- 05 Primitives -->
+  <Container as="section" class="sg-section" id="primitives">
+    <SectionLabel as="h2" number={5} name="Primitives" />
+
+    <div class="sg-demo">
+      <p class="sg-demo__name type-label">SectionLabel</p>
+      <div class="sg-demo__body sg-stack">
+        <SectionLabel number={0} name="Hello" />
+        <SectionLabel number={3} name="Yozuvlar" />
+        <div class="surface-accent sg-pad">
+          <SectionLabel number={4} name="Contact" />
+        </div>
+      </div>
+    </div>
+
+    <div class="sg-demo">
+      <p class="sg-demo__name type-label">Tag</p>
+      <div class="sg-demo__body sg-inline">
+        <Tag label="All" href="#primitives" active count={12} />
+        <Tag label="design" href="#primitives" count={5} />
+        <Tag label="astro" href="#primitives" count={3} />
+        <Tag label="tipografiya" />
+        <Tag label="i18n" />
+      </div>
+    </div>
+
+    <div class="sg-demo">
+      <p class="sg-demo__name type-label">ArrowLink · Arrow</p>
+      <div class="sg-demo__body sg-inline">
+        <ArrowLink href="/blog/" label="All posts" />
+        <ArrowLink href="https://github.com/blogchik" label="GitHub" />
+        <ArrowLink href="#top" direction="up" label="Back to top" />
+        <ArrowLink href="/" direction="left" arrowFirst label="Home" />
+        <span class="type-title sg-arrows">
+          <Arrow />
+          <Arrow direction="up-right" />
+          <Arrow direction="up" />
+          <Arrow direction="down" />
+        </span>
+      </div>
+    </div>
+
+    <div class="sg-demo">
+      <p class="sg-demo__name type-label">StatusDot</p>
+      <div class="sg-demo__body sg-inline">
+        <StatusDot status="live" label="Live" pulse="always" />
+        <StatusDot status="design" label="In design" />
+        <StatusDot status="planned" label="Planned" />
+        <a href="#primitives" class="sg-hover type-label" data-pulse-scope>
+          <StatusDot status="live" label="Hover me: pulses" />
+        </a>
+      </div>
+    </div>
+
+    <div class="sg-demo">
+      <p class="sg-demo__name type-label">Barcode</p>
+      <div class="sg-demo__body sg-stack">
+        <div class="sg-inline">
+          <Barcode seed="abduroziq" height="24px" />
+          <Barcode seed="2026" bars={24} height="12px" />
+          <Barcode seed="tashkent" bars={60} height="40px" module={1} />
+        </div>
+        <div class="sg-meta type-label">
+          <Barcode seed="left" bars={90} height="10px" fill />
+          <span>
+            [ <StatusDot status="live" label="AVLB : NOV.2026" pulse="always" /> ]
+          </span>
+          <Barcode seed="right" bars={90} height="10px" fill />
+        </div>
+      </div>
+    </div>
+
+    <div class="sg-demo">
+      <p class="sg-demo__name type-label">Capsule</p>
+      <div class="sg-demo__body sg-stack">
+        <p class="type-sentence">
+          I'm <em>Abduroziq</em>
+          <Capsule tone="raised">
+            <span class="sg-cap sg-cap--a"></span>
+          </Capsule>
+          , a Product{' '}
+          <Capsule tone="paper">
+            <span class="sg-cap sg-cap--b"></span>
+          </Capsule>
+          <em> Engineer</em> based in Tashkent{' '}
+          <Capsule tone="ink" width={1.4}>
+            <span class="sg-cap sg-cap--c"></span>
+          </Capsule>
+        </p>
+        <p class="type-lead">
+          At lead size{' '}
+          <Capsule tone="accent">
+            <span></span>
+          </Capsule>{' '}
+          the capsule keeps its place on the line{' '}
+          <Capsule tone="raised" width={2}>
+            <span class="sg-cap sg-cap--a"></span>
+          </Capsule>{' '}
+          too.
+        </p>
+      </div>
+    </div>
+
+    <div class="sg-demo">
+      <p class="sg-demo__name type-label">MonthTab · PostRow</p>
+      <div class="sg-demo__body">
+        <MonthTab date={day('2026-11-12')} locale="en" as="h3" />
+        <ul class="sg-list">
+          {posts.map((post) => (
+            <PostRow post={post} locale="en" as="li" headingLevel={4} transitionName={false} />
+          ))}
+        </ul>
+        <div class="sg-gap"></div>
+        <MonthTab date={day('2026-11-12')} locale="uz" as="h3" />
+        <ul class="sg-list" lang="uz">
+          {posts.map((post) => (
+            <PostRow post={post} locale="uz" as="li" headingLevel={4} transitionName={false} />
+          ))}
+        </ul>
+      </div>
+    </div>
+
+    <div class="sg-demo sg-demo--wide">
+      <p class="sg-demo__name type-label">
+        Tape · place it in a centred container or directly in main
+      </p>
+      <div class="sg-demo__body">
+        <Tape text="What I'm building" />
+        <Tape text="Nimalar qurayapman" angle={3} />
+      </div>
+    </div>
+
+    <div class="sg-demo">
+      <p class="sg-demo__name type-label">GiantName</p>
+      <div class="sg-demo__body sg-stack">
+        <div class="grid-12 sg-giants">
+          <div class="sg-outline" style="grid-column: 1 / span 6">
+            <GiantName />
+          </div>
+          <div class="sg-outline" style="grid-column: 7 / span 3">
+            <GiantName text="404" />
+          </div>
+          <div class="sg-outline" style="grid-column: 10 / span 3">
+            <GiantName text="Uz" />
+          </div>
+        </div>
+        <div class="surface-ink sg-pad">
+          <GiantName text="404" />
+        </div>
+      </div>
+    </div>
+  </Container>
+
+  <!-- 06 Chrome -->
+  <Container as="section" class="sg-section" id="chrome">
+    <SectionLabel as="h2" number={6} name="Chrome" />
+    <div class="sg-chrome type-body">
+      <p>
+        <strong>Header.</strong> Sticky with JavaScript, hidden while{' '}
+        <code>html[data-scrolled][data-scroll-dir=down]</code>, back on <code>up</code>; the motion
+        kit maintains both attributes. Below 768px the MENU button opens a full-screen sheet (Escape
+        closes, the page behind is inert and does not scroll; it dispatches <code>site:menu</code>).
+        Test the scroll states here:
+      </p>
+      <div class="sg-inline">
+        <button type="button" class="sg-btn type-label" data-sg-scroll="down">
+          Scrolled · down
+        </button>
+        <button type="button" class="sg-btn type-label" data-sg-scroll="up">
+          Scrolled · up
+        </button>
+        <button type="button" class="sg-btn type-label" data-sg-scroll="">
+          Reset
+        </button>
+      </div>
+      <p>
+        <strong>Footer.</strong> Accent block, section 04: e-mail in title size, socials as a
+        hairline list with the <code>open</code> cursor, tagline in hand, back to top, and the giant
+        name on the bottom edge (decorative, letters marked for the kit).
+      </p>
+    </div>
+  </Container>
 </BaseLayout>
+
+<script>
+  document.addEventListener('click', (event) => {
+    const button = (event.target as Element | null)?.closest<HTMLElement>('[data-sg-scroll]');
+    if (!button) return;
+    const root = document.documentElement;
+    const dir = button.dataset['sgScroll'];
+    if (dir) {
+      root.setAttribute('data-scrolled', '');
+      root.setAttribute('data-scroll-dir', dir);
+    } else {
+      root.removeAttribute('data-scrolled');
+      root.removeAttribute('data-scroll-dir');
+    }
+  });
+</script>
+
+<style>
+  .sg-intro {
+    padding-block: clamp(3rem, 2rem + 4vw, 6rem) 0;
+  }
+
+  .sg-intro__title {
+    margin: 2rem 0 1.5rem;
+  }
+
+  .sg-intro__lead {
+    max-width: 19em;
+    margin: 0;
+    color: var(--ink-soft);
+  }
+
+  .sg-toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 2rem;
+    margin: 3rem 0 0;
+    padding: 1rem 0 0;
+    list-style: none;
+    border-block-start: var(--hairline) solid var(--rule);
+  }
+
+  .sg-toc a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .sg-toc a:hover {
+    color: var(--accent-text);
+  }
+
+  .sg-section {
+    padding-block-start: var(--section);
+  }
+
+  .sg-note {
+    max-width: 38em;
+    margin: 1.5rem 0 2.5rem;
+    color: var(--ink-soft);
+  }
+
+  code {
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    color: var(--ink);
+  }
+
+  .sg-soft {
+    color: var(--ink-soft);
+  }
+
+  .sg-row {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.5rem var(--col-gap);
+    align-items: center;
+    padding-block: 0.75rem;
+    border-block-start: var(--hairline) solid var(--rule);
+  }
+
+  .sg-row > :nth-child(n + 4) {
+    display: none;
+  }
+
+  @media (width >= 48rem) {
+    .sg-row {
+      grid-template-columns: 4rem 1.2fr 1fr 1fr 2fr;
+    }
+
+    .sg-row > :nth-child(n + 4) {
+      display: block;
+    }
+  }
+
+  .sg-row--head {
+    color: var(--ink-soft);
+    border-block-start-color: var(--ink);
+  }
+
+  .sg-swatch {
+    display: block;
+    width: 100%;
+    height: 2rem;
+    outline: var(--hairline) solid var(--rule);
+  }
+
+  .sg-surfaces {
+    display: grid;
+    gap: var(--col-gap);
+    margin-block-start: 3rem;
+  }
+
+  @media (width >= 48rem) {
+    .sg-surfaces {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .sg-surface {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+  }
+
+  .sg-surface p {
+    margin: 0;
+  }
+
+  .sg-type {
+    display: grid;
+    gap: 1rem var(--col-gap);
+    padding-block: 2rem;
+    border-block-start: var(--hairline) solid var(--rule);
+  }
+
+  @media (width >= 64rem) {
+    .sg-type {
+      grid-template-columns: 3fr 9fr;
+    }
+  }
+
+  .sg-type__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .sg-type__specimens {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    min-width: 0;
+  }
+
+  .sg-type__specimens p {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .sg-grid {
+    height: 6rem;
+  }
+
+  .sg-grid span {
+    display: flex;
+    align-items: flex-end;
+    padding: 0.4rem;
+    background-color: color-mix(in srgb, var(--accent) 16%, transparent);
+    color: var(--accent-text);
+  }
+
+  .sg-grid-demo {
+    margin-block-start: var(--col-gap);
+  }
+
+  .sg-span {
+    padding: 0.75rem;
+    border-block-start: var(--hairline) solid var(--ink);
+  }
+
+  .sg-shapes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: 2.5rem var(--col-gap);
+    margin-block-start: 3rem;
+  }
+
+  .sg-shape {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+
+  .sg-rhythm {
+    width: 2rem;
+    height: var(--section);
+    border-block: var(--hairline) solid var(--ink);
+    background-color: color-mix(in srgb, var(--accent) 16%, transparent);
+  }
+
+  .sg-radius {
+    width: 8rem;
+    height: 5rem;
+    background-color: var(--paper-raised);
+    border: var(--hairline) solid var(--rule);
+  }
+
+  .sg-radius--0 {
+    background-color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .sg-radius--pill {
+    height: 2.25rem;
+    border-radius: var(--radius-pill);
+    border-color: var(--ink);
+  }
+
+  .sg-radius--card {
+    border: 0;
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-desk);
+    rotate: -2deg;
+  }
+
+  .sg-motion__row {
+    display: grid;
+    grid-template-columns: minmax(0, 12rem) 1fr;
+    gap: var(--col-gap);
+    align-items: center;
+    padding-block: 1rem;
+    border-block-start: var(--hairline) solid var(--rule);
+  }
+
+  .sg-motion__track {
+    position: relative;
+    height: 10px;
+  }
+
+  .sg-motion__dot {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: var(--radius-pill);
+    background-color: var(--ink);
+    transition: inset-inline-start var(--d) var(--e);
+  }
+
+  .sg-motion__row:hover .sg-motion__dot {
+    inset-inline-start: calc(100% - 10px);
+  }
+
+  .sg-demo {
+    display: grid;
+    gap: 1rem var(--col-gap);
+    padding-block: 2.5rem;
+    border-block-start: var(--hairline) solid var(--rule);
+  }
+
+  .sg-demo:first-of-type {
+    margin-block-start: 2.5rem;
+  }
+
+  @media (width >= 64rem) {
+    .sg-demo {
+      grid-template-columns: 3fr 9fr;
+    }
+  }
+
+  .sg-demo--wide {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sg-demo__name {
+    margin: 0;
+    color: var(--ink-soft);
+  }
+
+  .sg-demo__body {
+    min-width: 0;
+  }
+
+  .sg-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .sg-stack p {
+    margin: 0;
+  }
+
+  .sg-inline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 2rem;
+  }
+
+  .sg-arrows {
+    display: inline-flex;
+    gap: 0.5em;
+    color: var(--accent-text);
+  }
+
+  .sg-hover {
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .sg-pad {
+    padding: 1.5rem;
+  }
+
+  .sg-meta {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .sg-meta > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    white-space: nowrap;
+  }
+
+  .sg-cap {
+    display: block;
+  }
+
+  .sg-cap--a {
+    background-color: var(--ink-soft);
+  }
+
+  .sg-cap--b {
+    background-color: var(--paper);
+  }
+
+  .sg-cap--c {
+    background-color: var(--ink);
+  }
+
+  .sg-list {
+    margin: 0 0 0;
+    padding: 0;
+  }
+
+  .sg-gap {
+    height: 3rem;
+  }
+
+  .sg-giants {
+    row-gap: var(--col-gap);
+  }
+
+  .sg-outline {
+    outline: var(--hairline) dashed var(--rule);
+  }
+
+  .sg-chrome {
+    max-width: 38em;
+    margin-block-start: 2rem;
+  }
+
+  .sg-chrome p {
+    color: var(--ink-soft);
+  }
+
+  .sg-chrome strong {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .sg-btn {
+    padding: 0.7em 1.1em 0.6em;
+    border: var(--hairline) solid var(--ink);
+    border-radius: var(--radius-pill);
+    background: none;
+    color: var(--ink);
+    cursor: pointer;
+  }
+</style>

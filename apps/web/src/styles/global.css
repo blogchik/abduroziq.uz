@@ -1,77 +1,18 @@
+/*
+ * Global stylesheet, imported once by BaseLayout. Order: Tailwind, fonts, tokens, base
+ * elements, then the design-system utilities. See /styleguide/ in dev for every token.
+ */
 @import 'tailwindcss';
-
-/* Fonts: self-hosted Fontsource CSS. Families are declared with a " Variable" suffix. */
-@import '@fontsource-variable/bricolage-grotesque/standard.css';
-@import '@fontsource-variable/newsreader/standard.css';
-@import '@fontsource-variable/newsreader/standard-italic.css';
-@import '@fontsource/geist-mono/400.css';
-@import '@fontsource/geist-mono/500.css';
-@import '@fontsource/caveat/500.css';
+@import './fonts.css';
+@import './tokens.css';
+@import './base.css';
+@import './type.css';
+@import './layout.css';
 
 /* Class names used in the content package (posts, data) must be scanned too. */
 @source '../../../../packages/content';
 
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
-
-/* Colour tokens, docs/DESIGN.md 2.1. Light is the default; dark follows data-theme. */
-:root {
-  --paper: #eceae5;
-  --paper-raised: #f6f4f0;
-  --ink: #141310;
-  --ink-soft: #5c574e;
-  --rule: #d2cec6;
-  --accent: #e28413;
-  --accent-text: #9c5200;
-  --on-accent: #141310;
-  color-scheme: light;
-}
-
-:root[data-theme='dark'] {
-  --paper: #121110;
-  --paper-raised: #1b1a17;
-  --ink: #efece6;
-  --ink-soft: #9c968a;
-  --rule: #2c2a26;
-  --accent-text: #e28413;
-  color-scheme: dark;
-}
-
-/* Before the theme script has run (or without JavaScript) follow the system preference. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
-    --paper: #121110;
-    --paper-raised: #1b1a17;
-    --ink: #efece6;
-    --ink-soft: #9c968a;
-    --rule: #2c2a26;
-    --accent-text: #e28413;
-    color-scheme: dark;
-  }
-}
-
-@theme inline {
-  --color-paper: var(--paper);
-  --color-paper-raised: var(--paper-raised);
-  --color-ink: var(--ink);
-  --color-ink-soft: var(--ink-soft);
-  --color-rule: var(--rule);
-  --color-accent: var(--accent);
-  --color-accent-text: var(--accent-text);
-  --color-on-accent: var(--on-accent);
-
-  --font-display: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-serif: 'Newsreader Variable', Georgia, serif;
-  --font-mono: 'Geist Mono', ui-monospace, monospace;
-  --font-hand: 'Caveat', cursive;
-}
-
-@layer base {
-  body {
-    background-color: var(--color-paper);
-    color: var(--color-ink);
-    font-family: var(--font-display);
-  }
-}
 
 /* Shiki dual themes: light colours are inline, dark ones come from --shiki-dark* variables. */
 [data-theme='dark'] .astro-code,

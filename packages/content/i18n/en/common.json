@@ -3,19 +3,35 @@
   "nav": {
     "label": "Main",
     "home": "Home",
+    "homeLabel": "abduroziq.uz, home page",
     "building": "Building",
-    "writing": "Writing"
+    "writing": "Writing",
+    "menu": "Menu",
+    "close": "Close",
+    "menuLabel": "Site menu"
   },
   "lang": {
     "label": "Language",
     "en": "EN",
     "uz": "UZ",
     "enName": "English",
-    "uzName": "Uzbek"
+    "uzName": "Uzbek",
+    "writtenIn": {
+      "en": "Written in English",
+      "uz": "Written in Uzbek"
+    }
+  },
+  "theme": {
+    "toggle": "Dark theme"
+  },
+  "a11y": {
+    "newTab": "(opens in a new tab)"
   },
   "footer": {
     "hello": "Say hello",
     "contact": "Contact",
+    "elsewhere": "Elsewhere",
+    "email": "E-mail",
     "rights": "All rights reserved.",
     "backToTop": "Back to top"
   },

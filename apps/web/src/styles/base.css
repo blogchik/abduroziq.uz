@@ -1,0 +1,124 @@
+/*
+ * Base element styles on top of Tailwind's preflight: text rendering, selection, focus ring
+ * (docs/DESIGN.md section 8), link defaults, wrapping and reduced-motion defaults.
+ */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* The tape and full-bleed breakouts overflow the viewport on purpose; the page never
+       scrolls sideways. `clip` (not `hidden`) keeps `position: sticky` working. */
+    overflow-x: clip;
+    scroll-padding-top: calc(var(--header-h) + 1rem);
+    background-color: var(--paper);
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+    overflow-x: clip;
+    background-color: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: var(--fs-body);
+    font-optical-sizing: auto;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-synthesis-weight: none;
+  }
+
+  main {
+    flex: 1 0 auto;
+  }
+
+  main:focus {
+    outline: none;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+
+  p,
+  li,
+  dd,
+  figcaption,
+  blockquote {
+    text-wrap: pretty;
+  }
+
+  a {
+    text-underline-offset: 0.16em;
+    text-decoration-thickness: 1px;
+  }
+
+  hr {
+    border: 0;
+    border-block-start: var(--hairline) solid var(--rule);
+  }
+
+  ::selection {
+    background-color: var(--accent);
+    color: var(--on-accent);
+  }
+
+  /* Visible focus for every interactive element: 2px ink, 3px offset. Surfaces swap the
+     colour through --focus-color (on-accent on the accent fill). */
+  :focus-visible {
+    outline: 2px solid var(--focus-color);
+    outline-offset: 3px;
+  }
+
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  [hidden]:not([hidden='until-found']) {
+    display: none !important;
+  }
+
+  /* Emphasis inside the hero sentence: italic, ink-soft. */
+  .type-sentence :where(em, i) {
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+}
+
+/* Selection on an accent fill would be invisible: invert it there. */
+.surface-accent ::selection {
+  background-color: var(--on-accent);
+  color: var(--accent);
+}
+
+/* Forced colours: keep the system's own focus and link colours. */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+/* Reduced motion: CSS animations collapse to their end state; transitions that move things
+   are already instant through the duration tokens (tokens.css). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+:root[data-motion='reduced'] *,
+:root[data-motion='reduced'] *::before,
+:root[data-motion='reduced'] *::after {
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+}

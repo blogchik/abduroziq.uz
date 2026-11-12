@@ -1,7 +1,16 @@
 ---
 import { profile } from '@abduroziq/content';
+import Arrow from '@/components/ui/Arrow.astro';
+import ArrowLink from '@/components/ui/ArrowLink.astro';
+import GiantName from '@/components/ui/GiantName.astro';
+import SectionLabel from '@/components/ui/SectionLabel.astro';
 import { t, type Locale } from '@/i18n';
 
+/**
+ * Footer, section `04 — Contact` (DESIGN 3.3): a full-bleed accent block. Label and year,
+ * "Say hello" and the e-mail, socials as a hairline list, the tagline in hand, back to top,
+ * and the giant name clipped by the bottom edge (letters rise as it enters, via the kit).
+ */
 interface Props {
   locale: Locale;
 }
@@ -10,22 +19,170 @@ const { locale } = Astro.props;
 const year = new Date().getFullYear();
 ---
 
-<footer class="bg-accent text-on-accent mt-24 p-4">
-  <p class="font-mono text-xs uppercase">
-    {t(locale, 'common.footer.contact')} · © {year}
-  </p>
-  <p>{t(locale, 'common.footer.hello')}</p>
-  <p>
-    <a href={`mailto:${profile.email}`}>{profile.email}</a>
-  </p>
-  <ul class="flex gap-4 font-mono text-xs uppercase">
-    {profile.socials.map((social) => (
-      <li>
-        <a href={social.href} rel="me noopener" target="_blank">
-          {social.label} ↗
+<footer class="site-footer surface-accent" id="contact">
+  <div class="shell">
+    <div class="site-footer__top">
+      <SectionLabel as="h2" number={4} name={t(locale, 'common.footer.contact')} />
+      <p class="type-label site-footer__year">© {year}</p>
+    </div>
+
+    <div class="site-footer__main grid-12">
+      <div class="site-footer__hello">
+        <p class="type-lead site-footer__say">{t(locale, 'common.footer.hello')}</p>
+        <a class="type-title link-underline site-footer__mail" href={`mailto:${profile.email}`}>
+          {profile.email}
         </a>
-      </li>
-    ))}
-  </ul>
-  <p>{profile.tagline}</p>
+      </div>
+
+      <div class="site-footer__social">
+        <p class="type-label site-footer__caption" id="footer-elsewhere">
+          {t(locale, 'common.footer.elsewhere')}
+        </p>
+        <ul class="site-footer__list" aria-labelledby="footer-elsewhere">
+          {profile.socials.map((social) => (
+            <li>
+              <a
+                class="site-footer__social-link type-label"
+                href={social.href}
+                rel="me noopener"
+                target="_blank"
+                data-cursor="open"
+              >
+                <span>{social.label}</span>
+                <Arrow direction="up-right" class="site-footer__social-arrow" />
+                <span class="sr-only">{` ${t(locale, 'common.a11y.newTab')}`}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+
+    <div class="site-footer__end">
+      <p class="type-hand site-footer__tagline">{profile.tagline}</p>
+      <ArrowLink href="#top" direction="up" label={t(locale, 'common.footer.backToTop')} />
+    </div>
+  </div>
+
+  <div class="shell site-footer__name">
+    <GiantName decorative reveal="chars" />
+  </div>
 </footer>
+
+<style>
+  .site-footer {
+    margin-block-start: var(--section);
+    overflow: hidden;
+  }
+
+  .site-footer__top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 1.5rem;
+    border-block-end: var(--hairline) solid var(--rule);
+  }
+
+  .site-footer__year {
+    margin: 0;
+  }
+
+  .site-footer__main {
+    row-gap: 3.5rem;
+    padding-block: clamp(4rem, 2.6667rem + 5.9259vw, 8rem) clamp(3rem, 2.3333rem + 2.963vw, 5rem);
+  }
+
+  .site-footer__hello {
+    grid-column: 1 / -1;
+  }
+
+  .site-footer__say {
+    margin: 0 0 0.6rem;
+  }
+
+  .site-footer__mail {
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+
+  .site-footer__social {
+    grid-column: 1 / -1;
+  }
+
+  @media (width >= 48rem) {
+    .site-footer__hello {
+      grid-column: 1 / span 7;
+    }
+
+    .site-footer__social {
+      grid-column: 9 / -1;
+    }
+  }
+
+  .site-footer__caption {
+    margin: 0 0 0.9rem;
+    color: var(--ink-soft);
+  }
+
+  .site-footer__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .site-footer__list li {
+    border-block-start: var(--hairline) solid var(--rule);
+  }
+
+  .site-footer__list li:last-child {
+    border-block-end: var(--hairline) solid var(--rule);
+  }
+
+  .site-footer__social-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 0.85rem 0.8rem;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .site-footer__social-link :global(.site-footer__social-arrow) {
+    transition: translate var(--dur-2) var(--ease-out);
+  }
+
+  .site-footer__social-link > span:first-child {
+    transition: translate var(--dur-2) var(--ease-out);
+  }
+
+  .site-footer__social-link:hover > span:first-child {
+    translate: 8px 0;
+  }
+
+  .site-footer__social-link:hover :global(.site-footer__social-arrow) {
+    translate: 2px -2px;
+  }
+
+  .site-footer__end {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding-block-end: clamp(2rem, 1.3333rem + 2.963vw, 4rem);
+  }
+
+  .site-footer__tagline {
+    margin: 0;
+    rotate: -4deg;
+    transform-origin: left bottom;
+  }
+
+  /* The name sits on the bottom edge and loses the foot of its letters to it: the edge
+     falls 0.05em above the baseline (the line box ends 0.07em below it, plus the Q tail). */
+  .site-footer__name :global(.giant__word) {
+    margin-block-end: calc(-0.12em - var(--tail, 0em));
+  }
+</style>

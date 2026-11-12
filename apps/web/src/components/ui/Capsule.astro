@@ -1,0 +1,72 @@
+---
+/**
+ * The inline image capsule of the hero sentence (DESIGN 4.1): a pill 0.78em high and about
+ * 1.5em wide with a 1px ink border, set between words and centred on the x-height of the
+ * surrounding text (`vertical-align: middle` = baseline + half the x-height), so it sits
+ * right at any `type-sentence` size and never changes the line height.
+ *
+ * Slot: an <img>, <Image />, <picture> or <svg>; it is cropped to the pill.
+ */
+interface Props {
+  /** Width in em of the surrounding text. */
+  width?: number;
+  /** Background behind the slot content. */
+  tone?: 'paper' | 'raised' | 'ink' | 'accent';
+  /** Accessible name; omit when the capsule is decorative (the default). */
+  label?: string;
+  id?: string;
+  class?: string;
+}
+
+const { width = 1.5, tone = 'raised', label, id, class: className } = Astro.props;
+---
+
+<span
+  class:list={['capsule', className]}
+  id={id}
+  data-capsule
+  data-tone={tone}
+  role={label ? 'img' : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : 'true'}
+  style={{ '--capsule-w': `${width}em` }}
+>
+  <slot />
+</span>
+
+<style>
+  .capsule {
+    position: relative;
+    display: inline-block;
+    width: var(--capsule-w);
+    height: 0.78em;
+    margin-inline: 0.1em;
+    vertical-align: middle;
+    overflow: hidden;
+    border: var(--hairline) solid var(--ink);
+    border-radius: var(--radius-pill);
+    background-color: var(--paper-raised);
+    /* Safari clips overflow of a rounded box with transforms only with an isolated layer. */
+    isolation: isolate;
+    transform-origin: 50% 50%;
+  }
+
+  .capsule[data-tone='paper'] {
+    background-color: var(--paper);
+  }
+
+  .capsule[data-tone='ink'] {
+    background-color: var(--ink);
+  }
+
+  .capsule[data-tone='accent'] {
+    background-color: var(--accent);
+  }
+
+  .capsule > :global(*) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+</style>

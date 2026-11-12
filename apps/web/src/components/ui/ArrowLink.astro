@@ -1,0 +1,109 @@
+---
+import Arrow from '@/components/ui/Arrow.astro';
+import { localeFromPath, t } from '@/i18n';
+
+/**
+ * Mono label plus a drawn arrow: `ALL POSTS →`, `GITHUB ↗`, `BACK TO TOP ↑`.
+ * External links (http/https/mailto) get `↗`, open in a new tab and set the `open` cursor;
+ * internal links get `→`. On hover the arrow nudges in its own direction.
+ */
+interface Props {
+  href: string;
+  /** Visible text. The default slot can be used instead. */
+  label?: string;
+  /** Defaults to true for absolute http(s) URLs. */
+  external?: boolean;
+  direction?: 'right' | 'up-right' | 'up' | 'down' | 'left';
+  /** Put the arrow before the label (for `← BACK` style links). */
+  arrowFirst?: boolean;
+  class?: string;
+  hreflang?: string;
+  rel?: string;
+}
+
+const {
+  href,
+  label,
+  external = /^https?:\/\//.test(href),
+  direction = external ? 'up-right' : 'right',
+  arrowFirst = false,
+  class: className,
+  hreflang,
+  rel,
+} = Astro.props;
+
+const locale = localeFromPath(Astro.url.pathname);
+const newTab = external && !href.startsWith('mailto:');
+---
+
+<a
+  class:list={['arrow-link type-label', className]}
+  href={href}
+  hreflang={hreflang}
+  target={newTab ? '_blank' : undefined}
+  rel={newTab ? (rel ?? 'noopener') : rel}
+  data-cursor={external ? 'open' : undefined}
+  data-direction={direction}
+>
+  {arrowFirst && <Arrow direction={direction} class="arrow-link__arrow" />}
+  <span class="arrow-link__label">{label ?? <slot />}</span>
+  {!arrowFirst && <Arrow direction={direction} class="arrow-link__arrow" />}
+  {newTab && <span class="sr-only">{` ${t(locale, 'common.a11y.newTab')}`}</span>}
+</a>
+
+<style>
+  .arrow-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6em;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .arrow-link__label {
+    position: relative;
+  }
+
+  /* Hover rule drawn from the left under the label. */
+  .arrow-link__label::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: -0.2em;
+    height: var(--hairline);
+    background-color: currentColor;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform var(--dur-2) var(--ease-out);
+  }
+
+  .arrow-link :global(.arrow-link__arrow) {
+    color: var(--accent-text);
+    transition: translate var(--dur-2) var(--ease-out);
+  }
+
+  .arrow-link:hover .arrow-link__label::after,
+  .arrow-link:focus-visible .arrow-link__label::after {
+    transform: scaleX(1);
+  }
+
+  .arrow-link[data-direction='right']:hover :global(.arrow-link__arrow) {
+    translate: 3px 0;
+  }
+
+  .arrow-link[data-direction='left']:hover :global(.arrow-link__arrow) {
+    translate: -3px 0;
+  }
+
+  .arrow-link[data-direction='up-right']:hover :global(.arrow-link__arrow) {
+    translate: 2px -2px;
+  }
+
+  .arrow-link[data-direction='up']:hover :global(.arrow-link__arrow) {
+    translate: 0 -3px;
+  }
+
+  .arrow-link[data-direction='down']:hover :global(.arrow-link__arrow) {
+    translate: 0 3px;
+  }
+</style>

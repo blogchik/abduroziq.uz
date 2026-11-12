@@ -1,0 +1,94 @@
+---
+/**
+ * Project status: `● LIVE` (accent dot), `◐ IN DESIGN` (half-filled), `○ PLANNED` (outline),
+ * drawn in CSS, followed by a mono label. A live dot can pulse: always (`pulse="always"`, the
+ * meta bar) or while its row is hovered or focused (`pulse="hover"`, the default for live;
+ * the row is the nearest `a` or `[data-pulse-scope]`).
+ */
+interface Props {
+  status: 'live' | 'design' | 'planned';
+  /** Visible text, for example t(locale, 'home.building.status.live'). */
+  label: string;
+  /** Keep the label for assistive tech only. */
+  hideLabel?: boolean;
+  pulse?: 'always' | 'hover' | 'none';
+  class?: string;
+}
+
+const { status, label, hideLabel = false, pulse = 'hover', class: className } = Astro.props;
+---
+
+<span
+  class:list={['status type-label', className]}
+  data-status={status}
+  data-pulse={status === 'live' ? pulse : 'none'}
+>
+  <span class="status__dot" aria-hidden="true"></span>
+  <span class:list={[{ 'sr-only': hideLabel }]}>{label}</span>
+</span>
+
+<style>
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7em;
+    white-space: nowrap;
+  }
+
+  .status__dot {
+    position: relative;
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border: var(--hairline) solid var(--ink);
+    border-radius: var(--radius-pill);
+  }
+
+  [data-status='live'] .status__dot {
+    border-color: var(--accent);
+    background-color: var(--accent);
+  }
+
+  /* Half filled: the same glyph as the theme toggle. */
+  [data-status='design'] .status__dot::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-color: var(--ink);
+    clip-path: inset(0 50% 0 0);
+  }
+
+  [data-status='planned'] .status__dot {
+    border-color: var(--ink-soft);
+  }
+
+  /* The pulse: a ring that grows and fades. */
+  .status__dot::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border: var(--hairline) solid var(--accent);
+    border-radius: inherit;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  [data-pulse='always'] .status__dot::after,
+  :is(a, [data-pulse-scope]):is(:hover, :focus-visible) [data-pulse='hover'] .status__dot::after {
+    animation: status-pulse 2.4s var(--ease-out) infinite;
+  }
+
+  @keyframes status-pulse {
+    0% {
+      opacity: 0.9;
+      transform: scale(1);
+    }
+
+    70%,
+    100% {
+      opacity: 0;
+      transform: scale(2.6);
+    }
+  }
+</style>

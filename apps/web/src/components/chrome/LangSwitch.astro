@@ -1,0 +1,65 @@
+---
+import { locales, t, type Locale } from '@/i18n';
+
+/**
+ * `EN / UZ`: the current language in ink, the other in ink-soft. Each link carries
+ * `hreflang` and `lang`, and its accessible name includes the language's full name.
+ */
+interface Props {
+  locale: Locale;
+  /** Where each language points (BaseLayout computes them). */
+  hrefs: Record<Locale, string>;
+  class?: string;
+}
+
+const { locale, hrefs, class: className } = Astro.props;
+---
+
+<div
+  class:list={['lang-switch type-label', className]}
+  role="group"
+  aria-label={t(locale, 'common.lang.label')}
+>
+  {locales.map((target, index) => (
+    <>
+      {index > 0 && (
+        <span class="lang-switch__sep" aria-hidden="true">
+          /
+        </span>
+      )}
+      <a
+        href={hrefs[target]}
+        hreflang={target}
+        lang={target}
+        aria-current={target === locale ? 'true' : undefined}
+        class:list={['lang-switch__link', { 'is-current': target === locale }]}
+      >
+        <span>{t(locale, `common.lang.${target}`)}</span>
+        <span class="sr-only">{` ${t(target, `common.lang.${target}Name`)}`}</span>
+      </a>
+    </>
+  ))}
+</div>
+
+<style>
+  .lang-switch {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5em;
+  }
+
+  .lang-switch__sep {
+    color: var(--ink-soft);
+  }
+
+  .lang-switch__link {
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: color var(--dur-1) var(--ease-out);
+  }
+
+  .lang-switch__link:hover,
+  .lang-switch__link.is-current {
+    color: var(--ink);
+  }
+</style>
