@@ -1,0 +1,43 @@
+---
+title: "Salom, dunyo"
+description: "Yangi sayt uchun birinchi sinov yozuvi. U blog ko'rsata olishi kerak bo'lgan barcha elementlarni tekshirish uchun yozilgan."
+date: 2026-11-12
+tags: [meta, astro]
+draft: true
+cover: ../../assets/portrait.jpg
+coverAlt: "Abduroziqning portreti"
+translationKey: hello-world
+---
+
+Bu vaqtinchalik yozuv. U qoralama, shuning uchun faqat ishlab chiqish rejimida ko'rinadi va hech qachon ommaga chiqmaydi.
+
+## Nega sinov yozuvi kerak
+
+Blogning sifati uning eng yomon ko'rsatilgan elementi bilan o'lchanadi. Bu sahifada asosiy elementlar bor, shuning uchun tipografiyadagi o'zgarish avval shu yerda ko'rinadi. [Astro hujjatlari](https://docs.astro.build) bilan tanishing va `pnpm check` ni yashil holatda saqlang.
+
+### Nimalarni qamrab oladi
+
+Yozuvda quyidagi elementlar bor:
+
+- ikki darajadagi sarlavhalar
+- havola va `qator ichidagi kod` bor abzats
+- ro'yxat
+- iqtibos
+- kod bloki
+
+> Chegaradan tashqarida o'ylang.
+
+## Kod namunasi
+
+```ts
+interface Post {
+  title: string;
+  draft: boolean;
+}
+
+export function isPublished(post: Post): boolean {
+  return !post.draft;
+}
+```
+
+Hozircha shu. Haqiqiy yozuvlar keyinroq boshlanadi.

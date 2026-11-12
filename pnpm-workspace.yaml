@@ -1,0 +1,8 @@
+packages:
+  - apps/*
+  - packages/*
+
+# pnpm 10: only these packages may run install scripts (pnpm 11+ renames this to allowBuilds).
+onlyBuiltDependencies:
+  - esbuild
+  - workerd

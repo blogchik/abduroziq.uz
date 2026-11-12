@@ -1,0 +1,79 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import Footer from '@/components/chrome/Footer.astro';
+import Header from '@/components/chrome/Header.astro';
+import Seo from '@/components/seo/Seo.astro';
+import type { SeoProps } from '@/components/seo/types';
+import { locales, localePath, t, type Locale } from '@/i18n';
+import '@/styles/global.css';
+
+interface Props {
+  locale: Locale;
+  /** Locale-agnostic path, for example '/blog/'. */
+  path: string;
+  title: string;
+  description: string;
+  seo?: Partial<SeoProps>;
+  mainClass?: string;
+}
+
+const { locale, path, title, description, seo, mainClass } = Astro.props;
+
+// The language switch follows `seo.alternates` when a page has one (translated posts live at
+// different paths), otherwise it keeps the current path. A locale without an equivalent page
+// falls back to that locale's home page.
+const switchHrefs = Object.fromEntries(
+  locales.map((target) => [
+    target,
+    seo?.alternates
+      ? (seo.alternates.find((alt) => alt.locale === target)?.href ?? localePath(target, '/'))
+      : localePath(target, path),
+  ]),
+) as Record<Locale, string>;
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <Seo {...seo} locale={locale} path={path} title={title} description={description} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script is:inline>
+      // Sets data-theme before first paint and again after every client-side swap.
+      (() => {
+        const applyTheme = () => {
+          let theme = null;
+          try {
+            theme = localStorage.getItem('theme');
+          } catch {
+            /* storage unavailable */
+          }
+          if (theme !== 'light' && theme !== 'dark') {
+            theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          document.documentElement.setAttribute('data-theme', theme);
+        };
+        applyTheme();
+        document.addEventListener('astro:after-swap', applyTheme);
+      })();
+    </script>
+    <ClientRouter />
+  </head>
+  <body>
+    <a
+      href="#main"
+      class="bg-ink text-paper fixed top-2 left-2 z-50 -translate-y-20 px-3 py-2 focus:translate-y-0"
+    >
+      {t(locale, 'common.skip')}
+    </a>
+    <Header locale={locale} switchHrefs={switchHrefs} />
+    <main id="main" class={mainClass}>
+      <slot />
+    </main>
+    <Footer locale={locale} />
+    <script>
+      import '@/motion';
+    </script>
+  </body>
+</html>

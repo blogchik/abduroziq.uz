@@ -1,0 +1,27 @@
+{
+  "skip": "Skip to content",
+  "nav": {
+    "label": "Main",
+    "home": "Home",
+    "building": "Building",
+    "writing": "Writing"
+  },
+  "lang": {
+    "label": "Language",
+    "en": "EN",
+    "uz": "UZ",
+    "enName": "English",
+    "uzName": "Uzbek"
+  },
+  "footer": {
+    "hello": "Say hello",
+    "contact": "Contact",
+    "rights": "All rights reserved.",
+    "backToTop": "Back to top"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "text": "There is nothing at this address.",
+    "home": "Back to the home page"
+  }
+}

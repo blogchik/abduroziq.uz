@@ -1,0 +1,43 @@
+---
+title: "Hello, world"
+description: "A first test post for the new site. It exists to exercise every element the blog has to render."
+date: 2026-11-12
+tags: [meta, astro]
+draft: true
+cover: ../../assets/portrait.jpg
+coverAlt: "Portrait of Abduroziq"
+translationKey: hello-world
+---
+
+This is a placeholder post. It is a draft, so it is visible in development and never ships to production.
+
+## Why a test post
+
+A blog is only as good as its worst-rendered element. This page uses the basics, so a change to the typography shows up here first. Read more on the [Astro documentation](https://docs.astro.build) and keep `pnpm check` green.
+
+### What it covers
+
+The post exercises the following elements:
+
+- headings of two levels
+- a paragraph with a link and `inline code`
+- an unordered list
+- a blockquote
+- a fenced code block
+
+> Think beyond limits.
+
+## A code sample
+
+```ts
+interface Post {
+  title: string;
+  draft: boolean;
+}
+
+export function isPublished(post: Post): boolean {
+  return !post.draft;
+}
+```
+
+That is all. The real writing starts later.

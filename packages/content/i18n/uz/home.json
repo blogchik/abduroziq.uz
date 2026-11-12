@@ -1,0 +1,15 @@
+{
+  "building": {
+    "title": "Loyihalar",
+    "status": {
+      "live": "Ishlamoqda",
+      "design": "Dizayn bosqichida",
+      "planned": "Rejada"
+    }
+  },
+  "writing": {
+    "title": "Yozuvlar",
+    "all": "Barcha yozuvlar",
+    "empty": "Hozircha hech narsa e'lon qilinmagan."
+  }
+}

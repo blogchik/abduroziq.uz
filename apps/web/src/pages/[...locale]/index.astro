@@ -1,0 +1,66 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { profile, projects } from '@abduroziq/content';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { localeParam, locales, resolveLocale, t } from '@/i18n';
+import { formatDate } from '@/lib/dates';
+import { getPosts } from '@/lib/posts';
+
+export const getStaticPaths = (() =>
+  locales.map((locale) => ({ params: { locale: localeParam(locale) } }))) satisfies GetStaticPaths;
+
+const locale = resolveLocale(Astro.params.locale);
+const latest = (await getPosts(locale, { includeOtherLocale: true })).slice(0, 3);
+---
+
+<BaseLayout
+  locale={locale}
+  path="/"
+  title={t(locale, 'seo.home.title')}
+  description={t(locale, 'seo.home.description')}
+>
+  <h1>{profile.name}</h1>
+  <p>{profile.role[locale]}</p>
+  <p>
+    {profile.sentence[locale].map((part) =>
+      part.kind === 'break' ? (
+        <br />
+      ) : part.kind === 'capsule' ? (
+        <span>[{part.id}]</span>
+      ) : part.kind === 'em' ? (
+        <em>{part.value}</em>
+      ) : (
+        part.value
+      ),
+    )}
+  </p>
+  <p>{profile.support[locale]}</p>
+
+  <section id="building">
+    <h2>{t(locale, 'home.building.title')}</h2>
+    <ul>
+      {projects.map((project) => (
+        <li>
+          <strong>{project.name}</strong> ({project.year},{' '}
+          {t(locale, `home.building.status.${project.status}`)}): {project.description[locale]}
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section id="writing">
+    <h2>{t(locale, 'home.writing.title')}</h2>
+    {latest.length === 0 ? (
+      <p>{t(locale, 'home.writing.empty')}</p>
+    ) : (
+      <ul>
+        {latest.map((post) => (
+          <li>
+            <a href={post.url}>{post.title}</a>{' '}
+            <time datetime={post.date.toISOString()}>{formatDate(post.date, post.locale)}</time>
+          </li>
+        ))}
+      </ul>
+    )}
+  </section>
+</BaseLayout>

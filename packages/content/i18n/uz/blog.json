@@ -1,0 +1,22 @@
+{
+  "title": "Yozuvlar",
+  "intro": "Mahsulot yaratish, dizayn va muhandislik haqidagi qaydlar.",
+  "empty": "Hozircha hech narsa e'lon qilinmagan.",
+  "readingTime": "{minutes} daqiqalik o'qish",
+  "draft": "Qoralama",
+  "published": "E'lon qilingan: {date}",
+  "updated": "Yangilangan: {date}",
+  "tags": "Teglar",
+  "tag": {
+    "title": "\"{tag}\" tegi bo'yicha",
+    "all": "Barcha yozuvlar"
+  },
+  "post": {
+    "prev": "Oldingi yozuv",
+    "next": "Keyingi yozuv"
+  },
+  "language": {
+    "en": "Inglizcha",
+    "uz": "O'zbekcha"
+  }
+}

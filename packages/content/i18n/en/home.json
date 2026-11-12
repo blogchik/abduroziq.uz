@@ -1,0 +1,15 @@
+{
+  "building": {
+    "title": "Building",
+    "status": {
+      "live": "Live",
+      "design": "In design",
+      "planned": "Planned"
+    }
+  },
+  "writing": {
+    "title": "Writing",
+    "all": "All posts",
+    "empty": "Nothing published yet."
+  }
+}

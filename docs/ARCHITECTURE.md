@@ -25,10 +25,12 @@ The site is fully static: no server, no database, no runtime secrets.
 abduroziq.uz/
 ├─ apps/
 │  └─ web/                       @abduroziq/web: the Astro site
-│     ├─ astro.config.*
+│     ├─ astro.config.ts
+│     ├─ .env.development, .env.production   public values only (section 3)
 │     ├─ public/                 static files copied as is (favicons, _headers)
 │     └─ src/
-│        ├─ pages/               routes, one file per route for both locales
+│        ├─ pages/               routes, one file per route for both locales ([...locale]/ folder)
+│        ├─ dev-pages/           development-only routes (styleguide, lab); never built
 │        ├─ layouts/             BaseLayout.astro
 │        ├─ components/
 │        │  ├─ ui/               design-system primitives
@@ -74,6 +76,12 @@ secret: `apps/web/.env.development` and `apps/web/.env.production`.
 | `PUBLIC_ALLOW_INDEXING` | `false` | `true` | `false` adds `noindex` and a disallow-all robots.txt |
 | `PUBLIC_ANALYTICS_TOKEN` | empty | empty until provided | Cloudflare Web Analytics token; empty means no script |
 
+The variables are declared in the `astro:env` schema in `astro.config.ts` (read them with
+`import { PUBLIC_SITE_URL } from 'astro:env/client'`); the config itself loads the `.env`
+files with Vite's `loadEnv` to set `site`. A variable set in the shell wins over the files
+(`PUBLIC_ALLOW_INDEXING=false pnpm build`); Turborepo passes all three through (`globalEnv`).
+Only the exact string `true` enables indexing.
+
 Drafts (`draft: true`) are rendered in development and excluded from production builds.
 Deploy credentials exist only as GitHub Actions secrets (`CLOUDFLARE_API_TOKEN`,
 `CLOUDFLARE_ACCOUNT_ID`).
@@ -81,9 +89,13 @@ Deploy credentials exist only as GitHub Actions secrets (`CLOUDFLARE_API_TOKEN`,
 ## 4. Routing and languages
 
 - Locales: `en` (default, no prefix) and `uz` (prefix `/uz`).
-- Each route is a single page file that renders both locales (a rest parameter for the
-  locale, or the equivalent recommended in STACK-NOTES). Never duplicate page markup per
-  language.
+- Each route is a single page file that renders both locales through an optional rest
+  parameter: `src/pages/[...locale]/index.astro`, `[...locale]/blog/index.astro`,
+  `[...locale]/blog/[slug].astro`, `[...locale]/blog/tag/[tag].astro`,
+  `[...locale]/rss.xml.ts`. `getStaticPaths` returns `locale: undefined` for `en` (no
+  prefix) and `locale: 'uz'`; use `localeParam(locale)` and `resolveLocale(Astro.params.locale)`.
+  This works with Astro's `i18n` config (verified). `404.astro` and `robots.txt.ts` sit
+  directly in `pages/` because they exist once. Never duplicate page markup per language.
 
 | Route (en) | Route (uz) | Page |
 |---|---|---|
@@ -95,6 +107,11 @@ Deploy credentials exist only as GitHub Actions secrets (`CLOUDFLARE_API_TOKEN`,
 | `/og/...png` | | generated Open Graph images |
 | `/robots.txt`, `/sitemap-index.xml`, `/404` | | |
 | `/styleguide/`, `/lab/*` | | development only, never built for production |
+
+The development-only routes are `.astro` files under `src/dev-pages/` (`styleguide.astro`
+-> `/styleguide/`, `lab/motion.astro` -> `/lab/motion/`). An inline integration in
+`astro.config.ts` injects them only when the command is `dev` (new files need a dev server
+restart), and the sitemap filter excludes the same paths.
 
 URLs end with a trailing slash. A post exists at one URL, in its own language. The blog
 index of a locale lists that locale's posts first-class and also lists posts that exist
@@ -112,6 +129,11 @@ export function localePath(locale: Locale, path: string): string;   // '/blog/' 
 export function alternates(path: string): { locale: Locale; href: string }[]; // absolute URLs
 export function t(locale: Locale, key: string, vars?: Record<string, string | number>): string;
 ```
+
+Extra helpers in the same module: `locales`, `localeParam(locale)` (route parameter for
+`[...locale]`: `undefined` for `en`), `stripLocale(path)`, `localeFromPath(path)`.
+`localePath` adds a trailing slash unless the path has a file extension (`/rss.xml`).
+`{name}` placeholders in strings are filled from `vars`.
 
 `t()` reads `packages/content/i18n/<locale>/<namespace>.json`; the key is
 `namespace.dot.path`, for example `t(locale, 'common.nav.writing')`. A missing key throws
@@ -131,7 +153,8 @@ date: 2026-11-12      # required, publication date
 updated: 2026-11-20   # optional
 tags: [design, astro] # lowercase kebab-case
 draft: false          # default false
-cover: ../../assets/posts/<slug>/cover.jpg   # optional
+cover: ../../assets/posts/<slug>/cover.jpg   # optional, relative to the post file
+coverAlt: "…"         # optional alt text for the cover; empty means decorative
 translationKey: "…"   # optional; the same value on the en and uz versions links them
 ---
 ```
@@ -150,6 +173,13 @@ export function getPosts(locale: Locale, opts?: { includeOtherLocale?: boolean }
 export function getAllTags(locale: Locale): Promise<{ tag: string; count: number }[]>;
 export function getAdjacentPosts(post: PostSummary): Promise<{ prev?: PostSummary; next?: PostSummary }>;
 ```
+
+`getAdjacentPosts` works within the post's own locale: `prev` is the next older post,
+`next` the next newer one. Extra exports: `getPostEntries()` (collection entries, drafts
+excluded in production), `toPostSummary(entry)`, `parsePostId(id)`,
+`getTranslations(post)` (the same post in the other locale, via `translationKey`) and
+`readingMinutes(body)`. `includeOtherLocale` adds posts of the other locale that have no
+translation in the requested locale.
 
 ### 5.2 Site data (`packages/content/src`)
 
@@ -206,8 +236,13 @@ interface Props {
 }
 ```
 
-It renders `<html lang>`, the head (Seo, fonts, theme bootstrap script), the skip link,
-Header, `<main id="main">`, Footer and the motion entry script.
+It renders `<html lang>`, the head (Seo, theme bootstrap script, `<ClientRouter />`), the
+skip link, Header, `<main id="main">`, Footer and the motion entry script. Fonts come from
+Fontsource CSS imported in `styles/global.css`.
+
+The language switch in the Header keeps the current path, unless `seo.alternates` is given
+(translated posts live at different paths); a locale without an equivalent page links to
+that locale's home page.
 
 ### Seo (`apps/web/src/components/seo/Seo.astro`)
 
@@ -218,6 +253,7 @@ interface SeoProps {
   image?: string;                               // defaults to the generated OG image
   article?: { publishedTime: Date; modifiedTime?: Date; tags: string[] };
   alternateLocales?: Locale[];                  // defaults to all locales; a post passes only its own unless translated
+  alternates?: { locale: Locale; href: string }[]; // explicit alternate URLs (translated posts); wins over alternateLocales
   noindex?: boolean;
   jsonLd?: object | object[];
 }
@@ -273,10 +309,10 @@ orchestrator.
 | Area | Paths |
 |---|---|
 | Workspace and tooling | root config, `packages/config/`, `apps/web/astro.config.*`, `apps/web/package.json` |
-| Design system and chrome | `apps/web/src/styles/`, `components/ui/`, `components/chrome/`, `layouts/`, `pages/styleguide.astro`, `i18n/*/common.json` |
-| Motion kit | `apps/web/src/motion/`, `pages/lab/motion.astro` |
-| Home | `components/home/`, the home page file, `i18n/*/home.json` |
-| Blog | `components/blog/`, blog page files, feeds, `lib/posts.ts`, `lib/markdown/`, `content.config.ts`, `styles/prose.css`, `i18n/*/blog.json`, `packages/content/posts/` |
+| Design system and chrome | `apps/web/src/styles/`, `components/ui/`, `components/chrome/`, `layouts/`, `dev-pages/styleguide.astro`, `i18n/*/common.json` (the i18n JSON files live in `packages/content/i18n/`; `src/i18n/index.ts` is the code) |
+| Motion kit | `apps/web/src/motion/`, `dev-pages/lab/motion.astro` |
+| Home | `components/home/`, `pages/[...locale]/index.astro`, `i18n/*/home.json` |
+| Blog | `components/blog/`, `pages/[...locale]/blog/`, `pages/[...locale]/rss.xml.ts`, `lib/posts.ts`, `lib/markdown/`, `content.config.ts`, `styles/prose.css`, `i18n/*/blog.json`, `packages/content/posts/` |
 | SEO | `components/seo/`, `lib/seo/`, `pages/og/`, `pages/robots.txt.ts`, `public/` icons and manifest, `i18n/*/seo.json` |
 | Content | `packages/content/src/`, `packages/content/assets/` |
 | CI and deploy | `.github/`, `wrangler.*`, `lighthouserc.*`, `apps/web/public/_headers` |

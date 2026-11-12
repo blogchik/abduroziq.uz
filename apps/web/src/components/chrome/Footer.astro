@@ -1,0 +1,31 @@
+---
+import { profile } from '@abduroziq/content';
+import { t, type Locale } from '@/i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const year = new Date().getFullYear();
+---
+
+<footer class="bg-accent text-on-accent mt-24 p-4">
+  <p class="font-mono text-xs uppercase">
+    {t(locale, 'common.footer.contact')} · © {year}
+  </p>
+  <p>{t(locale, 'common.footer.hello')}</p>
+  <p>
+    <a href={`mailto:${profile.email}`}>{profile.email}</a>
+  </p>
+  <ul class="flex gap-4 font-mono text-xs uppercase">
+    {profile.socials.map((social) => (
+      <li>
+        <a href={social.href} rel="me noopener" target="_blank">
+          {social.label} ↗
+        </a>
+      </li>
+    ))}
+  </ul>
+  <p>{profile.tagline}</p>
+</footer>

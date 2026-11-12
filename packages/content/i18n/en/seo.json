@@ -1,0 +1,26 @@
+{
+  "site": {
+    "name": "Abduroziq",
+    "description": "Personal website and blog of Abduroziq Jabborov, a Product Engineer based in Tashkent."
+  },
+  "home": {
+    "title": "Abduroziq, Product Engineer",
+    "description": "Abduroziq Jabborov is a Product Engineer based in Tashkent. Projects, notes and writing about building digital products."
+  },
+  "blog": {
+    "title": "Writing",
+    "description": "Notes by Abduroziq on building digital products, design and engineering."
+  },
+  "tag": {
+    "title": "Posts tagged \"{tag}\"",
+    "description": "All posts by Abduroziq tagged \"{tag}\"."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for does not exist."
+  },
+  "rss": {
+    "title": "Abduroziq, Writing",
+    "description": "New posts from Abduroziq on building digital products, design and engineering."
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "skip": "Asosiy mazmunga o'tish",
+  "nav": {
+    "label": "Asosiy",
+    "home": "Bosh sahifa",
+    "building": "Loyihalar",
+    "writing": "Yozuvlar"
+  },
+  "lang": {
+    "label": "Til",
+    "en": "EN",
+    "uz": "UZ",
+    "enName": "Inglizcha",
+    "uzName": "O'zbekcha"
+  },
+  "footer": {
+    "hello": "Salom ayting",
+    "contact": "Aloqa",
+    "rights": "Barcha huquqlar himoyalangan.",
+    "backToTop": "Yuqoriga"
+  },
+  "notFound": {
+    "title": "Sahifa topilmadi",
+    "text": "Bu manzilda hech narsa yo'q.",
+    "home": "Bosh sahifaga qaytish"
+  }
+}

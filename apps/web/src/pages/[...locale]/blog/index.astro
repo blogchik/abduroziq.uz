@@ -1,0 +1,56 @@
+---
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { localeParam, locales, localePath, resolveLocale, t } from '@/i18n';
+import { formatDate } from '@/lib/dates';
+import { getAllTags, getPosts } from '@/lib/posts';
+
+export const getStaticPaths = (() =>
+  locales.map((locale) => ({ params: { locale: localeParam(locale) } }))) satisfies GetStaticPaths;
+
+const locale = resolveLocale(Astro.params.locale);
+const posts = await getPosts(locale, { includeOtherLocale: true });
+const tags = await getAllTags(locale);
+---
+
+<BaseLayout
+  locale={locale}
+  path="/blog/"
+  title={t(locale, 'seo.blog.title')}
+  description={t(locale, 'seo.blog.description')}
+>
+  <h1>{t(locale, 'blog.title')}</h1>
+  <p>{t(locale, 'blog.intro')}</p>
+
+  {tags.length > 0 && (
+    <nav aria-label={t(locale, 'blog.tags')}>
+      <ul>
+        {tags.map(({ tag, count }) => (
+          <li>
+            <a href={localePath(locale, `/blog/tag/${tag}/`)}>
+              {tag} ({count})
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )}
+
+  {posts.length === 0 ? (
+    <p>{t(locale, 'blog.empty')}</p>
+  ) : (
+    <ul>
+      {posts.map((post) => (
+        <li>
+          <a href={post.url} hreflang={post.locale} lang={post.locale}>
+            {post.title}
+          </a>{' '}
+          <time datetime={post.date.toISOString()}>{formatDate(post.date, locale)}</time>
+          {' · '}
+          {t(locale, 'blog.readingTime', { minutes: post.readingMinutes })}
+          {post.locale !== locale && <> · {t(locale, `blog.language.${post.locale}`)}</>}
+        </li>
+      ))}
+    </ul>
+  )}
+</BaseLayout>

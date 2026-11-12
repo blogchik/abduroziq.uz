@@ -1,0 +1,22 @@
+{
+  "title": "Writing",
+  "intro": "Notes on building products, design and engineering.",
+  "empty": "Nothing published yet.",
+  "readingTime": "{minutes} min read",
+  "draft": "Draft",
+  "published": "Published {date}",
+  "updated": "Updated {date}",
+  "tags": "Tags",
+  "tag": {
+    "title": "Tagged \"{tag}\"",
+    "all": "All posts"
+  },
+  "post": {
+    "prev": "Previous post",
+    "next": "Next post"
+  },
+  "language": {
+    "en": "English",
+    "uz": "Uzbek"
+  }
+}

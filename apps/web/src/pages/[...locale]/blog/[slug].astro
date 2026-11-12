@@ -1,0 +1,93 @@
+---
+import { Image } from 'astro:assets';
+import { render } from 'astro:content';
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { localeParam, localePath, resolveLocale, t } from '@/i18n';
+import { formatDate, isoDate } from '@/lib/dates';
+import {
+  getAdjacentPosts,
+  getPostEntries,
+  getTranslations,
+  parsePostId,
+  toPostSummary,
+} from '@/lib/posts';
+
+// A post exists at one URL, in its own language: /blog/<slug>/ or /uz/blog/<slug>/.
+export const getStaticPaths = (async () =>
+  (await getPostEntries()).map((entry) => {
+    const { locale, slug } = parsePostId(entry.id);
+    return { params: { locale: localeParam(locale), slug }, props: { entry } };
+  })) satisfies GetStaticPaths;
+
+const { entry } = Astro.props;
+const locale = resolveLocale(Astro.params.locale);
+const post = toPostSummary(entry);
+const { Content } = await render(entry);
+const { cover, coverAlt, tags, draft } = entry.data;
+
+const translations = await getTranslations(post);
+const { prev, next } = await getAdjacentPosts(post);
+const alternates = [
+  { locale: post.locale, href: post.url },
+  ...translations.map((translation) => ({ locale: translation.locale, href: translation.url })),
+];
+---
+
+<BaseLayout
+  locale={locale}
+  path={`/blog/${post.slug}/`}
+  title={post.title}
+  description={post.description}
+  seo={{
+    type: 'article',
+    article: {
+      publishedTime: post.date,
+      ...(post.updated ? { modifiedTime: post.updated } : {}),
+      tags,
+    },
+    alternates,
+  }}
+>
+  <article>
+    <h1>{post.title}</h1>
+    <p>
+      <time datetime={isoDate(post.date)}>{formatDate(post.date, locale)}</time>
+      {' · '}
+      {t(locale, 'blog.readingTime', { minutes: post.readingMinutes })}
+      {draft && <> · {t(locale, 'blog.draft')}</>}
+    </p>
+    {cover && (
+      <Image
+        src={cover}
+        alt={coverAlt}
+        widths={[480, 960, 1440]}
+        sizes="(min-width: 960px) 960px, 100vw"
+      />
+    )}
+    <Content />
+  </article>
+
+  {tags.length > 0 && (
+    <ul aria-label={t(locale, 'blog.tags')}>
+      {tags.map((tag) => (
+        <li>
+          <a href={localePath(locale, `/blog/tag/${tag}/`)}>{tag}</a>
+        </li>
+      ))}
+    </ul>
+  )}
+
+  <nav>
+    {prev && (
+      <a href={prev.url} rel="prev">
+        {t(locale, 'blog.post.prev')}: {prev.title}
+      </a>
+    )}
+    {next && (
+      <a href={next.url} rel="next">
+        {t(locale, 'blog.post.next')}: {next.title}
+      </a>
+    )}
+  </nav>
+</BaseLayout>

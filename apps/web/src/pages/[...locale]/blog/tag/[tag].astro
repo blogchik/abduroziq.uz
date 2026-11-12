@@ -1,0 +1,53 @@
+---
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { localeParam, locales, localePath, resolveLocale, t } from '@/i18n';
+import { formatDate } from '@/lib/dates';
+import { getAllTags, getPosts } from '@/lib/posts';
+
+export const getStaticPaths = (async () => {
+  const paths = [];
+  for (const locale of locales) {
+    for (const { tag } of await getAllTags(locale)) {
+      paths.push({ params: { locale: localeParam(locale), tag } });
+    }
+  }
+  return paths;
+}) satisfies GetStaticPaths;
+
+const locale = resolveLocale(Astro.params.locale);
+const { tag } = Astro.params;
+const path = `/blog/tag/${tag}/`;
+
+const posts = (await getPosts(locale)).filter((post) => post.tags.includes(tag));
+
+// The tag page of the other locale exists only if that locale uses the tag.
+const otherLocales = locales.filter((l) => l !== locale);
+const alternates = [{ locale, href: localePath(locale, path) }];
+for (const other of otherLocales) {
+  if ((await getAllTags(other)).some((entry) => entry.tag === tag)) {
+    alternates.push({ locale: other, href: localePath(other, path) });
+  }
+}
+---
+
+<BaseLayout
+  locale={locale}
+  path={path}
+  title={t(locale, 'seo.tag.title', { tag })}
+  description={t(locale, 'seo.tag.description', { tag })}
+  seo={{ alternates }}
+>
+  <h1>{t(locale, 'blog.tag.title', { tag })}</h1>
+  <p>
+    <a href={localePath(locale, '/blog/')}>{t(locale, 'blog.tag.all')}</a>
+  </p>
+  <ul>
+    {posts.map((post) => (
+      <li>
+        <a href={post.url}>{post.title}</a>{' '}
+        <time datetime={post.date.toISOString()}>{formatDate(post.date, locale)}</time>
+      </li>
+    ))}
+  </ul>
+</BaseLayout>
