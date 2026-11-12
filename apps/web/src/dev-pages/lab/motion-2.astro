@@ -1,0 +1,114 @@
+---
+/**
+ * Motion lab 2 (dev only, /lab/motion-2/): the second page for transition tests, plus a
+ * desk without entrance, a long page for scroll direction and back/forward restoration.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  locale="en"
+  path="/lab/motion-2/"
+  title="Motion lab 2"
+  description="Development only second test page for the motion kit."
+  seo={{ noindex: true }}
+>
+  <div
+    class="border-rule bg-paper-raised fixed right-3 bottom-3 z-50 flex items-center gap-2 border p-2 font-mono text-[11px] uppercase"
+    data-motion-toggle
+  >
+    <span>
+      motion: <b data-motion-current>?</b>
+    </span>
+    <button type="button" class="border-rule border px-2 py-1" data-motion-set="full">
+      full
+    </button>
+    <button type="button" class="border-rule border px-2 py-1" data-motion-set="reduced">
+      reduced
+    </button>
+    <button type="button" class="border-rule border px-2 py-1" data-motion-set="">
+      system
+    </button>
+  </div>
+
+  <div class="mx-auto max-w-[1200px] px-4 md:px-10">
+    <p class="font-mono text-xs uppercase" data-reveal="fade">
+      Lab 02 — after the wipe
+    </p>
+    <h1
+      class="mt-4 font-display text-[clamp(56px,12vw,168px)] leading-[0.86] uppercase"
+      data-reveal="lines"
+    >
+      Second page
+    </h1>
+    <p class="mt-6 max-w-[60ch] text-lg" data-reveal="lines" data-reveal-delay="0.15">
+      The paper panel wiped up over the previous page, the swap happened underneath, the panel left,
+      and only then did these lines rise. Use the browser's back button to check that the previous
+      page comes back at the position you left it.
+    </p>
+    <p
+      class="mt-8 flex flex-wrap gap-4 font-mono text-xs uppercase"
+      data-reveal="rise"
+      data-reveal-delay="0.3"
+    >
+      <a href="/lab/motion/" class="underline">
+        ← Back to lab 01
+      </a>
+      <a href="/lab/motion/#desk" class="underline">
+        Lab 01, at the desk
+      </a>
+      <a href="/" class="underline">
+        Home
+      </a>
+    </p>
+
+    <section class="mt-24">
+      <h2 class="font-mono text-xs uppercase" data-reveal="fade">
+        Desk without entrance
+      </h2>
+      <div class="border-rule mt-6 h-[300px] border" data-desk aria-hidden="true">
+        <div
+          data-draggable
+          data-x="10"
+          data-y="20"
+          data-rotate="-6"
+          data-cursor="drag"
+          class="bg-accent text-on-accent size-28 rounded-[10px] p-3 font-mono text-[11px] uppercase shadow-[0_1px_0_rgb(0_0_0/.06),0_10px_24px_-12px_rgb(0_0_0/.35)] data-[dragging]:shadow-[0_1px_0_rgb(0_0_0/.06),0_24px_40px_-14px_rgb(0_0_0/.45)]"
+        >
+          AI agent
+        </div>
+        <div
+          data-draggable
+          data-x="60"
+          data-y="45"
+          data-rotate="4"
+          data-cursor="drag"
+          class="bg-paper-raised w-48 rounded-[10px] p-4 font-hand text-2xl shadow-[0_1px_0_rgb(0_0_0/.06),0_10px_24px_-12px_rgb(0_0_0/.35)] data-[dragging]:shadow-[0_1px_0_rgb(0_0_0/.06),0_24px_40px_-14px_rgb(0_0_0/.45)]"
+        >
+          Tashkent, UZ
+        </div>
+      </div>
+    </section>
+
+    <ul class="mt-24" data-reveal-group data-reveal-delay="0.1">
+      {Array.from({ length: 14 }, (_, i) => (
+        <li data-reveal-item class="border-rule flex justify-between border-t py-6">
+          <a href="/lab/motion/" data-cursor="read" class="text-2xl">
+            Post row {i + 1}
+          </a>
+          <span class="text-ink-soft font-mono text-xs">2026</span>
+        </li>
+      ))}
+    </ul>
+
+    <p class="mt-24 mb-16 font-mono text-xs uppercase" data-reveal="rise">
+      <a href="/lab/motion/" class="underline">
+        ← Back to lab 01
+      </a>
+    </p>
+  </div>
+</BaseLayout>
+
+<script>
+  import './lab';
+</script>
