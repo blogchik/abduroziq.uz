@@ -1,10 +1,9 @@
 import rss from '@astrojs/rss';
-import { profile } from '@abduroziq/content';
 import type { APIContext, GetStaticPaths } from 'astro';
 import { localeParam, localePath, locales, resolveLocale, t } from '@/i18n';
 import { renderPostHtml } from '@/lib/markdown/feed-html';
 import { getPostEntries, toPostSummary } from '@/lib/posts';
-import { absoluteUrl } from '@/lib/seo/site';
+import { absoluteUrl, authorName } from '@/lib/seo/site';
 
 export const getStaticPaths = (() =>
   locales.map((locale) => ({ params: { locale: localeParam(locale) } }))) satisfies GetStaticPaths;
@@ -31,7 +30,7 @@ export async function GET(context: APIContext) {
         link,
         categories: post.tags,
         content: await renderPostHtml(entry, link),
-        customData: `<dc:creator>${profile.fullName.split(' ').reverse().join(' ')}</dc:creator>`,
+        customData: `<dc:creator>${authorName}</dc:creator>`,
       };
     }),
   );

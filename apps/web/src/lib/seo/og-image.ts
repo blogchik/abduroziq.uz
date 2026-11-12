@@ -4,6 +4,7 @@ import { profile } from '@abduroziq/content';
 import satori from 'satori';
 import sharp from 'sharp';
 import type { Locale } from '@/i18n';
+import { seededRandom } from '@/lib/prng';
 import { palette } from './brand';
 import { OG_HEIGHT, OG_WIDTH } from './og';
 
@@ -13,8 +14,10 @@ import { OG_HEIGHT, OG_WIDTH } from './og';
  * domain and barcode-like ticks (docs/DESIGN.md sections 2.1 and 2.2). No photo.
  *
  * satori renders only the default instance of variable fonts, so the static Fontsource
- * files are used. They are read with `process.cwd()` because the endpoint is bundled and
- * `import.meta.url` no longer points at the source tree (docs/STACK-NOTES.md section 10).
+ * files are used. They are read from the app root that `astro.config.ts` injects as
+ * `__WEB_ROOT__` (resolved from the config file, not from the working directory), because the
+ * endpoint is bundled and `import.meta.url` no longer points at the source tree
+ * (docs/STACK-NOTES.md section 10).
  */
 
 export interface OgCard {
@@ -31,8 +34,11 @@ export interface OgCard {
   hero?: boolean;
 }
 
+/** Absolute path of the app (`apps/web`), defined by `vite.define` in astro.config.ts. */
+declare const __WEB_ROOT__: string;
+
 const fontFile = (pkg: string, file: string) =>
-  readFile(path.resolve(process.cwd(), 'node_modules/@fontsource', pkg, 'files', file));
+  readFile(path.resolve(__WEB_ROOT__, 'node_modules/@fontsource', pkg, 'files', file));
 
 // Hoisted: read once per build process, not once per image.
 const fontsPromise = Promise.all([
@@ -107,18 +113,6 @@ function fitTitle(text: string, maxSize: number, maxHeight: number, lineHeight: 
  */
 const plainApostrophes = (text: string) => text.replace(/[ʻʼ‘’ʹ′]/g, "'");
 
-/** Small deterministic generator so each page gets its own barcode. */
-function seeded(seed: string) {
-  let h = 2166136261;
-  for (const ch of seed) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
-  return () => {
-    h ^= h << 13;
-    h ^= h >>> 17;
-    h ^= h << 5;
-    return ((h >>> 0) % 1000) / 1000;
-  };
-}
-
 type Node = { type: string; props: { style?: Record<string, unknown>; children?: unknown } };
 const el = (type: string, style: Record<string, unknown>, children?: unknown): Node => ({
   type,
@@ -126,7 +120,7 @@ const el = (type: string, style: Record<string, unknown>, children?: unknown): N
 });
 
 function barcode(seed: string): Node {
-  const rand = seeded(seed);
+  const rand = seededRandom(seed);
   const widths = [3, 3, 5, 8];
   const bars: Node[] = [];
   for (let i = 0; i < 26; i += 1) {

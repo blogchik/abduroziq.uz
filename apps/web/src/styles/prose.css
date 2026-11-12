@@ -392,19 +392,21 @@
   line-height: 1.7;
   letter-spacing: 0;
   tab-size: 2;
-  /* Shiki is configured to wrap; code blocks scroll sideways instead. */
-  white-space: pre !important;
-  word-wrap: normal !important;
+  /* Code scrolls sideways instead of wrapping. */
+  white-space: pre;
   overflow-wrap: normal;
-  /* The frame supplies the background in both themes (global.css paints dark with !important). */
-  background-color: transparent !important;
   text-wrap: nowrap;
 }
 
-/* global.css paints every token span with the dark theme's background through an inherited
-   variable; the frame is the only background. */
-.prose .code-block pre span {
-  background-color: transparent !important;
+/*
+ * Colours: the theme in src/lib/shiki-theme.ts (ink, ink-soft, accent-text on paper-raised,
+ * the frame's own colour, so the pre's inline background is invisible). Shiki can only mark
+ * strings and numbers as bold; the design wants weight 500. The dark rule in global.css sets
+ * font-weight with !important, so this one needs it too (the selector matches both the light
+ * inline `font-weight` and the dark `--shiki-dark-font-weight` variable).
+ */
+.prose .code-block pre span[style*='font-weight'] {
+  font-weight: 500 !important;
 }
 
 .prose .code-block pre:focus-visible {
@@ -505,8 +507,20 @@
   color: var(--accent-text);
 }
 
+/* Hit areas of at least 24 x 24px. Negative block margins give the extra height back, so the
+   line does not grow around a superscript. */
+.prose sup > a[data-footnote-ref],
+.prose a[data-footnote-backref] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 24px;
+  margin-block: -6px;
+}
+
 .prose sup > a[data-footnote-ref] {
-  padding-inline: 0.1em;
+  margin-inline: 0.1em;
 }
 
 @media print {

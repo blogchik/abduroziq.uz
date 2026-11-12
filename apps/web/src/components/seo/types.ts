@@ -25,5 +25,11 @@ export interface SeoProps {
    */
   alternates?: { locale: Locale; href: string }[];
   noindex?: boolean;
+  /**
+   * `false` leaves out `<link rel="canonical">`, `og:url` and every hreflang alternate. For
+   * pages that have no address of their own, such as the 404 page (which is served at any
+   * missing URL). Defaults to `true`.
+   */
+  canonical?: boolean;
   jsonLd?: object | object[];
 }

@@ -6,8 +6,9 @@ import uzBlog from '../i18n/uz/blog.json';
 import uzCommon from '../i18n/uz/common.json';
 import uzHome from '../i18n/uz/home.json';
 import uzSeo from '../i18n/uz/seo.json';
-import type { Locale } from './types';
+import type { Locale } from './locales';
 
+export { defaultLocale, locales } from './locales';
 export { profile } from './site';
 export { projects } from './projects';
 export type { Locale, Localized, Profile, Project, SentencePart } from './types';

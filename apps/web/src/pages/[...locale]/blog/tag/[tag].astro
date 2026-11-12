@@ -6,6 +6,7 @@ import TagNav from '@/components/blog/TagNav.astro';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { localeParam, locales, localePath, resolveLocale, t } from '@/i18n';
 import { getAllTags, getPosts } from '@/lib/posts';
+import { MIN_POSTS_PER_TAG } from '@/lib/seo/thresholds';
 import { breadcrumbSchema, collectionPageSchema } from '@/lib/seo/schema';
 
 export const getStaticPaths = (async () => {
@@ -44,6 +45,8 @@ for (const other of otherLocales) {
   title={t(locale, 'seo.tag.title', { tag })}
   description={t(locale, 'seo.tag.description', { tag })}
   seo={{
+    // A tag with only a post or two is a thin page: followed, but not indexed.
+    noindex: posts.length < MIN_POSTS_PER_TAG,
     alternates,
     jsonLd: [
       collectionPageSchema(locale, {

@@ -1,5 +1,5 @@
 ---
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import { render } from 'astro:content';
 import type { GetStaticPaths } from 'astro';
 import ArticleEnd from '@/components/blog/ArticleEnd.astro';
@@ -32,6 +32,11 @@ const post = toPostSummary(entry);
 const { Content } = await render(entry);
 const { cover, coverAlt, tags, draft } = entry.data;
 
+// The cover joins the generated card in the structured data, as an absolute URL.
+const coverImage = cover
+  ? absoluteUrl((await getImage({ src: cover, width: 1200 })).src)
+  : undefined;
+
 const translations = await getTranslations(post);
 const { prev, next } = await getAdjacentPosts(post);
 const alternates = [
@@ -54,7 +59,12 @@ const alternates = [
     },
     alternates,
     jsonLd: [
-      blogPostingSchema(post, { locale, slug: post.slug, wordCount: countWords(entry.body) }),
+      blogPostingSchema(post, {
+        locale,
+        slug: post.slug,
+        wordCount: countWords(entry.body),
+        coverImage,
+      }),
       breadcrumbSchema(locale, [
         { name: t(locale, 'common.nav.home'), path: '/' },
         { name: t(locale, 'blog.title'), path: '/blog/' },
@@ -67,7 +77,7 @@ const alternates = [
     <ArticleHeader post={post} locale={locale} draft={draft} translation={translations[0]} />
 
     {cover && (
-      <figure class="post-cover shell" data-reveal="rise">
+      <figure class="post-cover shell">
         <Image
           src={cover}
           alt={coverAlt}

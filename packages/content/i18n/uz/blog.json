@@ -36,7 +36,7 @@
       "uz": "O'zbekcha o'qish"
     },
     "by": "Muallif:",
-    "tableLabel": "Jadval, aylantiriladi",
+    "tableLabel": "{n}-jadval, aylantiriladi",
     "codeLabel": "{language} kodi, aylantiriladi",
     "codePlain": "Kod, aylantiriladi",
     "footnotes": "Izohlar",

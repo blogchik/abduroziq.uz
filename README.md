@@ -21,16 +21,17 @@ Start with [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the layout and contr
 
 Requires Node 24 (see `.nvmrc`) and pnpm 10 (`corepack enable` picks the right version).
 
-| Command          | What it does                                        |
-| ---------------- | --------------------------------------------------- |
-| `pnpm install`   | install the workspace                               |
-| `pnpm dev`       | dev server at http://localhost:4321, drafts visible |
-| `pnpm build`     | production build into `apps/web/dist`               |
-| `pnpm preview`   | serve the production build                          |
-| `pnpm lint`      | ESLint                                              |
-| `pnpm typecheck` | `astro check` and `tsc`                             |
-| `pnpm format`    | Prettier (`pnpm format:check` only checks)          |
-| `pnpm check`     | lint, typecheck and build; must pass before merging |
+| Command          | What it does                                                             |
+| ---------------- | ------------------------------------------------------------------------ |
+| `pnpm install`   | install the workspace                                                    |
+| `pnpm dev`       | dev server at http://localhost:4321, drafts visible                      |
+| `pnpm build`     | production build into `apps/web/dist`                                    |
+| `pnpm preview`   | serve the production build                                               |
+| `pnpm lint`      | ESLint                                                                   |
+| `pnpm typecheck` | `astro check` and `tsc`                                                  |
+| `pnpm format`    | Prettier (`pnpm format:check` only checks)                               |
+| `pnpm test`      | unit checks (sitemap parsing, code-theme contrast)                       |
+| `pnpm check`     | format check, lint, typecheck, tests and build; must pass before merging |
 
 ## Branches
 
@@ -50,7 +51,9 @@ Requires Node 24 (see `.nvmrc`) and pnpm 10 (`corepack enable` picks the right v
 
 ## Licence
 
-The code is released under the [MIT licence](LICENSE).
+This repository has two licences, depending on the directory:
 
-The posts, photos and other content in `packages/content` are (c) Jabborov Abduroziq, all
-rights reserved. They are published here so the site can be built, not to be reused.
+- **Code** (everything outside `packages/content`): [MIT licence](LICENSE).
+- **Content** (everything in `packages/content`: posts, site copy, photos and other images):
+  [(c) Jabborov Abduroziq, all rights reserved](packages/content/LICENSE). It is not covered
+  by the MIT licence and is published here so the site can be built, not to be reused.

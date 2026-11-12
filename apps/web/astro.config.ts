@@ -2,12 +2,19 @@ import { readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import mdx from '@astrojs/mdx';
+import { satteri } from '@astrojs/markdown-satteri';
 import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, envField } from 'astro/config';
 import type { AstroIntegration } from 'astro';
 import { loadEnv } from 'vite';
+import { defaultLocale, locales } from '../../packages/content/src/locales';
+import { codeThemes } from './src/lib/shiki-theme';
 import { createSitemapSetup } from './src/lib/seo/sitemap';
+
+// Paths come from this file's own location, never from the working directory: building with
+// `astro build --root apps/web` from the repository root must behave like `pnpm build`.
+const appRoot = path.dirname(fileURLToPath(import.meta.url));
 
 // `.env*` files are not loaded inside this config, so load them with Vite's own rules.
 // `astro dev` runs in mode "development"; build, preview and check use "production".
@@ -17,9 +24,18 @@ const mode =
   (modeFlag !== -1 ? argv[modeFlag + 1] : undefined) ??
   argv.find((arg) => arg.startsWith('--mode='))?.slice('--mode='.length) ??
   (argv[0] === 'dev' ? 'development' : 'production');
-const env = loadEnv(mode, process.cwd(), 'PUBLIC_');
+const env = loadEnv(mode, appRoot, 'PUBLIC_');
 
 const site = env['PUBLIC_SITE_URL'] ?? 'http://localhost:4321';
+
+// A production build with a non-https (or missing) site URL would publish canonical links,
+// hreflang, the sitemap and Open Graph tags that point at localhost. Fail instead.
+if (mode === 'production' && !site.startsWith('https://')) {
+  throw new Error(
+    `PUBLIC_SITE_URL must be an https URL in production builds, got "${site}". ` +
+      `Set it in apps/web/.env.production (looked in ${appRoot}).`,
+  );
+}
 
 /** Routes that exist only in `astro dev`. Keep in sync with the sitemap filter below. */
 const DEV_ONLY_PATH = /^\/(styleguide|lab)(\/|$)/;
@@ -28,9 +44,9 @@ const DEV_ONLY_PATH = /^\/(styleguide|lab)(\/|$)/;
 // translated posts come from the posts' frontmatter (see src/lib/seo/sitemap.ts).
 const sitemapSetup = createSitemapSetup({
   siteUrl: site,
-  postsDir: path.resolve(process.cwd(), '../../packages/content/posts'),
-  locales: ['en', 'uz'],
-  defaultLocale: 'en',
+  postsDir: path.resolve(appRoot, '../../packages/content/posts'),
+  locales,
+  defaultLocale,
   exclude: [/^\/404\/?$/, DEV_ONLY_PATH, /^\/(uz\/)?og\//],
 });
 
@@ -69,22 +85,30 @@ export default defineConfig({
   site,
   trailingSlash: 'always',
   i18n: {
-    locales: ['en', 'uz'],
-    defaultLocale: 'en',
+    locales: [...locales],
+    defaultLocale,
     routing: { prefixDefaultLocale: false },
   },
   integrations: [
     devOnlyPages(),
     mdx(),
     sitemap({
-      i18n: { defaultLocale: 'en', locales: { en: 'en', uz: 'uz' } },
+      i18n: {
+        defaultLocale,
+        locales: Object.fromEntries(locales.map((locale) => [locale, locale])),
+      },
       filter: sitemapSetup.filter,
       serialize: sitemapSetup.serialize,
     }),
   ],
   markdown: {
+    // Straight quotes stay straight: Uzbek uses a plain ' (o'zbek), and titles, descriptions
+    // and structured data do too, so one spelling reaches readers and search engines.
+    processor: satteri({ features: { smartPunctuation: false } }),
     shikiConfig: {
-      themes: { light: 'github-light', dark: 'github-dark' },
+      // Our own two-mode theme (src/lib/shiki-theme.ts); the dark colours reach the page as
+      // --shiki-dark* variables, switched by the rule in styles/global.css.
+      themes: { light: codeThemes.light, dark: codeThemes.dark },
       wrap: false,
     },
   },
@@ -127,5 +151,7 @@ export default defineConfig({
   },
   vite: {
     plugins: [tailwindcss()],
+    // The app's absolute path for code that reads files at build time (the OG image fonts).
+    define: { __WEB_ROOT__: JSON.stringify(appRoot) },
   },
 });

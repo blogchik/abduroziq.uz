@@ -13,8 +13,8 @@
     "description": "Notes by Abduroziq Jabborov, a Product Engineer in Tashkent, on building digital products, design and engineering. In English and Uzbek."
   },
   "tag": {
-    "title": "Posts tagged \"{tag}\"",
-    "description": "All posts by Abduroziq tagged \"{tag}\": notes on building digital products, design and engineering."
+    "title": "Posts tagged “{tag}”",
+    "description": "All posts by Abduroziq tagged “{tag}”: notes on building digital products, design and engineering."
   },
   "notFound": {
     "title": "Page not found",

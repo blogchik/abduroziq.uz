@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   check:
-    name: Lint, typecheck, build
+    name: Format, lint, typecheck, test, build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -37,7 +37,12 @@ jobs:
           key: turbo-${{ runner.os }}-${{ github.sha }}
           restore-keys: turbo-${{ runner.os }}-
 
-      # Production-mode build (indexing allowed), which is also what Lighthouse needs.
+      # Fails fast with a clear message when a file is not formatted (also part of `pnpm check`).
+      - name: Check formatting
+        run: pnpm format:check
+
+      # Format, lint, typecheck, unit checks, then the production-mode build (indexing allowed),
+      # which is also what Lighthouse needs.
       - run: pnpm check
 
       - uses: actions/upload-artifact@v7

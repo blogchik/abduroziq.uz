@@ -37,7 +37,8 @@ blog index still lists it with a language badge.
 Plain Markdown plus GFM: headings, lists, tables, footnotes (`[^1]`), fenced code. Start with
 a paragraph (it gets the drop cap), not a heading; the layout renders the title as the `h1`, so
 use `##` and `###` only. Every `##` is numbered automatically. Link to your other posts with
-absolute paths (`/uz/blog/<slug>/`) and describe the link in words. Use a plain `'` in Uzbek.
+absolute paths (`/uz/blog/<slug>/`) and describe the link in words. Use a plain `'` in Uzbek: smart punctuation is off, so quotes, apostrophes and `--` are
+rendered exactly as typed (type `“…”` or `—` yourself when you want them).
 
 External links open in a new tab on their own. Images: put files in
 `packages/content/assets/posts/<slug>/` and import them; always write `alt`.

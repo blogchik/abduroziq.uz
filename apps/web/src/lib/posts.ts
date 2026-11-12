@@ -1,6 +1,7 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import getReadingTime from 'reading-time';
 import { localePath, locales, type Locale } from '@/i18n';
+import { bodyText } from '@/lib/body-text';
 import { monthKey } from '@/lib/dates';
 
 export interface PostSummary {
@@ -32,8 +33,9 @@ export function parsePostId(id: string): { locale: Locale; slug: string } {
   return { locale: folder, slug: rest.join('/') };
 }
 
+/** Minutes to read a post body: counted on the readable text, not on MDX imports and JSX tags. */
 export function readingMinutes(body: string | undefined): number {
-  return Math.max(1, Math.ceil(getReadingTime(body ?? '').minutes));
+  return Math.max(1, Math.ceil(getReadingTime(bodyText(body)).minutes));
 }
 
 export function toPostSummary(entry: PostEntry): PostSummary {
