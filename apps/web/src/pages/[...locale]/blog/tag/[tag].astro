@@ -4,6 +4,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import { localeParam, locales, localePath, resolveLocale, t } from '@/i18n';
 import { formatDate } from '@/lib/dates';
 import { getAllTags, getPosts } from '@/lib/posts';
+import { breadcrumbSchema, collectionPageSchema } from '@/lib/seo/schema';
 
 export const getStaticPaths = (async () => {
   const paths = [];
@@ -36,7 +37,21 @@ for (const other of otherLocales) {
   path={path}
   title={t(locale, 'seo.tag.title', { tag })}
   description={t(locale, 'seo.tag.description', { tag })}
-  seo={{ alternates }}
+  seo={{
+    alternates,
+    jsonLd: [
+      collectionPageSchema(locale, {
+        path,
+        name: t(locale, 'seo.tag.title', { tag }),
+        description: t(locale, 'seo.tag.description', { tag }),
+      }),
+      breadcrumbSchema(locale, [
+        { name: t(locale, 'common.nav.home'), path: '/' },
+        { name: t(locale, 'blog.title'), path: '/blog/' },
+        { name: tag, path },
+      ]),
+    ],
+  }}
 >
   <h1>{t(locale, 'blog.tag.title', { tag })}</h1>
   <p>

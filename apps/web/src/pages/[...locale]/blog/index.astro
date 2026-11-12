@@ -4,6 +4,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import { localeParam, locales, localePath, resolveLocale, t } from '@/i18n';
 import { formatDate } from '@/lib/dates';
 import { getAllTags, getPosts } from '@/lib/posts';
+import { blogSchema, breadcrumbSchema } from '@/lib/seo/schema';
 
 export const getStaticPaths = (() =>
   locales.map((locale) => ({ params: { locale: localeParam(locale) } }))) satisfies GetStaticPaths;
@@ -11,6 +12,7 @@ export const getStaticPaths = (() =>
 const locale = resolveLocale(Astro.params.locale);
 const posts = await getPosts(locale, { includeOtherLocale: true });
 const tags = await getAllTags(locale);
+const ownPosts = posts.filter((post) => post.locale === locale);
 ---
 
 <BaseLayout
@@ -18,6 +20,15 @@ const tags = await getAllTags(locale);
   path="/blog/"
   title={t(locale, 'seo.blog.title')}
   description={t(locale, 'seo.blog.description')}
+  seo={{
+    jsonLd: [
+      blogSchema(locale, ownPosts),
+      breadcrumbSchema(locale, [
+        { name: t(locale, 'common.nav.home'), path: '/' },
+        { name: t(locale, 'blog.title'), path: '/blog/' },
+      ]),
+    ],
+  }}
 >
   <h1>{t(locale, 'blog.title')}</h1>
   <p>{t(locale, 'blog.intro')}</p>
