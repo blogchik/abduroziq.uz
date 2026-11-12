@@ -1,77 +1,149 @@
 /**
- * Motion kit entry. STUB: it keeps the public contract of docs/ARCHITECTURE.md section 7
- * (class `js`, `data-motion`, `onPageEnter`, `prefersReducedMotion`, `splitLines`, `gsap`,
- * `ScrollTrigger`) without any animation. The motion owner replaces the internals and must
- * keep these exports.
+ * Motion kit entry (docs/ARCHITECTURE.md section 7). Markup opts in through data
+ * attributes; see README.md in this folder for the reference.
  *
  * This module is bundled once and never re-executes during client-side navigation, so all
- * per-page work hangs off the `astro:*` events.
+ * per-page work hangs off the `astro:*` events: everything a page creates lives in one
+ * `gsap.context` plus a list of cleanups and is released on `astro:before-swap`. The cursor,
+ * the transition panel, Lenis and the scroll listener persist for the session.
+ *
+ * Public exports (keep them stable): `onPageEnter`, `prefersReducedMotion`, `splitLines`,
+ * `gsap`, `ScrollTrigger`.
  */
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
+import { reveal } from './config';
+import {
+  beginPage,
+  currentPage,
+  endPage,
+  gsap,
+  inPage,
+  isCurrent,
+  prefersReducedMotion,
+  ScrollTrigger,
+  track,
+} from './core';
+import { refreshCursorTarget, restoreCursor, updateCursor, watchCursorConditions } from './cursor';
+import { initDesks } from './desk';
+import { initFollowers } from './follower';
+import { initMagnetic } from './magnetic';
+import { initMarquees } from './marquee';
+import { initProgress } from './progress';
+import { initReveals } from './reveal';
+import { applyScrollState } from './root-state';
+import {
+  initSmoothScroll,
+  pauseSmoothScroll,
+  resumeSmoothScroll,
+  syncSmoothScroll,
+} from './smooth-scroll';
+import { loadSplitText, splitLines } from './split';
+import { finishTransition, installTransitions, restorePanel } from './transition';
 
 type Cleanup = () => void;
 type PageEnterCallback = (ctx: { reduced: boolean }) => void | Cleanup;
 
-const REDUCED_QUERY = '(prefers-reduced-motion: reduce)';
-
-export function prefersReducedMotion(): boolean {
-  return typeof window !== 'undefined' && window.matchMedia(REDUCED_QUERY).matches;
-}
-
-/** Astro replaces the <html> attributes on every swap, so the global state is re-applied. */
-function applyRootState(): void {
-  const root = document.documentElement;
-  root.classList.add('js');
-  root.dataset['motion'] = prefersReducedMotion() ? 'reduced' : 'full';
-}
-
 const callbacks = new Set<PageEnterCallback>();
-let cleanups: Cleanup[] = [];
-let active = false;
+let entered = false;
+let firstLoad = true;
+
+/** SplitText is ready before page callbacks run, so they can call `splitLines`. */
+async function callbacksReady(): Promise<void> {
+  try {
+    await loadSplitText();
+  } catch (error) {
+    console.error('[motion] SplitText unavailable', error);
+  }
+}
 
 function run(cb: PageEnterCallback): void {
-  const cleanup = cb({ reduced: prefersReducedMotion() });
-  if (typeof cleanup === 'function') cleanups.push(cleanup);
+  const page = currentPage();
+  void callbacksReady().then(() => {
+    if (!isCurrent(page)) return;
+    try {
+      const cleanup = inPage(() => cb({ reduced: prefersReducedMotion() }));
+      if (typeof cleanup === 'function') track(cleanup);
+    } catch (error) {
+      console.error('[motion] onPageEnter callback failed', error);
+    }
+  });
 }
 
 /**
- * Runs `cb` on every page load (first load and after each client-side navigation).
- * A function returned from `cb` runs before the next navigation swaps the page.
+ * Runs `cb` on every page load (first load and after each client-side navigation), inside
+ * the page's `gsap.context`: tweens, ScrollTriggers and splits it creates are reverted when
+ * the page is left. A function returned from `cb` also runs then. Callbacks are global for
+ * the session, so return early when your elements are not on the page.
  */
 export function onPageEnter(cb: PageEnterCallback): void {
+  if (callbacks.has(cb)) return;
   callbacks.add(cb);
-  if (active) run(cb);
+  if (entered) run(cb);
+}
+
+function step(name: string, fn: () => void): void {
+  try {
+    fn();
+  } catch (error) {
+    console.error(`[motion] ${name} failed`, error);
+  }
 }
 
 function enter(): void {
-  if (active) return;
-  active = true;
-  applyRootState();
+  if (entered) return;
+  entered = true;
+  const reduced = prefersReducedMotion();
+  // On a very slow first load the CSS failsafe has already shown the page.
+  const late = firstLoad && performance.now() > reveal.failsafeMs - 150;
+  firstLoad = false;
+
+  beginPage();
+  applyScrollState();
+  updateCursor();
+  refreshCursorTarget();
+  void initSmoothScroll();
+
+  inPage(() => {
+    step('reveals', () => initReveals(reduced, late));
+    step('marquee', () => initMarquees(reduced));
+    step('desk', () => initDesks(reduced));
+    step('follower', () => initFollowers(reduced));
+    step('progress', () => initProgress());
+    step('magnetic', () => initMagnetic(reduced));
+  });
   for (const cb of callbacks) run(cb);
+  ScrollTrigger.refresh();
+  finishTransition();
 }
 
 function leave(): void {
-  const pending = cleanups;
-  cleanups = [];
-  active = false;
-  for (const cleanup of pending) cleanup();
+  if (!entered) return;
+  entered = false;
+  endPage();
 }
 
-/** Splits an element into lines. Stub: the element itself is the single "line". */
-export function splitLines(el: Element): { lines: Element[]; revert(): void } {
-  return { lines: [el], revert() {} };
+function afterSwap(): void {
+  applyScrollState(true);
+  restoreCursor();
+  restorePanel();
+  syncSmoothScroll();
 }
 
+function onMenu(event: Event): void {
+  const open = (event as CustomEvent<{ open?: boolean }>).detail?.open;
+  if (open) pauseSmoothScroll();
+  else resumeSmoothScroll();
+}
+
+installTransitions();
+watchCursorConditions();
 document.addEventListener('astro:page-load', enter);
 document.addEventListener('astro:before-swap', leave);
-document.addEventListener('astro:after-swap', applyRootState);
+document.addEventListener('astro:after-swap', afterSwap);
+document.addEventListener('site:menu', onMenu);
 
-applyRootState();
-// The first `astro:page-load` can fire before or after this module runs; `enter` is idempotent.
+// The first `astro:page-load` can fire before or after this module runs; `enter` is
+// idempotent per page.
 if (document.readyState !== 'loading') enter();
 else document.addEventListener('DOMContentLoaded', enter, { once: true });
 
-export { gsap, ScrollTrigger };
+export { gsap, prefersReducedMotion, ScrollTrigger, splitLines };

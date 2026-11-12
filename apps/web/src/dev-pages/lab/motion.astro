@@ -1,0 +1,347 @@
+---
+/**
+ * Motion lab 1 (dev only, /lab/motion/): plain markup exercising every attribute of the
+ * motion kit. Pair with /lab/motion-2/ to test the page transition.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+
+const rows = [
+  { id: 'atlas', year: '2026', name: 'Atlas', note: 'A design system for small teams.' },
+  { id: 'piala', year: '2025', name: 'Piala', note: 'Tea timer that refills itself.' },
+  { id: 'ticket', year: '2024', name: 'Ticket', note: 'From Figma to production in a week.' },
+];
+---
+
+<BaseLayout
+  locale="en"
+  path="/lab/motion/"
+  title="Motion lab"
+  description="Development only test page for the motion kit."
+  seo={{ noindex: true }}
+>
+  <div
+    class="border-rule bg-paper-raised fixed right-3 bottom-3 z-50 flex items-center gap-2 border p-2 font-mono text-[11px] uppercase"
+    data-motion-toggle
+  >
+    <span>
+      motion: <b data-motion-current>?</b>
+    </span>
+    <button type="button" class="border-rule border px-2 py-1" data-motion-set="full">
+      full
+    </button>
+    <button type="button" class="border-rule border px-2 py-1" data-motion-set="reduced">
+      reduced
+    </button>
+    <button type="button" class="border-rule border px-2 py-1" data-motion-set="">
+      system
+    </button>
+  </div>
+
+  <div class="mx-auto max-w-[1200px] px-4 md:px-10">
+    <p class="font-mono text-xs uppercase" data-reveal="fade">
+      Lab 01 — motion kit
+    </p>
+    <h1
+      class="mt-4 font-serif text-[clamp(36px,7vw,92px)] leading-[1.04] font-light"
+      data-reveal="lines"
+    >
+      Text that rises line by line, a tape that follows the scroll, and a desk you can throw.
+    </h1>
+    <p class="mt-6 max-w-[60ch] text-lg" data-reveal="words" data-reveal-delay="0.2">
+      Words come up one after another. This paragraph waits two tenths of a second before it starts.
+    </p>
+    <p
+      class="mt-8 flex flex-wrap gap-4 font-mono text-xs uppercase"
+      data-reveal="rise"
+      data-reveal-delay="0.35"
+    >
+      <a href="/lab/motion-2/" class="underline">
+        Go to lab 02 →
+      </a>
+      <a href="#desk" class="underline">
+        Jump to the desk
+      </a>
+      <a href="https://gsap.com/" class="underline">
+        External link ↗
+      </a>
+    </p>
+
+    <!-- Giant name with pre-split letters (as GiantName provides them). -->
+    <div class="mt-16 overflow-hidden" aria-label="Abduroziq">
+      <p
+        class="flex font-display text-[13vw] leading-[0.8] font-medium tracking-[-0.045em] uppercase"
+        data-reveal="chars"
+        data-reveal-delay="0.5"
+        aria-hidden="true"
+      >
+        {'Abduroziq'.split('').map((letter) => (
+          <span class="block overflow-hidden" data-giant-mask>
+            <span class="block" data-giant-letter>
+              {letter}
+            </span>
+          </span>
+        ))}
+      </p>
+    </div>
+
+    <p class="mt-6 font-display text-4xl" data-reveal="chars">
+      Chars split by SplitText.
+    </p>
+
+    <!-- Cursor targets -->
+    <section class="mt-32" id="cursor">
+      <h2 class="font-mono text-xs uppercase" data-reveal="fade">
+        Cursor states
+      </h2>
+      <div class="mt-6 grid gap-4 sm:grid-cols-3" data-reveal-group>
+        <a data-reveal-item href="/lab/motion-2/" class="border-rule block border p-6">
+          Internal link (link)
+        </a>
+        <a data-reveal-item href="https://lenis.dev/" class="border-rule block border p-6">
+          External link (open)
+        </a>
+        <button data-reveal-item type="button" class="border-rule border p-6 text-left">
+          Button (link)
+        </button>
+        <div data-reveal-item data-cursor="read" class="border-rule border p-6">
+          Post row (read)
+        </div>
+        <div data-reveal-item data-cursor="drag" class="border-rule border p-6">
+          Drag target (drag)
+        </div>
+        <div data-reveal-item data-cursor="hide" class="border-rule border p-6">
+          Hidden cursor (hide)
+        </div>
+        <div
+          data-reveal-item
+          data-cursor="link"
+          data-cursor-label="Play"
+          class="border-rule border p-6"
+        >
+          Custom label
+        </div>
+        <label data-reveal-item class="border-rule block border p-6">
+          <span class="font-mono text-xs uppercase">Input (text)</span>
+          <input
+            class="border-rule mt-2 block w-full border bg-transparent p-2"
+            placeholder="Type here"
+          />
+        </label>
+        <div data-reveal-item class="bg-ink text-paper p-6">
+          Ink band: the cursor inverts
+        </div>
+        <div data-reveal-item class="bg-accent text-on-accent p-6">
+          Accent fill: still visible
+        </div>
+      </div>
+      <div class="prose mt-8 max-w-[680px] font-serif text-xl leading-relaxed">
+        <p data-reveal="lines">
+          Long-form text inside <code>.prose</code> gives the pointer back to the native I-beam, so
+          selecting a sentence feels normal. Links inside it, like{' '}
+          <a href="/lab/motion-2/">this one</a>, still show the ring.
+        </p>
+      </div>
+    </section>
+
+    <!-- Magnetic -->
+    <section class="mt-24 flex gap-6" data-reveal="rise">
+      <a
+        href="/lab/motion-2/"
+        class="bg-accent text-on-accent inline-block rounded-full px-6 py-4 font-mono text-xs uppercase"
+        data-magnetic
+      >
+        Magnetic button
+      </a>
+      <button
+        type="button"
+        class="border-ink rounded-full border px-6 py-4 font-mono text-xs uppercase"
+        data-magnetic="0.4"
+      >
+        Stronger pull
+      </button>
+    </section>
+  </div>
+
+  <!-- Tape -->
+  <section class="my-32 overflow-x-clip py-16" aria-label="What I'm building">
+    <div
+      class="bg-accent -mx-[5vw] -rotate-[4deg] py-3"
+      data-marquee
+      data-marquee-scroll
+      data-marquee-speed="80"
+    >
+      <div data-marquee-track>
+        {Array.from({ length: 6 }, () => (
+          <span class="text-on-accent flex items-center gap-6 pr-6 font-display text-4xl font-bold uppercase">
+            <span>What I'm building</span>
+            <span aria-hidden="true">+</span>
+          </span>
+        ))}
+      </div>
+    </div>
+    <div class="mt-16" data-marquee data-marquee-speed="-40">
+      <div data-marquee-track class="font-mono text-xs uppercase">
+        <span class="pr-8">Plain marquee, reversed, no scroll follow ·</span>
+        <span class="pr-8">Pauses off screen ·</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="mx-auto max-w-[1200px] px-4 md:px-10">
+    <!-- Desk -->
+    <section id="desk" class="mt-16">
+      <h2 class="font-mono text-xs uppercase" data-reveal="fade">
+        Desk — drag, throw, double-click to reset
+      </h2>
+      <div
+        class="border-rule relative mt-6 h-[320px] border md:h-[460px]"
+        data-desk
+        data-desk-entrance="0.1"
+        aria-hidden="true"
+      >
+        <div
+          data-draggable
+          data-x="6"
+          data-y="10"
+          data-rotate="-4"
+          data-cursor="drag"
+          class="bg-paper-raised w-40 rounded-[10px] p-4 font-hand text-2xl shadow-[0_1px_0_rgb(0_0_0/.06),0_10px_24px_-12px_rgb(0_0_0/.35)] data-[dragging]:shadow-[0_1px_0_rgb(0_0_0/.06),0_24px_40px_-14px_rgb(0_0_0/.45)]"
+        >
+          Think beyond limits.
+        </div>
+        <div
+          data-draggable
+          data-x="36"
+          data-y="40"
+          data-rotate="5"
+          data-cursor="drag"
+          class="bg-accent text-on-accent w-52 rounded-[10px] p-4 font-mono text-[11px] uppercase shadow-[0_1px_0_rgb(0_0_0/.06),0_10px_24px_-12px_rgb(0_0_0/.35)] data-[dragging]:shadow-[0_1px_0_rgb(0_0_0/.06),0_24px_40px_-14px_rgb(0_0_0/.45)]"
+        >
+          Admit one · Figma → production
+        </div>
+        <div
+          data-draggable
+          data-x="70"
+          data-y="14"
+          data-rotate="-8"
+          data-cursor="drag"
+          class="bg-ink text-paper grid size-20 place-items-center rounded-[10px] font-mono text-lg shadow-[0_1px_0_rgb(0_0_0/.06),0_10px_24px_-12px_rgb(0_0_0/.35)] data-[dragging]:shadow-[0_1px_0_rgb(0_0_0/.06),0_24px_40px_-14px_rgb(0_0_0/.45)]"
+        >
+          ⌘K
+        </div>
+        <div
+          data-draggable
+          data-x="80"
+          data-y="70"
+          data-rotate="3"
+          class="bg-paper-raised w-44 rounded-[10px] p-4 shadow-[0_1px_0_rgb(0_0_0/.06),0_10px_24px_-12px_rgb(0_0_0/.35)] data-[dragging]:shadow-[0_1px_0_rgb(0_0_0/.06),0_24px_40px_-14px_rgb(0_0_0/.45)]"
+        >
+          <p class="font-hand text-xl">click to refill</p>
+          <button
+            type="button"
+            class="border-ink mt-2 rounded-full border px-3 py-1 font-mono text-[11px] uppercase"
+            data-refill
+            tabindex="-1"
+          >
+            Cups today: <span data-cups>3</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Follower -->
+    <section class="mt-32" data-follower-scope>
+      <h2 class="font-mono text-xs uppercase" data-reveal="fade">
+        Follower preview
+      </h2>
+      <ul class="mt-6" data-reveal-group>
+        {rows.map((row) => (
+          <li data-reveal-item class="border-rule border-t last:border-b">
+            <a href="/lab/motion-2/" class="flex gap-6 py-5" data-follower-item={row.id}>
+              <span class="text-ink-soft font-mono text-xs">{row.year}</span>
+              <span class="text-2xl">{row.name}</span>
+              <span class="text-ink-soft">{row.note}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      <div class="w-[240px]" data-follower-panel aria-hidden="true">
+        {rows.map((row) => (
+          <div
+            data-follower-for={row.id}
+            class="bg-accent text-on-accent grid h-[300px] place-items-center rounded-[10px] p-6 font-display text-3xl uppercase"
+          >
+            {row.name} · {row.year}
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- Progress + page-specific timeline -->
+    <section class="relative mt-32 grid gap-10 md:grid-cols-[40px_1fr]">
+      <div
+        class="sticky top-24 hidden h-[60vh] md:block"
+        data-progress
+        data-progress-target="#article"
+        aria-hidden="true"
+      >
+        <div class="bg-rule absolute inset-y-0 left-1/2 w-px"></div>
+        <div
+          class="bg-accent absolute inset-y-0 left-1/2 w-px origin-top"
+          style="transform: scaleY(var(--progress, 0))"
+        ></div>
+      </div>
+      <article id="article" class="prose max-w-[680px] font-serif text-xl leading-relaxed">
+        <h2 class="font-display text-4xl" data-lab-timeline>
+          A page-specific timeline built with onPageEnter and splitLines.
+        </h2>
+        {Array.from({ length: 10 }, (_, i) => (
+          <p class="mt-6" data-reveal="lines">
+            Paragraph {i + 1}. The progress line on the left fills with accent as this article is
+            read. Every paragraph reveals line by line when it enters the viewport, once, and the
+            split is reverted afterwards so the markup is exactly what the author wrote.
+          </p>
+        ))}
+      </article>
+    </section>
+
+    <p class="mt-32 mb-16 font-mono text-xs uppercase" data-reveal="rise">
+      <a href="/lab/motion-2/" class="underline">
+        Next: lab 02 →
+      </a>
+    </p>
+  </div>
+</BaseLayout>
+
+<script>
+  import './lab';
+  import { gsap, onPageEnter, splitLines } from '@/motion';
+
+  // Page-specific choreography: guarded by its own element, cleaned up by the kit.
+  onPageEnter(({ reduced }) => {
+    const title = document.querySelector('[data-lab-timeline]');
+    if (!title || reduced) return;
+    const { lines, revert } = splitLines(title);
+    gsap.from(lines, {
+      xPercent: -8,
+      yPercent: 100,
+      stagger: 0.1,
+      duration: 0.7,
+      ease: 'motionOut',
+      scrollTrigger: { trigger: title, start: 'top 85%', once: true },
+      onComplete: revert,
+    });
+  });
+
+  // An interactive child of a desk object: the click must work, but never after a drag.
+  onPageEnter(() => {
+    const button = document.querySelector<HTMLElement>('[data-refill]');
+    const cups = document.querySelector('[data-cups]');
+    if (!button || !cups) return;
+    const onClick = () => {
+      cups.textContent = String(Number(cups.textContent) + 1);
+    };
+    button.addEventListener('click', onClick);
+    return () => button.removeEventListener('click', onClick);
+  });
+</script>
