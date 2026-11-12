@@ -285,8 +285,18 @@ page load and after every client-side navigation, and cleans up before the next 
 | `data-progress` + `data-progress-target="<selector>"` | sets `--progress` (0 to 1) on the element as the target is scrolled through |
 | `data-magnetic` | subtle pull toward the cursor |
 
-Global state the kit maintains on `<html>`: `data-scroll-dir="up|down"`, `data-scrolled`
-(present after 80px), `data-motion="full|reduced"`, and the class `js`.
+Root state on `<html>`:
+
+- Set by the inline script in BaseLayout before first paint and after every swap:
+  `data-theme="light|dark"`, `data-motion="full|reduced"` and the class `js`.
+  `data-motion` is the single source of truth for reduced motion: it follows
+  `prefers-reduced-motion`, and `localStorage.motion = 'reduced' | 'full'` overrides it
+  (a testing aid). The kit's `prefersReducedMotion()` reads this attribute.
+- Maintained by the kit while the page is used: `data-scroll-dir="up|down"` and
+  `data-scrolled` (present after 80px).
+
+The kit's own CSS lives in `src/motion/motion.css`, imported by BaseLayout. Rules there
+that hide or offset content are scoped to `html.js[data-motion='full']`.
 
 Exports for page-specific choreography:
 

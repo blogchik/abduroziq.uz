@@ -1,0 +1,8 @@
+/*
+ * Styles that belong to the motion kit: the custom cursor, the page-transition panel and
+ * the prepared (pre-animation) states of elements that opt in through data attributes.
+ *
+ * Loaded from BaseLayout so it is in the <head> before first paint. Rules that hide or
+ * offset content must be scoped to `html.js[data-motion='full']`, so that everything stays
+ * visible without JavaScript and under reduced motion.
+ */

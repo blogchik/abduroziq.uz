@@ -2,10 +2,12 @@
 import { ClientRouter } from 'astro:transitions';
 import Footer from '@/components/chrome/Footer.astro';
 import Header from '@/components/chrome/Header.astro';
+import Analytics from '@/components/seo/Analytics.astro';
 import Seo from '@/components/seo/Seo.astro';
 import type { SeoProps } from '@/components/seo/types';
 import { locales, localePath, t, type Locale } from '@/i18n';
 import '@/styles/global.css';
+import '@/motion/motion.css';
 
 interface Props {
   locale: Locale;
@@ -40,22 +42,36 @@ const switchHrefs = Object.fromEntries(
     <Seo {...seo} locale={locale} path={path} title={title} description={description} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script is:inline>
-      // Sets data-theme before first paint and again after every client-side swap.
+      // Root state, set before first paint and again after every client-side swap (Astro
+      // replaces the <html> attributes on navigation):
+      //   data-theme  = light | dark    (localStorage `theme`, else the system preference)
+      //   data-motion = full | reduced  (localStorage `motion` as a testing override, else
+      //                                  prefers-reduced-motion)
+      //   class `js`                    (lets CSS prepare elements for the motion kit)
       (() => {
-        const applyTheme = () => {
-          let theme = null;
+        const read = (key) => {
           try {
-            theme = localStorage.getItem('theme');
+            return localStorage.getItem(key);
           } catch {
-            /* storage unavailable */
+            return null;
           }
+        };
+        const applyRootState = () => {
+          const root = document.documentElement;
+          let theme = read('theme');
           if (theme !== 'light' && theme !== 'dark') {
             theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
           }
-          document.documentElement.setAttribute('data-theme', theme);
+          let motion = read('motion');
+          if (motion !== 'full' && motion !== 'reduced') {
+            motion = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'reduced' : 'full';
+          }
+          root.setAttribute('data-theme', theme);
+          root.setAttribute('data-motion', motion);
+          root.classList.add('js');
         };
-        applyTheme();
-        document.addEventListener('astro:after-swap', applyTheme);
+        applyRootState();
+        document.addEventListener('astro:after-swap', applyRootState);
       })();
     </script>
     <ClientRouter />
@@ -72,6 +88,7 @@ const switchHrefs = Object.fromEntries(
       <slot />
     </main>
     <Footer locale={locale} />
+    <Analytics />
     <script>
       import '@/motion';
     </script>
