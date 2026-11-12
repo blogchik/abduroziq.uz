@@ -7,9 +7,17 @@
  * element `data-reveal-ready` and takes over with inline styles; `data-revealed` marks the
  * end. Text modes use SplitText with line masks and `autoSplit`, and revert the split
  * when they finish, so the DOM goes back to the author's markup.
+ *
+ * Nothing the visitor is already looking at stays hidden longer than necessary: an element
+ * inside the viewport when the kit initialises starts at once (after the page-transition
+ * gate), without waiting for ScrollTrigger. A text reveal there that would have to wait
+ * for SplitText or for the fonts rises as a whole instead. Elements above the viewport (a
+ * restored scroll position) are shown as they are, also when the position is restored
+ * after the kit has started. In a hidden tab animations cannot run (no animation frames),
+ * so a reveal that starts there jumps to its end.
  */
 import { dur, ease, reveal } from './config';
-import { afterGate, currentPage, gsap, inPage, isCurrent, num, ScrollTrigger } from './core';
+import { afterGate, currentPage, gsap, inPage, isCurrent, num, ScrollTrigger, track } from './core';
 import { getSplitText, loadSplitText } from './split';
 
 type Mode = 'lines' | 'words' | 'chars' | 'rise' | 'fade';
@@ -63,14 +71,61 @@ function showNow(el: Element): boolean {
   return lateStart && rect.top < window.innerHeight;
 }
 
-/** Plays `play` once, when `el` enters the viewport and the gate is open. */
+/** Inside the viewport right now (any part of it). */
+function inView(el: Element): boolean {
+  const rect = el.getBoundingClientRect();
+  return rect.bottom > 0 && rect.top < window.innerHeight && rect.width + rect.height > 0;
+}
+
+/** Entirely above the viewport: scrolled past (a restored scroll position). */
+function above(el: Element): boolean {
+  return el.getBoundingClientRect().bottom < 0;
+}
+
+function hiddenTab(): boolean {
+  return document.visibilityState === 'hidden';
+}
+
+/**
+ * Starts a prepared tween, or completes it at once when it could not be seen anyway. A
+ * watchdog completes it too when no animation frame has run by the time it should have
+ * ended: some embedded or background views report `visible` but never paint a frame, and
+ * the CSS failsafe no longer covers an element the kit has taken over.
+ */
+function start(tween: gsap.core.Tween | gsap.core.Timeline | undefined, el: Element): void {
+  if (!tween) return;
+  if (hiddenTab() || above(el)) {
+    tween.progress(1);
+    return;
+  }
+  tween.play();
+  const frame = gsap.ticker.frame;
+  const timer = window.setTimeout(
+    () => {
+      if (gsap.ticker.frame === frame && tween.progress() < 1) tween.progress(1);
+    },
+    (tween.totalDuration() + tween.delay()) * 1000 + reveal.failsafeMs,
+  );
+  track(() => window.clearTimeout(timer));
+}
+
+/**
+ * Plays `play` once the gate is open: at once for an element already in view, otherwise
+ * when it enters the viewport (or is jumped past, which also counts as entering).
+ */
 function whenVisible(el: Element, play: () => void): void {
-  ScrollTrigger.create({
-    trigger: el,
-    start: reveal.start,
-    once: true,
-    onEnter: () => afterGate(play),
-  });
+  if (inView(el)) {
+    afterGate(play);
+    return;
+  }
+  let fired = false;
+  const go = () => {
+    if (fired) return;
+    fired = true;
+    afterGate(play);
+  };
+  // `onLeave` as well: a jump past the whole range (scroll restoration) must still count.
+  ScrollTrigger.create({ trigger: el, start: reveal.start, once: true, onEnter: go, onLeave: go });
 }
 
 function delayOf(el: HTMLElement): number {
@@ -93,7 +148,7 @@ function setupSimple(el: HTMLElement, mode: 'rise' | 'fade'): void {
       markDone(el);
     },
   });
-  whenVisible(el, () => tween.play());
+  whenVisible(el, () => start(tween, el));
 }
 
 function setupPresplit(el: HTMLElement): void {
@@ -113,7 +168,7 @@ function setupPresplit(el: HTMLElement): void {
       markDone(el);
     },
   });
-  whenVisible(el, () => tween.play());
+  whenVisible(el, () => start(tween, el));
 }
 
 function setupSplit(el: HTMLElement, mode: 'lines' | 'words' | 'chars'): void {
@@ -136,6 +191,8 @@ function setupSplit(el: HTMLElement, mode: 'lines' | 'words' | 'chars'): void {
     type,
     mask: 'lines',
     linesClass: 'm-line',
+    // No aria-label on the element and no aria-hidden pieces (see split.ts).
+    aria: 'none',
     autoSplit: true,
     onSplit(self) {
       markReady(el);
@@ -168,7 +225,7 @@ function setupSplit(el: HTMLElement, mode: 'lines' | 'words' | 'chars'): void {
 
   whenVisible(el, () => {
     played = true;
-    current?.play();
+    start(current, el);
   });
 }
 
@@ -185,26 +242,36 @@ function setupGroup(group: HTMLElement): void {
   const hidden = [...pending];
   gsap.set(hidden, { opacity: 0, y: reveal.rise });
   const delay = delayOf(group);
-  ScrollTrigger.batch(hidden, {
-    start: reveal.start,
-    once: true,
-    onEnter: (batch) =>
-      afterGate(() => {
-        gsap.to(batch, {
-          opacity: 1,
-          y: 0,
-          duration: dur[3],
-          ease: ease.out,
-          stagger: reveal.itemStagger,
-          delay,
-          onComplete() {
-            gsap.set(batch, { clearProps: 'opacity,transform' });
-            for (const item of batch) pending.delete(item as HTMLElement);
-            if (pending.size === 0) markDone(group);
-          },
-        });
-      }),
-  });
+
+  function play(batch: Element[]): void {
+    const tween = gsap.to(batch, {
+      opacity: 1,
+      y: 0,
+      duration: dur[3],
+      ease: ease.out,
+      stagger: reveal.itemStagger,
+      delay,
+      paused: true,
+      onComplete() {
+        gsap.set(batch, { clearProps: 'opacity,transform' });
+        for (const item of batch) pending.delete(item as HTMLElement);
+        if (pending.size === 0) markDone(group);
+      },
+    });
+    const first = batch[0];
+    if (first) start(tween, first);
+  }
+
+  const now = hidden.filter(inView);
+  const later = hidden.filter((item) => !now.includes(item));
+  if (now.length > 0) afterGate(() => play(now));
+  if (later.length > 0) {
+    ScrollTrigger.batch(later, {
+      start: reveal.start,
+      once: true,
+      onEnter: (batch) => afterGate(() => play(batch)),
+    });
+  }
 }
 
 function guarded(el: HTMLElement, fn: () => void): void {
@@ -226,11 +293,16 @@ export function initReveals(reduced: boolean, late: boolean): void {
   const page = currentPage();
   const textEls: HTMLElement[] = [];
 
+  // A split needs SplitText and the final fonts; on screen there is no time to wait for them.
+  const splitNow = getSplitText() !== undefined && document.fonts?.status === 'loaded';
+
   for (const el of document.querySelectorAll<HTMLElement>('[data-reveal]')) {
     if (el.hasAttribute('data-revealed')) continue;
     const mode = modeOf(el);
-    if (needsSplit(el)) textEls.push(el);
-    else if (mode === 'chars') guarded(el, () => setupPresplit(el));
+    if (needsSplit(el)) {
+      if (!splitNow && inView(el)) guarded(el, () => setupSimple(el, 'rise'));
+      else textEls.push(el);
+    } else if (mode === 'chars') guarded(el, () => setupPresplit(el));
     else guarded(el, () => setupSimple(el, mode === 'fade' ? 'fade' : 'rise'));
   }
   for (const group of document.querySelectorAll<HTMLElement>('[data-reveal-group]')) {

@@ -3,11 +3,18 @@
  * `data-follower-item="<id>"` shows the `data-follower-panel` next to the pointer (soft lag,
  * tilt from velocity) with only its `data-follower-for="<id>"` child visible. Fine pointers
  * with full motion only; otherwise the panel stays hidden (motion.css).
+ *
+ * The panel sits 32px beside the pointer (further when the cursor shows a label), centred
+ * on it vertically, and pivots on its near edge. It lags behind the pointer but never
+ * slides under it: when a fast move would bring its near edge closer than the gap, the
+ * edge is pushed along with the pointer.
  */
 import { dur, ease, follower as cfg } from './config';
 import { clamp, finePointer, gsap, listen } from './core';
+import { cursorExtent } from './cursor';
 
-const GAP = 24;
+/** Space between the pointer and the near edge of the panel, in px. */
+const GAP = 32;
 
 function setup(scope: HTMLElement): void {
   const panel = scope.querySelector<HTMLElement>('[data-follower-panel]');
@@ -26,13 +33,33 @@ function setup(scope: HTMLElement): void {
   gsap.set(panel, { autoAlpha: 0, scale: 0.92 });
   panel.setAttribute('data-follower-ready', '');
 
-  function target(clientX: number, clientY: number): { x: number; y: number } {
+  let side: 'right' | 'left' = 'right';
+
+  function target(clientX: number, clientY: number): { x: number; y: number; gap: number } {
     const w = panel!.offsetWidth;
     const h = panel!.offsetHeight;
-    let x = clientX + GAP;
-    if (x + w > window.innerWidth - 8) x = clientX - GAP - w;
+    const gap = Math.max(GAP, cursorExtent() + 12);
+    let x = clientX + gap;
+    let next: typeof side = 'right';
+    if (x + w > window.innerWidth - 8) {
+      x = clientX - gap - w;
+      next = 'left';
+    }
+    if (next !== side) {
+      side = next;
+      gsap.set(panel, { transformOrigin: side === 'right' ? '0% 50%' : '100% 50%' });
+    }
     const y = clamp(clientY - h / 2, 8, Math.max(8, window.innerHeight - h - 8));
-    return { x, y };
+    return { x, y, gap };
+  }
+
+  /** Keeps the lagging panel from sliding under the pointer. */
+  function keepClear(clientX: number, p: { x: number; gap: number }): void {
+    const now = Number(gsap.getProperty(panel, 'x'));
+    if (side === 'right' && now < clientX + p.gap) xTo(p.x, clientX + p.gap);
+    else if (side === 'left' && now + panel!.offsetWidth > clientX - p.gap)
+      xTo(p.x, clientX - p.gap - panel!.offsetWidth);
+    else xTo(p.x);
   }
 
   function select(id: string): void {
@@ -60,7 +87,7 @@ function setup(scope: HTMLElement): void {
         overwrite: 'auto',
       });
     } else {
-      xTo(p.x);
+      keepClear(clientX, p);
       yTo(p.y);
     }
   }

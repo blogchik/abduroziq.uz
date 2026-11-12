@@ -81,3 +81,13 @@
     text-decoration-thickness: max(2px, 0.07em);
   }
 }
+
+/* Target size (WCAG 2.5.8): small mono links get a hit area at least 24px tall without
+   moving. The padding is given back by a negative margin, so the layout is unchanged; it
+   works on inline, inline-flex and flex-item links. `--target-pad` is exposed for
+   decorations positioned from the padding box (an underline under the text). */
+@utility target-24 {
+  --target-pad: 0.3125rem;
+  padding-block: var(--target-pad);
+  margin-block: calc(-1 * var(--target-pad));
+}

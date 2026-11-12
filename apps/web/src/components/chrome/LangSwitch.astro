@@ -32,7 +32,7 @@ const { locale, hrefs, class: className } = Astro.props;
         hreflang={target}
         lang={target}
         aria-current={target === locale ? 'true' : undefined}
-        class:list={['lang-switch__link', { 'is-current': target === locale }]}
+        class:list={['lang-switch__link target-24', { 'is-current': target === locale }]}
       >
         <span>{t(locale, `common.lang.${target}`)}</span>
         <span class="sr-only">{` ${t(target, `common.lang.${target}Name`)}`}</span>
@@ -52,7 +52,12 @@ const { locale, hrefs, class: className } = Astro.props;
     color: var(--ink-soft);
   }
 
+  /* 24px wide as well as tall: two letters are narrower than that. */
   .lang-switch__link {
+    min-width: 24px;
+    margin-inline: -0.3125rem;
+    padding-inline: 0.3125rem;
+    text-align: center;
     color: var(--ink-soft);
     text-decoration: none;
     transition: color var(--dur-1) var(--ease-out);

@@ -1,7 +1,8 @@
 ---
 /**
  * A run of barcode ticks, deterministic from `seed` (same seed, same bars, on every build).
- * Drawn as one SVG in currentColor. Decorative: hidden from assistive tech.
+ * Drawn as one SVG with a single path in currentColor (one subpath per bar, so the page
+ * carries one element per barcode, not one per bar). Decorative: hidden from assistive tech.
  *
  * `fill` stretches the run to the width of its box (meta-bar flanks); otherwise each module
  * is `module` px wide and the run has its natural width.
@@ -64,6 +65,8 @@ for (let i = 0; i < bars; i++) {
   x += w + (i === bars - 1 ? 0 : pick([5, 3, 1]));
 }
 const total = x;
+// `M x 0 h w v 10 h -w z` per bar, absolute moves so bars never drift.
+const d = rects.map((rect) => `M${rect.x} 0h${rect.w}v10h-${rect.w}z`).join('');
 ---
 
 <svg
@@ -74,9 +77,7 @@ const total = x;
   focusable="false"
   style={{ height, width: fill ? '100%' : `${total * module}px` }}
 >
-  {rects.map((rect) => (
-    <rect x={rect.x} y="0" width={rect.w} height="10" />
-  ))}
+  <path d={d} />
 </svg>
 
 <style>

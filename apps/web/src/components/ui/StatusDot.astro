@@ -79,6 +79,36 @@ const { status, label, hideLabel = false, pulse = 'hover', class: className } = 
     animation: status-pulse 2.4s var(--ease-out) infinite;
   }
 
+  /* Forced colours drop backgrounds: draw the fills in the system text colour instead. */
+  @media (forced-colors: active) {
+    .status__dot,
+    .status__dot::before,
+    .status__dot::after {
+      forced-color-adjust: none;
+    }
+
+    .status__dot {
+      border-color: CanvasText;
+    }
+
+    [data-status='live'] .status__dot {
+      border-color: CanvasText;
+      background-color: CanvasText;
+    }
+
+    [data-status='design'] .status__dot::before {
+      background-color: CanvasText;
+    }
+
+    [data-status='planned'] .status__dot {
+      border-color: CanvasText;
+    }
+
+    .status__dot::after {
+      border-color: CanvasText;
+    }
+  }
+
   @keyframes status-pulse {
     0% {
       opacity: 0.9;

@@ -4,7 +4,9 @@ import { t, type Locale } from '@/i18n';
 /**
  * Theme toggle drawn as a half-filled circle; it turns half a revolution when the theme
  * changes. A toggle button (`aria-pressed` = dark theme on). Writes `localStorage.theme`
- * and `data-theme` on <html>. Needs JavaScript, so it is hidden without it.
+ * (and `window.__siteTheme`, which BaseLayout's root script reads when storage is
+ * unavailable), `data-theme` on <html> and the `theme-color` metas. Needs JavaScript, so it
+ * is hidden without it.
  */
 interface Props {
   locale: Locale;
@@ -28,6 +30,11 @@ const { locale, class: className } = Astro.props;
 </button>
 
 <script>
+  type ThemeWindow = Window & {
+    __siteTheme?: string;
+    __siteThemeColor?: (theme: string) => void;
+  };
+
   function current(): 'light' | 'dark' {
     return document.documentElement.dataset['theme'] === 'dark' ? 'dark' : 'light';
   }
@@ -45,11 +52,14 @@ const { locale, class: className } = Astro.props;
     if (!target?.closest('[data-theme-toggle]')) return;
     const next = current() === 'dark' ? 'light' : 'dark';
     document.documentElement.dataset['theme'] = next;
+    const win = window as ThemeWindow;
+    win.__siteTheme = next;
     try {
       localStorage.setItem('theme', next);
     } catch {
-      // Storage can be unavailable (private mode); the choice then lasts for this page.
+      // Storage can be unavailable (private mode); the in-memory choice lasts for the session.
     }
+    win.__siteThemeColor?.(next);
     sync();
   });
 

@@ -7,6 +7,11 @@
  * `gsap.context` plus a list of cleanups and is released on `astro:before-swap`. The cursor,
  * the transition panel, Lenis and the scroll listener persist for the session.
  *
+ * Switching motion while a page is open (the footer's motion switch dispatches `site:motion`
+ * after updating `data-motion`) releases the page and enters it again in the new mode:
+ * cursor, smooth scrolling, marquees, reveals and page callbacks follow at once, and
+ * nothing already on screen replays its entrance (the new page context has `late: true`).
+ *
  * Public exports (keep them stable): `onPageEnter`, `prefersReducedMotion`, `splitLines`,
  * `afterGate`, the motion tokens (`dur`, `ease`, `cssEase`), `gsap`, `ScrollTrigger`.
  * Page code imports from this entry only, never from the kit's internal modules.
@@ -32,6 +37,7 @@ import { initProgress } from './progress';
 import { initReveals } from './reveal';
 import { applyScrollState } from './root-state';
 import {
+  destroySmoothScroll,
   initSmoothScroll,
   pauseSmoothScroll,
   resumeSmoothScroll,
@@ -44,7 +50,8 @@ type Cleanup = () => void;
 /**
  * `first` is true only for the document's initial page (not for client-side navigations);
  * `late` is true when that initial load was slow enough for the CSS failsafe to have shown
- * the page already, so entrance choreography should be skipped.
+ * the page already, or when the page is entered again after a switch of the motion mode, so
+ * entrance choreography should be skipped.
  */
 type PageContext = { reduced: boolean; first: boolean; late: boolean };
 type PageEnterCallback = (ctx: PageContext) => void | Cleanup;
@@ -101,12 +108,13 @@ function step(name: string, fn: () => void): void {
   }
 }
 
-function enter(): void {
+function enter(again = false): void {
   if (entered) return;
   entered = true;
   const reduced = prefersReducedMotion();
-  // On a very slow first load the CSS failsafe has already shown the page.
-  const late = firstLoad && performance.now() > reveal.failsafeMs - 150;
+  // On a very slow first load the CSS failsafe has already shown the page; after a switch of
+  // the motion mode the visitor is in the middle of the page and nothing should replay.
+  const late = again || (firstLoad && performance.now() > reveal.failsafeMs - 150);
   pageFirst = firstLoad;
   pageLate = late;
   firstLoad = false;
@@ -120,7 +128,7 @@ function enter(): void {
   inPage(() => {
     step('reveals', () => initReveals(reduced, late));
     step('marquee', () => initMarquees(reduced));
-    step('desk', () => initDesks(reduced));
+    step('desk', () => initDesks(reduced, late));
     step('follower', () => initFollowers(reduced));
     step('progress', () => initProgress());
     step('magnetic', () => initMagnetic(reduced));
@@ -143,6 +151,14 @@ function afterSwap(): void {
   syncSmoothScroll();
 }
 
+/** The motion mode changed on this page (`data-motion` is already updated). */
+function onMotionChange(): void {
+  if (!entered) return;
+  leave();
+  if (prefersReducedMotion()) destroySmoothScroll();
+  enter(true);
+}
+
 function onMenu(event: Event): void {
   const open = (event as CustomEvent<{ open?: boolean }>).detail?.open;
   if (open) pauseSmoothScroll();
@@ -151,15 +167,16 @@ function onMenu(event: Event): void {
 
 installTransitions();
 watchCursorConditions();
-document.addEventListener('astro:page-load', enter);
+document.addEventListener('astro:page-load', () => enter());
 document.addEventListener('astro:before-swap', leave);
 document.addEventListener('astro:after-swap', afterSwap);
 document.addEventListener('site:menu', onMenu);
+document.addEventListener('site:motion', onMotionChange);
 
 // The first `astro:page-load` can fire before or after this module runs; `enter` is
 // idempotent per page.
 if (document.readyState !== 'loading') enter();
-else document.addEventListener('DOMContentLoaded', enter, { once: true });
+else document.addEventListener('DOMContentLoaded', () => enter(), { once: true });
 
 export { afterGate } from './core';
 export { cssEase, dur, ease } from './config';

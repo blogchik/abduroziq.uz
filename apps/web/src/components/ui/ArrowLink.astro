@@ -37,7 +37,7 @@ const newTab = external && !href.startsWith('mailto:');
 ---
 
 <a
-  class:list={['arrow-link type-label', className]}
+  class:list={['arrow-link type-label target-24', className]}
   href={href}
   hreflang={hreflang}
   target={newTab ? '_blank' : undefined}
@@ -64,14 +64,13 @@ const newTab = external && !href.startsWith('mailto:');
     position: relative;
   }
 
-  /* Hover rule drawn from the left under the label. */
+  /* Hover rule drawn from the left under the label (a border: it survives forced colours). */
   .arrow-link__label::after {
     content: '';
     position: absolute;
     inset-inline: 0;
     inset-block-end: -0.2em;
-    height: var(--hairline);
-    background-color: currentColor;
+    border-block-start: var(--hairline) solid currentColor;
     transform: scaleX(0);
     transform-origin: left center;
     transition: transform var(--dur-2) var(--ease-out);

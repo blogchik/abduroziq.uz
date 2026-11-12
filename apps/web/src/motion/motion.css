@@ -6,8 +6,10 @@
  * offset content are scoped to `html.js[data-motion='full']`, so that everything stays
  * visible without JavaScript and under reduced motion. Each of them stops matching as soon
  * as the kit takes the element over (`data-reveal-ready`, `data-desk-ready`), and a CSS
- * failsafe shows everything after 2.5s if the kit never arrives (keep in sync with
+ * failsafe shows everything after 1s if the kit never arrives (keep in sync with
  * `reveal.failsafeMs` in config.ts).
+ *
+ * Raw values live in the tokens (styles/tokens.css): colours, z-index, font families.
  */
 
 /* ------------------------------------------------------------ prepared states */
@@ -22,7 +24,7 @@ html.js[data-motion='full'] [data-reveal]:not([data-reveal-ready]),
 html.js[data-motion='full'] [data-reveal-group]:not([data-reveal-ready]) [data-reveal-item],
 html.js[data-motion='full'] [data-desk]:not([data-desk-ready]) [data-draggable] {
   opacity: 0;
-  animation: m-failsafe 0.01s linear 2.5s forwards;
+  animation: m-failsafe 0.01s linear 1s forwards;
 }
 
 /* ------------------------------------------------------------------- marquee */
@@ -71,9 +73,11 @@ html.js [data-desk] [data-draggable] {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 60;
+  z-index: var(--z-follower);
   pointer-events: none;
   visibility: hidden;
+  /* Scale and tilt pivot on the edge next to the pointer, so the gap to it stays. */
+  transform-origin: 0 50%;
   opacity: 0;
 }
 
@@ -111,17 +115,34 @@ html[data-cursor-active]:not([data-cursor-native]) * {
 }
 
 .m-cursor {
+  /* Colours follow the surface under the pointer (cursor.ts sets `data-surface`): ink on
+     paper, on-accent on the accent fill, paper on ink. The halo is a 1px ring in the
+     surface's own colour: invisible on a plain surface, it keeps the cursor readable over
+     photos and anything else that is neither. */
+  --m-cursor-fg: var(--ink);
+  --m-cursor-halo: var(--paper);
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 2147483000;
+  z-index: var(--z-cursor);
   width: 0;
   height: 0;
   pointer-events: none;
-  color: #fff;
-  mix-blend-mode: difference;
+  color: var(--m-cursor-fg);
   opacity: 0;
-  transition: opacity var(--m-dur-2) var(--m-ease-out);
+  transition:
+    opacity var(--m-dur-2) var(--m-ease-out),
+    color var(--m-dur-1) var(--m-ease-out);
+}
+
+.m-cursor[data-surface='accent'] {
+  --m-cursor-fg: var(--on-accent);
+  --m-cursor-halo: var(--accent);
+}
+
+.m-cursor[data-surface='ink'] {
+  --m-cursor-fg: var(--paper);
+  --m-cursor-halo: var(--ink);
 }
 
 .m-cursor[data-visible] {
@@ -133,9 +154,24 @@ html[data-cursor-active]:not([data-cursor-native]) * {
   opacity: 0;
 }
 
-/* The read pill is an accent fill and must keep its colour. */
-.m-cursor[data-state='read'] {
-  mix-blend-mode: normal;
+/* Reference colours read by cursor.ts to recognise the surfaces. */
+.m-cursor__probe {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.m-cursor__probe[data-probe='accent'] {
+  color: var(--accent);
+}
+
+.m-cursor__probe[data-probe='ink'] {
+  color: var(--ink);
+}
+
+.m-cursor__probe[data-probe='paper'] {
+  color: var(--paper);
 }
 
 .m-cursor__dot,
@@ -161,8 +197,9 @@ html[data-cursor-active]:not([data-cursor-native]) * {
   width: 10px;
   height: 10px;
   margin: -5px 0 0 -5px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: currentColor;
+  box-shadow: 0 0 0 1px var(--m-cursor-halo);
 }
 
 .m-cursor__ring-shape {
@@ -170,7 +207,10 @@ html[data-cursor-active]:not([data-cursor-native]) * {
   height: 36px;
   margin: -18px 0 0 -18px;
   border: 1.5px solid currentColor;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
+  box-shadow:
+    0 0 0 1px var(--m-cursor-halo),
+    inset 0 0 0 1px var(--m-cursor-halo);
   opacity: 0;
   transform: scale(0.3);
 }
@@ -179,13 +219,18 @@ html[data-cursor-active]:not([data-cursor-native]) * {
   position: absolute;
   top: 14px;
   left: 24px;
-  font-family: 'Geist Mono', ui-monospace, monospace;
-  font-size: 10px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
   font-weight: 500;
   line-height: 1;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
+  text-shadow:
+    1px 0 var(--m-cursor-halo),
+    -1px 0 var(--m-cursor-halo),
+    0 1px var(--m-cursor-halo),
+    0 -1px var(--m-cursor-halo);
   opacity: 0;
   transform: translateY(4px);
   transition:
@@ -195,11 +240,11 @@ html[data-cursor-active]:not([data-cursor-native]) * {
 
 .m-cursor__pill {
   padding: 9px 14px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--accent);
   color: var(--on-accent);
-  font-family: 'Geist Mono', ui-monospace, monospace;
-  font-size: 11px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
   font-weight: 500;
   line-height: 1;
   letter-spacing: 0.08em;
@@ -291,7 +336,7 @@ html[data-cursor-active]:not([data-cursor-native]) * {
 .m-wipe {
   position: fixed;
   inset: 0;
-  z-index: 2147482000;
+  z-index: var(--z-wipe);
   pointer-events: none;
   background: var(--paper);
   /* Positioned by the kit (yPercent); hidden while idle. */
@@ -316,6 +361,51 @@ html[data-motion='full']::view-transition-new(root) {
   animation: none;
 }
 
+/* Text morphs (shared names starting with `post-`; transition.ts gives them the class
+   `m-text`): a post title changes font, size, alignment and line count between the row and
+   the article, so a stretched snapshot would smear. Only the box morphs; the old and new
+   text keep their natural size, pinned to the box's top left, and cross-fade. */
+html[data-motion='full']::view-transition-group(*.m-text) {
+  overflow: clip;
+  animation-duration: var(--dur-3);
+  animation-timing-function: var(--ease-out);
+}
+
+html[data-motion='full']::view-transition-image-pair(*.m-text) {
+  isolation: auto;
+}
+
+html[data-motion='full']::view-transition-old(*.m-text),
+html[data-motion='full']::view-transition-new(*.m-text) {
+  inset: 0 auto auto 0;
+  inline-size: auto;
+  block-size: auto;
+  mix-blend-mode: normal;
+  animation-duration: 200ms;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+
+html[data-motion='full']::view-transition-old(*.m-text) {
+  animation-name: m-text-out;
+}
+
+html[data-motion='full']::view-transition-new(*.m-text) {
+  animation-name: m-text-in;
+}
+
+@keyframes m-text-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes m-text-in {
+  from {
+    opacity: 0;
+  }
+}
+
 /* ----------------------------------------------------------- reduced motion */
 
 html[data-motion='reduced'] .m-cursor,
@@ -323,7 +413,9 @@ html[data-motion='reduced'] .m-wipe {
   display: none;
 }
 
-@media (forced-colors: active) {
+/* The native cursor stays for forced colours and for visitors who asked for more contrast
+   (cursor.ts does not enable the replacement then either). */
+@media (forced-colors: active), (prefers-contrast: more) {
   .m-cursor {
     display: none;
   }

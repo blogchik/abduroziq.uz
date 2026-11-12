@@ -35,6 +35,21 @@
     "rights": "Barcha huquqlar himoyalangan.",
     "backToTop": "Yuqoriga"
   },
+  "motion": {
+    "label": "Harakat",
+    "on": "Yoniq",
+    "off": "O'chiq"
+  },
+  "cursor": {
+    "open": "Ochish",
+    "read": "O'qish",
+    "drag": "Sudrash",
+    "drop": "Qo'yish"
+  },
+  "tag": {
+    "countOne": "{n} ta yozuv",
+    "countOther": "{n} ta yozuv"
+  },
   "notFound": {
     "title": "Sahifa topilmadi",
     "text": "Bu manzilda hech narsa yo'q.",

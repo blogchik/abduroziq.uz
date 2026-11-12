@@ -9,7 +9,9 @@
  * Static markup already looks finished (enough repeats to cover 2560px). Motion is the
  * kit's: `data-marquee` on the strip, `data-marquee-track` on the row, optional
  * `data-marquee-speed` and `data-marquee-scroll` (follow scroll velocity).
- * Decorative: hidden from assistive tech (give the section its own heading).
+ * Decorative: hidden from assistive tech (give the section its own heading). The strip
+ * itself takes the pointer (the zone around it does not), so the marquee pauses while it
+ * is hovered; it is marked `data-surface="accent"` for the cursor colour.
  */
 interface Props {
   text: string;
@@ -38,6 +40,7 @@ const items = Array.from({ length: repeat }, (_, i) => i);
 >
   <div
     class="tape"
+    data-surface="accent"
     data-marquee
     data-marquee-speed={speed}
     data-marquee-scroll={scroll ? '' : undefined}
@@ -75,6 +78,7 @@ const items = Array.from({ length: repeat }, (_, i) => i);
     color: var(--on-accent);
     rotate: var(--tape-angle);
     transform-origin: 50% 50%;
+    pointer-events: auto;
   }
 
   .tape__track {

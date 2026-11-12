@@ -41,7 +41,7 @@ const links = [
 <header class="site-header" data-site-header>
   <div class="site-header__bar shell">
     <a
-      class="brand type-label"
+      class="brand type-label target-24"
       href={localePath(locale, '/')}
       aria-label={t(locale, 'common.nav.homeLabel')}
     >
@@ -54,7 +54,7 @@ const links = [
         {links.map((link) => (
           <li>
             <a
-              class="site-nav__link type-label"
+              class="site-nav__link type-label target-24"
               href={link.href}
               aria-current={link.current ? 'page' : undefined}
             >
@@ -67,6 +67,7 @@ const links = [
       <ThemeToggle locale={locale} />
     </nav>
 
+    <!-- One fixed label: the state is `aria-expanded`; the plus turns into a cross. -->
     <button
       type="button"
       class="menu-button type-label"
@@ -74,12 +75,8 @@ const links = [
       aria-controls="site-menu"
       data-menu-toggle
     >
-      <span class="menu-button__label" data-when="closed">
-        {t(locale, 'common.nav.menu')}
-      </span>
-      <span class="menu-button__label" data-when="open">
-        {t(locale, 'common.nav.close')}
-      </span>
+      <span>{t(locale, 'common.nav.menu')}</span>
+      <span class="menu-button__icon" aria-hidden="true"></span>
     </button>
   </div>
 
@@ -186,7 +183,7 @@ const links = [
 <style>
   .site-header {
     position: relative;
-    z-index: 40;
+    z-index: var(--z-header);
     background-color: var(--paper);
     border-block-end: var(--hairline) solid transparent;
     transition:
@@ -264,14 +261,15 @@ const links = [
     text-decoration: none;
   }
 
-  /* Hover rule draws from the left; the current page keeps it. */
+  /* Hover rule draws from the left; the current page keeps it. A border, not a background,
+     so it survives forced colours. The hit area is 24px tall (target-24), the rule stays
+     0.35em under the text. */
   .site-nav__link::after {
     content: '';
     position: absolute;
     inset-inline: 0;
-    inset-block-end: -0.35em;
-    height: var(--hairline);
-    background-color: currentColor;
+    inset-block-end: calc(var(--target-pad) - 0.35em);
+    border-block-start: var(--hairline) solid currentColor;
     transform: scaleX(0);
     transform-origin: left center;
     transition: transform var(--dur-2) var(--ease-out);
@@ -284,6 +282,8 @@ const links = [
 
   .menu-button {
     display: inline-flex;
+    align-items: center;
+    gap: 0.75em;
     margin: -0.75rem;
     padding: 0.75rem;
     border: 0;
@@ -292,9 +292,29 @@ const links = [
     cursor: pointer;
   }
 
-  .menu-button[aria-expanded='false'] [data-when='open'],
-  .menu-button[aria-expanded='true'] [data-when='closed'] {
-    display: none;
+  /* A drawn plus (two hairlines) that turns into a cross while the sheet is open. */
+  .menu-button__icon {
+    position: relative;
+    width: 0.75em;
+    height: 0.75em;
+    transition: rotate var(--dur-2) var(--ease-out);
+  }
+
+  .menu-button__icon::before,
+  .menu-button__icon::after {
+    content: '';
+    position: absolute;
+    inset: 50% 0 auto;
+    border-block-start: var(--hairline) solid currentColor;
+    translate: 0 -50%;
+  }
+
+  .menu-button__icon::after {
+    rotate: 90deg;
+  }
+
+  .menu-button[aria-expanded='true'] .menu-button__icon {
+    rotate: 45deg;
   }
 
   @media (width >= 48rem) {
