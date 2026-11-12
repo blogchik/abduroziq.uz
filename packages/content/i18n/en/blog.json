@@ -36,7 +36,7 @@
       "uz": "Read in Uzbek"
     },
     "by": "By",
-    "tableLabel": "Table, scrollable",
+    "tableLabel": "Table {n}, scrollable",
     "codeLabel": "{language} code, scrollable",
     "codePlain": "Code, scrollable",
     "footnotes": "Footnotes",

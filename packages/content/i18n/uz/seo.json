@@ -13,8 +13,8 @@
     "description": "Toshkentdagi mahsulot muhandisi Jabborov Abduroziqning raqamli mahsulotlar yaratish, dizayn va muhandislik haqidagi qaydlari."
   },
   "tag": {
-    "title": "\"{tag}\" tegli yozuvlar",
-    "description": "Abduroziqning \"{tag}\" tegi bilan belgilangan yozuvlari: raqamli mahsulotlar yaratish, dizayn va muhandislik haqida qaydlar."
+    "title": "“{tag}” tegli yozuvlar",
+    "description": "Abduroziqning “{tag}” tegi bilan belgilangan yozuvlari: raqamli mahsulotlar yaratish, dizayn va muhandislik haqida qaydlar."
   },
   "notFound": {
     "title": "Sahifa topilmadi",

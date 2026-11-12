@@ -1,11 +1,12 @@
 ---
 import { Image } from 'astro:assets';
-import { profile } from '@abduroziq/content';
+import portrait from '@abduroziq/content/assets/portrait.jpg';
 import ArrowLink from '@/components/ui/ArrowLink.astro';
 import { localePath, t, type Locale } from '@/i18n';
 import { formatDate, isoDate } from '@/lib/dates';
 import { postTransitionName, type PostSummary } from '@/lib/posts';
-import portrait from '../../../../../packages/content/assets/portrait.jpg';
+import { authorName } from '@/lib/seo/site';
+import { keepShortWordsTogether } from '@/lib/typography';
 
 /**
  * Centred article header (DESIGN 5.3): a mono meta line (date, reading time, language), a link
@@ -13,8 +14,12 @@ import portrait from '../../../../../packages/content/assets/portrait.jpg';
  * the same `view-transition-name` as its row in the lists, so it morphs), and the author row
  * with the small round portrait.
  *
- * The title is not revealed by the motion kit: it is the target of the shared-element
- * transition and must be in its final state in the first frame.
+ * Nothing in the header is revealed by the motion kit: the title is the target of the
+ * shared-element transition and must be in its final state in the first frame, and the rest is
+ * above the fold, where a reveal would only delay the largest contentful paint.
+ *
+ * The meta line wraps between whole items only (each item keeps its trailing `/` and never
+ * breaks inside), and the title keeps one-letter words with the next word.
  */
 interface Props {
   post: PostSummary;
@@ -24,43 +29,27 @@ interface Props {
 }
 
 const { post, locale, draft = false, translation } = Astro.props;
-
-// "Abduroziq Jabborov": the profile stores the name surname first.
-const [family = '', ...given] = profile.fullName.split(' ');
-const authorName = [...given, family].join(' ');
 ---
 
 <header class="article-head shell">
-  <p class="type-label article-head__meta" data-reveal="fade">
-    <time datetime={isoDate(post.date)}>{formatDate(post.date, locale)}</time>
-    <span class="article-head__sep" aria-hidden="true">
-      /
+  <p class="type-label article-head__meta">
+    <span class="article-head__item">
+      <time datetime={isoDate(post.date)}>{formatDate(post.date, locale)}</time>
     </span>
-    <span>{t(locale, 'blog.readingTime', { minutes: post.readingMinutes })}</span>
-    <span class="article-head__sep" aria-hidden="true">
-      /
+    <span class="article-head__item">
+      {t(locale, 'blog.readingTime', { minutes: post.readingMinutes })}
     </span>
-    <span>{t(locale, `blog.language.${post.locale}`)}</span>
+    <span class="article-head__item">{t(locale, `blog.language.${post.locale}`)}</span>
     {post.updated && (
-      <>
-        <span class="article-head__sep" aria-hidden="true">
-          /
-        </span>
-        <span>{t(locale, 'blog.updated', { date: formatDate(post.updated, locale) })}</span>
-      </>
+      <span class="article-head__item">
+        {t(locale, 'blog.updated', { date: formatDate(post.updated, locale) })}
+      </span>
     )}
-    {draft && (
-      <>
-        <span class="article-head__sep" aria-hidden="true">
-          /
-        </span>
-        <span class="article-head__draft">{t(locale, 'blog.draft')}</span>
-      </>
-    )}
+    {draft && <span class="article-head__item article-head__draft">{t(locale, 'blog.draft')}</span>}
   </p>
 
   {translation && (
-    <p class="article-head__translation" data-reveal="fade" data-reveal-delay="0.1">
+    <p class="article-head__translation">
       <ArrowLink
         href={translation.url}
         hreflang={translation.locale}
@@ -70,10 +59,10 @@ const authorName = [...given, family].join(' ');
   )}
 
   <h1 class="type-article-title article-head__title" transition:name={postTransitionName(post)}>
-    {post.title}
+    {keepShortWordsTogether(post.title)}
   </h1>
 
-  <p class="article-head__author" data-reveal="fade" data-reveal-delay="0.15">
+  <p class="article-head__author">
     <a class="article-head__author-link type-label" href={localePath(locale, '/')} rel="author">
       <Image
         class="article-head__portrait"
@@ -108,16 +97,15 @@ const authorName = [...given, family].join(' ');
     color: var(--ink-soft);
   }
 
-  /* The slashes only separate items that share a line: on a phone the gap does the work. */
-  .article-head__sep {
-    display: none;
-    color: var(--rule);
+  /* An item never breaks inside; its `/` separator belongs to it and is decorative. */
+  .article-head__item {
+    white-space: nowrap;
   }
 
-  @media (width >= 40rem) {
-    .article-head__sep {
-      display: inline;
-    }
+  .article-head__item:not(:last-child)::after {
+    content: '/' / '';
+    margin-inline-start: 0.8rem;
+    color: var(--ink-soft);
   }
 
   .article-head__draft {
@@ -130,8 +118,9 @@ const authorName = [...given, family].join(' ');
 
   .article-head__title {
     margin: clamp(1.25rem, 0.9rem + 1.4vw, 2.25rem) 0 0;
-    max-width: 12em;
-    overflow-wrap: anywhere;
+    max-width: min(100%, 15em);
+    overflow-wrap: break-word;
+    text-wrap: balance;
   }
 
   .article-head__author {

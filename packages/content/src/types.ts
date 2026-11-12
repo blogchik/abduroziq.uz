@@ -1,4 +1,6 @@
-export type Locale = 'en' | 'uz';
+import type { Locale } from './locales';
+
+export type { Locale };
 export type Localized<T = string> = Record<Locale, T>;
 
 export type SentencePart =

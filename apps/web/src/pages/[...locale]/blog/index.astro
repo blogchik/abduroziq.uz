@@ -24,6 +24,8 @@ const ownPosts = posts.filter((post) => post.locale === locale);
   title={t(locale, 'seo.blog.title')}
   description={t(locale, 'seo.blog.description')}
   seo={{
+    // An index with nothing on it is a thin page: keep it out of search until the first post.
+    noindex: posts.length === 0,
     jsonLd: [
       blogSchema(locale, ownPosts),
       breadcrumbSchema(locale, [

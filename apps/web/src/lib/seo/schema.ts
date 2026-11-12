@@ -1,8 +1,10 @@
+import { getImage } from 'astro:assets';
 import { profile } from '@abduroziq/content';
+import portrait from '@abduroziq/content/assets/portrait.jpg';
 import { localePath, locales, t, type Locale } from '@/i18n';
 import { plainText } from './meta';
 import { ogImageUrl, type OgTarget } from './og';
-import { absoluteUrl, entityId } from './site';
+import { absoluteUrl, authorName, entityId } from './site';
 
 /** A JSON-LD node. `JsonLd.astro` adds `@context`. */
 export type JsonLdNode = Record<string, unknown>;
@@ -15,12 +17,15 @@ function nameParts() {
   return { givenName: given.join(' ') || profile.name, familyName: family };
 }
 
+// The portrait through Astro's image pipeline: a hashed, resized file with an absolute URL.
+const personImage = await getImage({ src: portrait, width: 800, height: 800, format: 'jpg' });
+
 /** The author as a reference that also carries name and url, which crawlers expect inline. */
 function authorRef(): JsonLdNode {
   return {
     '@type': 'Person',
     '@id': entityId.person(),
-    name: profile.fullName,
+    name: authorName,
     url: absoluteUrl('/'),
   };
 }
@@ -30,11 +35,17 @@ export function personSchema(locale: Locale): JsonLdNode {
   return {
     '@type': 'Person',
     '@id': entityId.person(),
-    name: profile.fullName,
+    name: authorName,
     givenName,
     familyName,
-    alternateName: [profile.name, `${givenName} ${familyName}`],
+    alternateName: [profile.fullName, profile.name],
     url: absoluteUrl('/'),
+    image: {
+      '@type': 'ImageObject',
+      url: absoluteUrl(personImage.src),
+      width: 800,
+      height: 800,
+    },
     jobTitle: profile.role[locale],
     description: profile.support[locale],
     knowsLanguage: [...locales],
@@ -64,8 +75,11 @@ export function websiteSchema(locale: Locale): JsonLdNode {
   };
 }
 
-/** The home page: a ProfilePage whose main entity is the Person. */
-export function profilePageSchema(locale: Locale): JsonLdNode {
+/**
+ * The home page: a ProfilePage whose main entity is the Person. `modified` defaults to the
+ * moment of the build, which is when the page was last regenerated.
+ */
+export function profilePageSchema(locale: Locale, modified: Date = new Date()): JsonLdNode {
   const url = absoluteUrl(localePath(locale, '/'));
   return {
     '@type': 'ProfilePage',
@@ -74,6 +88,7 @@ export function profilePageSchema(locale: Locale): JsonLdNode {
     name: t(locale, 'seo.home.title'),
     description: t(locale, 'seo.home.description'),
     inLanguage: locale,
+    dateModified: modified.toISOString(),
     isPartOf: reference(entityId.website()),
     mainEntity: reference(entityId.person()),
     primaryImageOfPage: {
@@ -138,21 +153,17 @@ export function collectionPageSchema(
   };
 }
 
-/** Words in an MDX body, ignoring import/export lines and fenced code. */
-export function countWords(body: string | undefined): number | undefined {
-  if (!body) return undefined;
-  const text = body
-    .replace(/```[\s\S]*?```/g, ' ')
-    .replace(/^\s*(import|export)\s.*$/gm, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/[#>*_`~[\]()!|-]+/g, ' ');
-  const words = text.split(/\s+/).filter((word) => /[\p{L}\p{N}]/u.test(word));
-  return words.length > 0 ? words.length : undefined;
-}
+export { countWords } from '@/lib/body-text';
 
 export function blogPostingSchema(
   post: PostForSchema,
-  opts: { locale: Locale; slug: string; wordCount?: number | undefined; image?: string },
+  opts: {
+    locale: Locale;
+    slug: string;
+    wordCount?: number | undefined;
+    /** Absolute URL of the post's cover, listed after the generated card. */
+    coverImage?: string | undefined;
+  },
 ): JsonLdNode {
   const url = absoluteUrl(post.url);
   const target: OgTarget = { kind: 'post', slug: opts.slug };
@@ -161,7 +172,7 @@ export function blogPostingSchema(
     '@id': entityId.onPage(url, 'article'),
     headline: plainText(post.title),
     description: plainText(post.description),
-    image: [opts.image ?? ogImageUrl(opts.locale, target)],
+    image: [ogImageUrl(opts.locale, target), ...(opts.coverImage ? [opts.coverImage] : [])],
     datePublished: post.date.toISOString(),
     dateModified: (post.updated ?? post.date).toISOString(),
     author: authorRef(),

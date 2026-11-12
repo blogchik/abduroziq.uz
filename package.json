@@ -15,7 +15,8 @@
     "typecheck": "turbo run typecheck",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "turbo run lint typecheck build --concurrency=1"
+    "check": "pnpm format:check && turbo run lint typecheck test build --concurrency=1",
+    "test": "turbo run test"
   },
   "devDependencies": {
     "@abduroziq/config": "workspace:*",

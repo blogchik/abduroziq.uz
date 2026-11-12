@@ -4,6 +4,8 @@ import { localeFromPath, t } from '@/i18n';
 /**
  * A quiet aside inside a post: an ink hairline above, a mono label, the text below in the
  * display face. Not a card: no fill, no border box. `label` overrides the default "Note".
+ * It is a `div role="note"`, not an `<aside>`: an aside inside the article becomes a
+ * complementary landmark that is not top level.
  */
 interface Props {
   label?: string;
@@ -14,12 +16,12 @@ const locale = localeFromPath(Astro.url.pathname);
 const { label = t(locale, 'blog.post.note'), class: className } = Astro.props;
 ---
 
-<aside class:list={['note', className]} data-reveal="rise">
+<div class:list={['note', className]} role="note" data-reveal="rise">
   <p class="note__label type-label">{label}</p>
   <div class="note__body">
     <slot />
   </div>
-</aside>
+</div>
 
 <style>
   .note {

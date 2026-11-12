@@ -9,7 +9,7 @@ import { defaultLocale, localePath, locales, t, type Locale } from '@/i18n';
 import { palette } from '@/lib/seo/brand';
 import { formatTitle, limits, plainText } from '@/lib/seo/meta';
 import { OG_HEIGHT, OG_WIDTH, defaultOgTarget, ogImageUrl } from '@/lib/seo/og';
-import { absoluteUrl, indexingAllowed, ogLocale } from '@/lib/seo/site';
+import { absoluteUrl, authorName, indexingAllowed, ogLocale } from '@/lib/seo/site';
 import JsonLd from './JsonLd.astro';
 import type { SeoProps } from './types';
 
@@ -27,6 +27,7 @@ const {
   alternateLocales = [...locales],
   alternates,
   noindex = false,
+  canonical: withCanonical = true,
   jsonLd,
 } = Astro.props;
 
@@ -37,8 +38,13 @@ const fullTitle = formatTitle(locale, cleanTitle, { siteName, isHome: path === '
 const pageUrl = localePath(locale, path);
 const canonical = absoluteUrl(pageUrl);
 
-const robots =
-  indexingAllowed && !noindex ? 'index, follow, max-image-preview:large' : 'noindex, nofollow';
+// Site-wide switch off: nothing is indexed or followed. A page-level `noindex` keeps the page
+// out of search results but lets crawlers follow its links.
+const robots = !indexingAllowed
+  ? 'noindex, nofollow'
+  : noindex
+    ? 'noindex, follow'
+    : 'index, follow, max-image-preview:large';
 
 // hreflang only for locales where the page really exists. The current page is always listed.
 const alternateLinks: { locale: Locale; href: string }[] = (
@@ -71,14 +77,14 @@ if (import.meta.env.PROD && robots.startsWith('index')) {
 
 <title>{fullTitle}</title>
 <meta name="description" content={description} />
-<link rel="canonical" href={canonical} />
+{withCanonical && <link rel="canonical" href={canonical} />}
 <meta name="robots" content={robots} />
-<meta name="author" content={profile.fullName} />
+<meta name="author" content={authorName} />
 <meta name="color-scheme" content="light dark" />
 <meta name="theme-color" content={palette.paper} media="(prefers-color-scheme: light)" />
 <meta name="theme-color" content={palette.paperDark} media="(prefers-color-scheme: dark)" />
 
-{alternateLinks.length > 1 && (
+{withCanonical && alternateLinks.length > 1 && (
   <>
     {alternateLinks.map((alt) => (
       <link rel="alternate" hreflang={alt.locale} href={alt.href} />
@@ -115,13 +121,12 @@ if (import.meta.env.PROD && robots.startsWith('index')) {
 <meta property="og:type" content={type} />
 <meta property="og:title" content={cleanTitle} />
 <meta property="og:description" content={description} />
-<meta property="og:url" content={canonical} />
+{withCanonical && <meta property="og:url" content={canonical} />}
 <meta property="og:locale" content={ogLocale[locale]} />
-{alternateLinks
-  .filter((alt) => alt.locale !== locale)
-  .map((alt) => (
-    <meta property="og:locale:alternate" content={ogLocale[alt.locale]} />
-  ))}
+{withCanonical &&
+  alternateLinks
+    .filter((alt) => alt.locale !== locale)
+    .map((alt) => <meta property="og:locale:alternate" content={ogLocale[alt.locale]} />)}
 <meta property="og:image" content={ogImage} />
 {generatedImage && <meta property="og:image:type" content="image/png" />}
 {generatedImage && <meta property="og:image:width" content={String(OG_WIDTH)} />}

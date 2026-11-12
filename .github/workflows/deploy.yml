@@ -15,9 +15,13 @@ permissions:
 
 jobs:
   deploy:
-    name: Build and deploy to Cloudflare
+    name: Check, build and deploy to Cloudflare
+    # Production is `main` only. A manual run on another branch (workflow_dispatch lets you
+    # pick any ref) must never publish that branch: the job is skipped before it starts, so
+    # the `production` environment is not even requested.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     environment:
       name: production
     steps:
@@ -36,8 +40,23 @@ jobs:
           key: turbo-${{ runner.os }}-${{ github.sha }}
           restore-keys: turbo-${{ runner.os }}-
 
-      # Production build, gated by lint and typecheck.
+      # Formatting, lint, typecheck, unit checks and the production build of this exact commit.
       - run: pnpm check
+
+      # The same Lighthouse assertions as the CI workflow (lighthouserc.json), run here so that
+      # a deploy never depends on a separate workflow finishing first: if the checks fail on
+      # this commit, nothing below runs and nothing is published.
+      - name: Lighthouse assertions
+        run: pnpm exec lhci autorun --config=./lighthouserc.json
+
+      - name: Keep Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-report
+          path: .lighthouseci
+          if-no-files-found: ignore
+          retention-days: 7
 
       # `secrets` is not available in `if:` expressions, so expose it through env.
       - name: Check Cloudflare secrets
@@ -56,7 +75,7 @@ jobs:
               echo
               echo "Deploy skipped: secrets not configured, see docs/DEPLOY.md."
               echo
-              echo "The build passed; nothing was published."
+              echo "The checks and the build passed; nothing was published."
             } >> "$GITHUB_STEP_SUMMARY"
           fi
 

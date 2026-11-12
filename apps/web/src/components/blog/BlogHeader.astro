@@ -3,7 +3,9 @@ import ArrowLink from '@/components/ui/ArrowLink.astro';
 
 /**
  * Page head of the blog index and tag pages (DESIGN 5.2): the title in `display` with the
- * mono subtitle level with its baseline on the right. A tag page adds a way back.
+ * mono subtitle level with its baseline on the right. A tag page adds a way back. Nothing here
+ * is revealed by the motion kit: it is the first thing on screen, and a reveal would delay the
+ * largest contentful paint.
  */
 interface Props {
   title: string;
@@ -16,17 +18,13 @@ const { title, subtitle, back } = Astro.props;
 
 <header class="blog-head shell">
   {back && (
-    <p class="blog-head__back" data-reveal="fade">
+    <p class="blog-head__back">
       <ArrowLink href={back.href} label={back.label} direction="left" arrowFirst />
     </p>
   )}
   <div class="blog-head__row">
-    <h1 class="type-display blog-head__title" data-reveal="rise">
-      {title}
-    </h1>
-    <p class="type-label blog-head__sub" data-reveal="fade" data-reveal-delay="0.25">
-      {subtitle}
-    </p>
+    <h1 class="type-display blog-head__title">{title}</h1>
+    <p class="type-label blog-head__sub">{subtitle}</p>
   </div>
 </header>
 

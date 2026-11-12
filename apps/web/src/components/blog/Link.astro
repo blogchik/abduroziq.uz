@@ -8,19 +8,21 @@ import { isExternalHref, isMailHref } from '@/lib/markdown/links';
  * The `a` of every MDX post. External links open in a new tab with `rel="noopener"`, get the
  * `open` cursor, a small drawn arrow and a screen-reader note; mail links get the `open`
  * cursor only. Internal links and anchors are plain links (the cursor picks `link` itself).
- * The back-reference of a footnote gets its label in the page language.
+ * The back-reference of a footnote gets its label in the page language: the processor writes an
+ * English `aria-label` ("Back to reference 1") that cannot be set per post, so it is dropped
+ * here and replaced (an `a` with two `aria-label`s keeps the first one, the English one).
  */
 interface Props extends HTMLAttributes<'a'> {
   'data-footnote-backref'?: boolean | string;
 }
 
-const { href: rawHref, class: className, ...rest } = Astro.props;
+const { href: rawHref, class: className, 'aria-label': ariaLabel, ...rest } = Astro.props;
 const href = rawHref == null ? undefined : String(rawHref);
 const external = isExternalHref(href);
 const mail = isMailHref(href);
 const locale = localeFromPath(Astro.url.pathname);
 const backref = 'data-footnote-backref' in rest;
-const label = backref ? t(locale, 'blog.post.footnoteBack') : rest['aria-label'];
+const label = backref ? t(locale, 'blog.post.footnoteBack') : ariaLabel;
 ---
 
 <a

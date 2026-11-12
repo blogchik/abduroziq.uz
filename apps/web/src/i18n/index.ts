@@ -1,15 +1,17 @@
 import { PUBLIC_SITE_URL } from 'astro:env/client';
 import {
+  defaultLocale,
   dictionaries,
+  locales,
   namespaces,
   type Dictionary,
   type Locale,
   type Namespace,
 } from '@abduroziq/content';
 
-export const locales = ['en', 'uz'] as const;
+// The list of languages lives in one place, packages/content/src/locales.ts (also read by astro.config.ts).
+export { defaultLocale, locales };
 export type { Locale };
-export const defaultLocale: Locale = 'en';
 
 const isLocale = (value: string): value is Locale => (locales as readonly string[]).includes(value);
 

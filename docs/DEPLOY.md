@@ -10,8 +10,10 @@ The site is static. GitHub Actions builds it and Cloudflare Workers (static asse
 | `main` | production | CI, then `Deploy` workflow |
 
 Releasing = merging `dev` into `main` and pushing. The `Deploy` workflow rebuilds,
-runs `pnpm check`, and runs `wrangler deploy`. You can also run it by hand from the
-Actions tab (`Deploy` -> `Run workflow`).
+runs `pnpm check` (format, lint, typecheck, tests, build) and the Lighthouse assertions of
+`lighthouserc.json`, and only then runs `wrangler deploy`, so a commit that fails any check
+is never published. The job only runs on `main`: starting it by hand from the Actions tab
+(`Deploy` -> `Run workflow`) on another branch does nothing.
 
 Until the two secrets below exist, the workflow still succeeds: it builds, then writes
 "Deploy skipped: secrets not configured" to the job summary and publishes nothing.
@@ -53,8 +55,7 @@ Cloudflare zone"; a hostname with an existing CNAME cannot be used).
    **Not verified:** whether `.uz` registrars (UZINFOCOM and its resellers) accept
    third-party nameservers and whether Cloudflare accepts a `.uz` zone. Test it with the
    steps above; the zone becomes "Active" within minutes to hours if it works.
-2. Enable the route. In `wrangler.jsonc` add a comma after the `assets` block and
-   uncomment the `routes` line, commit to `dev`, merge to `main`. The deploy creates the
+2. Enable the route. In `wrangler.jsonc` uncomment the `routes` line, commit to `dev`, merge to `main`. The deploy creates the
    DNS record and certificate for `abduroziq.uz` automatically.
 3. `www` -> apex redirect. `_redirects` cannot match on host (the docs list
    domain-level redirects as unsupported), so use a dashboard rule:

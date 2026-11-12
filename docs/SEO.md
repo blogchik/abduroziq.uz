@@ -10,7 +10,9 @@ page strings in `packages/content/i18n/<locale>/seo.json`.
 
 - `<title>` as `Title — Abduroziq` (the home page has no suffix), a meta description, an
   absolute canonical, `robots` (`index, follow, max-image-preview:large` in production,
-  `noindex, nofollow` when `PUBLIC_ALLOW_INDEXING` is not `true` or the page sets `noindex`).
+  `noindex, nofollow` when `PUBLIC_ALLOW_INDEXING` is not `true`, `noindex, follow` when the page sets `noindex`).
+  A page can pass `canonical: false` in its `seo` prop to leave out the canonical, `og:url` and
+  hreflang entirely (the 404 page does: it is served at any missing URL).
 - `hreflang` alternates plus `x-default`, only for languages where the page really exists.
 - Open Graph and Twitter `summary_large_image` tags with a generated 1200x630 image, plus
   `og:locale` / `og:locale:alternate`.
@@ -31,8 +33,23 @@ pages reference one Person instead of redefining it. Person data comes from `pro
 
 Sitemap (`sitemap-index.xml`, `sitemap-0.xml`): canonical indexable URLs only (no 404, drafts,
 dev-only routes). Posts carry `lastmod = updated ?? date`. Translated posts are paired with
-hreflang through `translationKey` even when the slugs differ (`lib/seo/sitemap.ts` reads the
-frontmatter). `robots.txt` is disallow-all unless indexing is on.
+hreflang through `translationKey` even when the slugs differ (`lib/seo/sitemap.ts` parses the
+frontmatter with the `yaml` package, so comments and block-style lists are fine; `pnpm test`
+covers it). `robots.txt` is disallow-all unless indexing is on.
+
+Thin pages are kept out until they have something to show (`noindex, follow` and no sitemap
+entry): a blog index of a language with no posts at all, and a tag page with fewer than
+`MIN_POSTS_PER_TAG` (3, `lib/seo/thresholds.ts`) posts in that language.
+
+Structured data names the author "Abduroziq Jabborov" (as the byline reads) with
+`alternateName` "Jabborov Abduroziq"; the Person has the portrait as `image`, the ProfilePage a
+`dateModified` (the build time) and a post with a cover lists it after the generated card in
+`BlogPosting.image`.
+
+Markdown is rendered with smart punctuation off (`satteri({ features: { smartPunctuation: false } })`
+in `astro.config.ts`): a straight `'` stays `'` in post bodies, matching titles, descriptions and
+structured data, so one spelling is indexed and searched. Write typographic quotes or dashes
+yourself if you want them.
 
 ## Writing a post that ranks
 

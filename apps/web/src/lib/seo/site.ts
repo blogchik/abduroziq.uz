@@ -1,4 +1,5 @@
 import { PUBLIC_ALLOW_INDEXING, PUBLIC_SITE_URL } from 'astro:env/client';
+import { profile } from '@abduroziq/content';
 import type { Locale } from '@/i18n';
 
 /** Absolute URL on this site for a site-relative path or URL. */
@@ -22,3 +23,12 @@ export const entityId = {
   /** Fragment id of an entity that lives on a page: `onPage(url, "article")`. */
   onPage: (url: string, name: string) => `${url}#${name}`,
 };
+
+/**
+ * The author's name as readers see it: "Abduroziq Jabborov". The profile stores it surname
+ * first ("Jabborov Abduroziq"), which structured data lists as `alternateName`.
+ */
+export const authorName: string = (() => {
+  const [family = '', ...given] = profile.fullName.split(' ');
+  return [...given, family].join(' ');
+})();
