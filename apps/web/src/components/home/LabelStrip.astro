@@ -162,12 +162,20 @@ const serial = `${lat.toFixed(4)}N ${lon.toFixed(4)}E`;
   }
 
   @media (width >= 64rem) {
-    .strip__coords {
-      display: inline;
-    }
-
     .strip__made :global(.strip__ticks) {
       display: block;
+    }
+  }
+
+  /* The coordinates join the serial only where the paper box is at its full width, which
+     holds the whole serial (about 29 mono characters). */
+  @media (width >= 80rem) {
+    .strip__box {
+      width: 13.5rem;
+    }
+
+    .strip__coords {
+      display: inline;
     }
   }
 </style>

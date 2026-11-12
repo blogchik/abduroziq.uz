@@ -1,25 +1,24 @@
 /**
  * The hero's client side: the entrance sequence (DESIGN 7.1) and the live data.
  *
- * Entrance, one timeline:
- *   0.00  section label; the sentence's lines rise from behind their masks (80ms stagger)
+ * The sentence (the page's `h1` and its largest paint) is never hidden or moved: it is
+ * painted with the first frame and stays as written. The entrance is spent around it:
  *   0.30  the capsules pop in with the spring (120ms stagger); the supporting line rises
+ *         from behind its mask
  *   0.50  the name's letters rise from the baseline (35ms stagger, dur-4)
- *   0.90  the label strip wipes in from the left, then its print fades in; the meta bar
- *   1.10  the desk objects drop in (the motion kit's `data-desk-entrance`)
+ *   0.90  the label strip's print wipes in from the left; the meta bar rises
+ *   0.75  (the desk objects drop in: the motion kit's `data-desk-entrance` in Hero.astro)
  * The name and the strip join the timeline only when they are on screen at that moment;
  * on a short viewport they start below the fold and play when they are scrolled to.
  *
- * The parts are held back by CSS (Hero.astro) until this module applies their start poses
- * and marks the hero `data-hero-ready`, so nothing flashes; without JavaScript, under
- * reduced motion, or when the CSS failsafe has already shown the page, everything simply
- * stays as written.
+ * Only the strip's print and the meta bar are held back by CSS (Hero.astro) until this
+ * module applies their start poses and marks the hero `data-hero-ready`. The capsules, the
+ * supporting line and the name are painted as written and only offset here, so the worst
+ * case is text that is simply already there. Nothing waits for fonts: no line is measured.
+ * Without JavaScript, under reduced motion, or when the CSS failsafe has already shown the
+ * page, everything stays as written.
  */
-import { gsap, onPageEnter, ScrollTrigger, splitLines } from '@/motion';
-import { dur, ease, reveal } from '@/motion/config';
-// Entrances wait for the page-transition panel. The gate is not part of the kit's public
-// exports yet (see the hand-off notes); it is the same function the kit's own reveals use.
-import { afterGate } from '@/motion/core';
+import { afterGate, dur, ease, gsap, onPageEnter, ScrollTrigger } from '@/motion';
 
 declare global {
   interface Window {
@@ -28,7 +27,14 @@ declare global {
   }
 }
 
-let firstLoad = true;
+/** DESIGN 7.1 and 7.2: masked parts rise this far (percent of their height). */
+const MASK_OFFSET = 110;
+const CHAR_STAGGER = 0.035;
+const RISE = 16;
+/** Same start as the kit's scroll reveals. */
+const BELOW_FOLD_START = 'top 88%';
+/** The CSS failsafe in Hero.astro shows the held parts after this long (keep in sync). */
+const FAILSAFE_MS = 2500;
 
 function all(root: ParentNode, selector: string): HTMLElement[] {
   return Array.from(root.querySelectorAll<HTMLElement>(selector));
@@ -79,100 +85,81 @@ function schedule(
   }
   ScrollTrigger.create({
     trigger,
-    start: reveal.start,
+    start: BELOW_FOLD_START,
     once: true,
-    onEnter: () => segment.play(),
+    onEnter: () => afterGate(() => segment.play()),
   });
 }
 
-function buildEntrance(hero: HTMLElement): void {
-  const sentence = hero.querySelector<HTMLElement>('[data-hero-sentence]');
-  const label = all(hero, '[data-hero-part="label"]');
-  const support = all(hero, '[data-hero-part="support"]');
-  const meta = all(hero, '[data-hero-part="meta"]');
+/** Applies the start poses and returns the paused entrance. */
+function buildEntrance(hero: HTMLElement): gsap.core.Timeline {
+  const capsules = all(hero, '[data-hero-sentence] [data-capsule]');
+  const support = all(hero, '[data-hero-support]');
   const name = all(hero, '[data-hero-part="name"]');
   const letters = all(hero, '[data-hero-part="name"] [data-giant-letter]');
   const strip = all(hero, '[data-hero-strip]');
   const print = all(hero, '[data-strip-part]');
+  const meta = all(hero, '[data-hero-part="meta"]');
 
-  const split = sentence ? splitLines(sentence) : undefined;
-  // Queried after the split: these are the nodes that are on screen during the entrance.
-  const capsules = sentence ? all(sentence, '[data-capsule]') : [];
-  const intro = [...label, ...support];
-
-  gsap.set(split?.lines ?? [], { yPercent: reveal.maskOffset });
   gsap.set(capsules, { scale: 0 });
-  gsap.set(letters, { yPercent: reveal.maskOffset });
-  gsap.set(strip, { clipPath: 'inset(0% 100% 0% 0%)' });
-  gsap.set(print, { opacity: 0 });
-  gsap.set([...intro, ...meta], { opacity: 0, y: reveal.rise });
+  gsap.set(support, { yPercent: MASK_OFFSET });
+  gsap.set(letters, { yPercent: MASK_OFFSET });
+  // The held parts: CSS hides them by opacity until `data-hero-ready`; from here on the
+  // print is hidden by its wipe instead.
+  gsap.set(print, { opacity: 1, clipPath: 'inset(0% 100% 0% 0%)' });
+  gsap.set(meta, { opacity: 0, y: RISE });
   hero.setAttribute('data-hero-ready', '');
 
-  // Each part goes back to the markup as written when it is done: no inline styles.
-  const clear = (targets: HTMLElement[]) => () => gsap.set(targets, { clearProps: 'all' });
-  const rise = { opacity: 1, y: 0, duration: dur[3], ease: ease.out };
+  // Each part goes back to the markup as written when it is done. Only the properties set
+  // here are cleared: the capsules carry their own inline width.
+  const clear = (targets: HTMLElement[]) => () =>
+    gsap.set(targets, { clearProps: 'transform,opacity,clipPath' });
 
-  const entrance = gsap.timeline({ onComplete: clear(intro) });
-  entrance.to(label, rise, 0).to(support, rise, 0.3);
-  if (split) {
-    entrance
-      .to(
-        split.lines,
-        { yPercent: 0, duration: dur[3], ease: ease.out, stagger: reveal.lineStagger },
-        0,
-      )
-      .to(capsules, { scale: 1, duration: dur[4], ease: ease.spring, stagger: 0.12 }, 0.3)
-      // The split is undone as soon as the capsules have settled, so the sentence wraps
-      // freely again (the capsules are re-created by the revert, in their final state).
-      .call(() => split.revert(), [], 0.3 + 0.12 * Math.max(0, capsules.length - 1) + dur[4]);
-  }
+  const entrance = gsap.timeline({ paused: true, onComplete: clear([...capsules, ...support]) });
+  entrance
+    .to(capsules, { scale: 1, duration: dur[4], ease: ease.spring, stagger: 0.12 }, 0.3)
+    .to(support, { yPercent: 0, duration: dur[3], ease: ease.out }, 0.3);
 
   const nameIn = gsap.timeline({ paused: true, onComplete: clear(letters) }).to(letters, {
     yPercent: 0,
     duration: dur[4],
     ease: ease.out,
-    stagger: reveal.charStagger,
+    stagger: CHAR_STAGGER,
   });
   schedule(entrance, nameIn, name[0], 0.5);
 
   const stripIn = gsap
-    .timeline({ paused: true, onComplete: clear([...strip, ...print, ...meta]) })
-    .to(strip, { clipPath: 'inset(0% 0% 0% 0%)', duration: dur[3], ease: ease.inOut }, 0)
-    .to(print, { opacity: 1, duration: dur[2], ease: 'none', stagger: 0.05 }, dur[3] * 0.6)
-    .to(meta, rise, 0.3);
+    .timeline({ paused: true, onComplete: clear([...print, ...meta]) })
+    .to(print, { clipPath: 'inset(0% 0% 0% 0%)', duration: dur[2], ease: ease.inOut, stagger: 0.06 }, 0)
+    .to(meta, { opacity: 1, y: 0, duration: dur[3], ease: ease.out }, 0.2);
   schedule(entrance, stripIn, strip[0], 0.9);
+
+  return entrance;
 }
 
-onPageEnter(({ reduced }) => {
+onPageEnter(({ reduced, first, late }) => {
   const hero = document.querySelector<HTMLElement>('[data-hero]');
   if (!hero) return;
 
   const stopClock = keepTime(hero);
   const stopWatching = watchVisibility(hero);
-  let alive = true;
   const cleanup = (): void => {
-    alive = false;
     stopClock();
     stopWatching();
   };
 
-  // Shown as written: reduced motion, a hero already scrolled past (history restore), or
-  // a first load so slow that the CSS failsafe has revealed the page before us.
-  const late = firstLoad && performance.now() > reveal.failsafeMs - 150;
-  firstLoad = false;
-  if (reduced || late || hero.getBoundingClientRect().bottom < 0) {
+  // Shown as written: reduced motion, a first load so slow that the CSS failsafe has
+  // revealed the page (the kit's `late`, or the failsafe passing while the kit got ready),
+  // or a hero already scrolled past (history restore).
+  const failsafePassed = first && performance.now() > FAILSAFE_MS - 100;
+  if (reduced || late || failsafePassed || hero.getBoundingClientRect().bottom < 0) {
     hero.setAttribute('data-hero-ready', '');
     return cleanup;
   }
 
-  const start = (): void => {
-    if (alive) afterGate(() => buildEntrance(hero));
-  };
-  // Lines are measured, so the sentence's font should be in. It is preloaded; do not wait
-  // long for it on a bad connection.
-  if (document.fonts.status === 'loaded') start();
-  else
-    void Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 400))]).then(start);
-
+  // The poses are applied now (after a client-side navigation the transition panel still
+  // covers the page); the entrance plays once the panel has left.
+  const entrance = buildEntrance(hero);
+  afterGate(() => entrance.play());
   return cleanup;
 });

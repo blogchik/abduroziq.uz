@@ -17,12 +17,13 @@ import SentenceCapsule from './SentenceCapsule.astro';
  */
 interface Props {
   locale: Locale;
+  id?: string;
 }
 
 type Inline = Exclude<SentencePart, { kind: 'break' }>;
 type Node = SentencePart | { kind: 'keep'; spaced: boolean; children: Inline[] };
 
-const { locale } = Astro.props;
+const { locale, id } = Astro.props;
 
 const nodes: Node[] = [];
 const source = profile.sentence[locale].map((part) => ({ ...part }));
@@ -69,7 +70,7 @@ source.forEach((part, index) => {
 });
 ---
 
-<h1 class="sentence type-sentence" data-hero-sentence>
+<h1 class="sentence type-sentence" id={id} data-hero-sentence>
   {nodes.map((node) => {
     if (node.kind === 'keep') {
       return (
@@ -95,6 +96,12 @@ source.forEach((part, index) => {
 <style is:global>
   .sentence__keep {
     white-space: nowrap;
+  }
+
+  /* Italic correction: the slanted last letter of an emphasised word leans into whatever
+     follows (a roman word, a capsule), so it gets a little room of its own. */
+  .sentence em {
+    padding-inline-end: 0.06em;
   }
 
   /* The word space before a capsule (a space of the serif is about 0.22em wide). */

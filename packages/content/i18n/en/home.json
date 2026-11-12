@@ -17,6 +17,7 @@
   "tape": "What I'm building",
   "building": {
     "title": "Building",
+    "table": "Projects",
     "columns": {
       "year": "Year",
       "project": "Project",

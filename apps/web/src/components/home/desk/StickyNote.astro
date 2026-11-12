@@ -1,14 +1,17 @@
 ---
-/** Sticky note (DESIGN 4.2): a light paper square with one line in the hand face. */
+/**
+ * Sticky note (DESIGN 4.2): a light paper square with one line in the hand face. The line is
+ * `text`, or the slot when it needs markup (the 404 page prints it in both languages).
+ */
 interface Props {
-  text: string;
+  text?: string;
 }
 
 const { text } = Astro.props;
 ---
 
 <div class="sticky desk-shadow">
-  <p class="sticky__text type-hand">{text}</p>
+  <p class="sticky__text type-hand"><slot>{text}</slot></p>
   <svg class="sticky__line" viewBox="0 0 96 10" aria-hidden="true" focusable="false">
     <path d="M2 6.5c9-4.5 14 3.5 23-.5s14-3.5 23 0 15 3.5 24 0 13-3 22 .5"></path>
   </svg>

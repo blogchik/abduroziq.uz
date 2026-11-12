@@ -35,7 +35,7 @@ const column = (key: string) => t(locale, `home.building.columns.${key}`);
   />
 
   <div class="ptable" data-follower-scope>
-    <div role="table" aria-labelledby="building-title">
+    <div role="table" aria-label={t(locale, 'home.building.table')}>
       <div role="rowgroup">
         <div class="ptable__head type-label" role="row" data-reveal="fade">
           <span role="columnheader">{column('year')}</span>
@@ -114,14 +114,12 @@ const column = (key: string) => t(locale, `home.building.columns.${key}`);
     margin-block-start: clamp(1.5rem, 1.2rem + 1.4vw, 2.5rem);
   }
 
-  /* Rows reach half a gutter past the text on both sides, so the hover fill has air. */
+  /* Rows and their hairlines span the content box exactly, like every other rule on the
+     page; only the hover fill (`::before`) reaches half a gutter past it, for air. */
   .ptable__head,
   .prow {
-    --bleed: calc(var(--gutter) / 2);
     display: grid;
     column-gap: var(--col-gap);
-    margin-inline: calc(-1 * var(--bleed));
-    padding-inline: var(--bleed);
   }
 
   /* Small screens: the column headers are for assistive technology only. */
@@ -145,7 +143,20 @@ const column = (key: string) => t(locale, `home.building.columns.${key}`);
     align-items: start;
     padding-block: 1.4rem 1.5rem;
     border-block-start: var(--hairline) solid var(--rule);
-    transition: background-color var(--dur-1) var(--ease-out);
+    /* The fill below stays behind the cells and above the page. */
+    isolation: isolate;
+  }
+
+  .prow::before {
+    --bleed: calc(var(--gutter) / 2);
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: 0 calc(-1 * var(--bleed));
+    background-color: var(--paper-raised);
+    opacity: 0;
+    transition: opacity var(--dur-1) var(--ease-out);
+    pointer-events: none;
   }
 
   .prow:last-child {
@@ -225,8 +236,8 @@ const column = (key: string) => t(locale, `home.building.columns.${key}`);
     transition: rotate var(--dur-2) var(--ease-out);
   }
 
-  .prow:is(:hover, :focus-within) {
-    background-color: var(--paper-raised);
+  .prow:is(:hover, :focus-within)::before {
+    opacity: 1;
   }
 
   .prow:is(:hover, :focus-within) .prow__label {
@@ -258,10 +269,11 @@ const column = (key: string) => t(locale, `home.building.columns.${key}`);
       color: var(--ink-soft);
     }
 
+    /* `2026` needs one column; the project name and the role get the room. */
     .ptable__head > :nth-child(1),
     .prow__year {
       grid-area: auto;
-      grid-column: 1 / span 2;
+      grid-column: 1 / span 1;
     }
 
     .ptable__head > :nth-child(2),
@@ -291,7 +303,7 @@ const column = (key: string) => t(locale, `home.building.columns.${key}`);
 
     .prow {
       row-gap: 0;
-      padding-block: clamp(1.5rem, 1.1rem + 1.2vw, 2.25rem);
+      padding-block: 1.5rem;
     }
 
     /* Mono cells sit on the baseline of the project name's first line. */
@@ -306,16 +318,4 @@ const column = (key: string) => t(locale, `home.building.columns.${key}`);
     }
   }
 
-  @media (width >= 64rem) {
-    /* Project names start on the same column line as the About paragraph. */
-    .ptable__head > :nth-child(1),
-    .prow__year {
-      grid-column: 1 / span 3;
-    }
-
-    .ptable__head > :nth-child(2),
-    .prow__project {
-      grid-column: 4 / span 4;
-    }
-  }
 </style>

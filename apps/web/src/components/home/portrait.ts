@@ -1,8 +1,7 @@
 /**
- * The portrait (a square black-and-white photo; the face sits near 56% from the left and
- * 35% from the top). The content package exports only its TypeScript entry, so the asset is
- * reached by path, in this one place.
+ * The portrait: a square (1600x1600) black-and-white photo from the content package. The
+ * face sits near 56% from the left and 35% from the top.
  */
-import portrait from '../../../../../packages/content/assets/portrait.jpg';
+import portrait from '@abduroziq/content/assets/portrait.jpg';
 
 export { portrait };

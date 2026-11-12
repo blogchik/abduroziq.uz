@@ -3,8 +3,7 @@
  * one) drinks what is left, refills it, lets a little steam rise and counts the cup. The
  * count is kept per calendar day in localStorage and shared by every bowl on the page.
  */
-import { gsap, onPageEnter } from '@/motion';
-import { dur, ease } from '@/motion/config';
+import { dur, ease, gsap, onPageEnter } from '@/motion';
 
 const KEY = 'cups';
 

@@ -11,7 +11,7 @@ import QrBlock from './QrBlock.astro';
  */
 interface Props {
   text: string;
-  /** Printed on the stub. */
+  /** Printed on the stub; the hero's inline script keeps it current (`data-hero-year`). */
   year: string | number;
 }
 
@@ -37,7 +37,7 @@ const title = withArrows(rest.join(' · ') || kicker);
   </div>
   <div class="ticket__stub desk-shadow">
     <QrBlock seed="abduroziq.uz" class="ticket__qr" />
-    <span class="type-micro">{year}</span>
+    <span class="type-micro" data-hero-year>{year}</span>
   </div>
 </div>
 

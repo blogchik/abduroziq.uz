@@ -17,6 +17,7 @@
   "tape": "Nimalar quryapman",
   "building": {
     "title": "Loyihalar",
+    "table": "Loyihalar ro'yxati",
     "columns": {
       "year": "Yil",
       "project": "Loyiha",

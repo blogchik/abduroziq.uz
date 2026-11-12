@@ -12,6 +12,8 @@ import type { PostSummary } from '@/lib/posts';
  * `03 — Writing` (DESIGN 4.6): the latest posts as post rows and a link to all of them.
  * With nothing published yet the section shows one quiet row built like a post row (date
  * block, title, note) that says the first post is being written, and offers the feed.
+ * Its month is the build's in the HTML and is set to the visitor's current month (in
+ * Tashkent time, like every date on the site) by a tiny inline script before first paint.
  */
 interface Props {
   locale: Locale;
@@ -20,6 +22,7 @@ interface Props {
 
 const { locale, posts } = Astro.props;
 const now = new Date();
+const soonMonth = `${monthShort(now, locale)} ${year(now, locale)}`;
 ---
 
 <Container as="section" grid class="writing" id="writing" aria-labelledby="writing-title">
@@ -46,8 +49,8 @@ const now = new Date();
         <p class="soon__date" aria-hidden="true">
           <span class="type-label">{t(locale, 'home.writing.emptyKicker')}</span>
           <span class="type-numeral soon__numeral">01</span>
-          <span class="type-label">
-            {monthShort(now, locale)} {year(now, locale)}
+          <span class="type-label" data-writing-month>
+            {soonMonth}
           </span>
         </p>
         <div class="soon__body">
@@ -59,6 +62,23 @@ const now = new Date();
           label={t(locale, 'home.writing.emptyStatus')}
           class="soon__status"
         />
+        <script is:inline data-astro-rerun define:vars={{ locale }}>
+          // The same formatting as `date-parts.ts`, at view time instead of build time.
+          (() => {
+            const el = document.querySelector('[data-writing-month]');
+            if (!el) return;
+            const now = new Date();
+            const part = (options, type) =>
+              new Intl.DateTimeFormat(locale, { ...options, timeZone: 'Asia/Tashkent' })
+                .formatToParts(now)
+                .find((p) => p.type === type)?.value ?? '';
+            const text =
+              part({ month: 'short' }, 'month').replace(/\.$/, '') +
+              ' ' +
+              part({ year: 'numeric' }, 'year');
+            if (text.trim() && el.textContent.trim() !== text) el.textContent = text;
+          })();
+        </script>
       </div>
     )}
 
