@@ -75,11 +75,12 @@ secret: `apps/web/.env.development` and `apps/web/.env.production`.
 | `PUBLIC_SITE_URL` | `http://localhost:4321` | `https://abduroziq.uz` | canonical origin |
 | `PUBLIC_ALLOW_INDEXING` | `false` | `true` | `false` adds `noindex` and a disallow-all robots.txt |
 | `PUBLIC_ANALYTICS_TOKEN` | empty | empty until provided | Cloudflare Web Analytics token; empty means no script |
+| `PUBLIC_GOOGLE_SITE_VERIFICATION`, `PUBLIC_YANDEX_VERIFICATION`, `PUBLIC_BING_SITE_VERIFICATION` | empty | empty until provided | search engine ownership codes; a non-empty value is output as a meta tag |
 
 The variables are declared in the `astro:env` schema in `astro.config.ts` (read them with
 `import { PUBLIC_SITE_URL } from 'astro:env/client'`); the config itself loads the `.env`
 files with Vite's `loadEnv` to set `site`. A variable set in the shell wins over the files
-(`PUBLIC_ALLOW_INDEXING=false pnpm build`); Turborepo passes all three through (`globalEnv`).
+(`PUBLIC_ALLOW_INDEXING=false pnpm build`); Turborepo passes all of them through (`globalEnv`).
 Only the exact string `true` enables indexing.
 
 Drafts (`draft: true`) are rendered in development and excluded from production builds.
@@ -250,7 +251,8 @@ that locale's home page.
 interface SeoProps {
   locale: Locale; path: string; title: string; description: string;
   type?: 'website' | 'article';
-  image?: string;                               // defaults to the generated OG image
+  image?: string;                               // defaults to the generated OG image of the page (chosen from `path`)
+  imageAlt?: string;                            // alt of the OG image; defaults to the title
   article?: { publishedTime: Date; modifiedTime?: Date; tags: string[] };
   alternateLocales?: Locale[];                  // defaults to all locales; a post passes only its own unless translated
   alternates?: { locale: Locale; href: string }[]; // explicit alternate URLs (translated posts); wins over alternateLocales
@@ -259,10 +261,16 @@ interface SeoProps {
 }
 ```
 
-Outputs: title, description, canonical, hreflang alternates plus `x-default`, Open Graph,
-Twitter card, robots, theme-color, RSS link, JSON-LD. Schema helpers live in
-`apps/web/src/lib/seo/` (`personSchema`, `websiteSchema`, `blogPostingSchema`,
-`breadcrumbSchema`, `ogImageUrl`).
+Outputs: title (site suffix from `seo.site.titleTemplate`, none on the home page), description,
+canonical, hreflang alternates plus `x-default`, robots, Open Graph (with image size and alt),
+article tags, Twitter card, theme-color, author, RSS and sitemap links, favicons and manifest
+links, optional verification metas and JSON-LD through `JsonLd.astro` (`@context` added,
+output escaped). `Analytics.astro` renders the Cloudflare beacon in production builds only.
+Schema helpers live in `apps/web/src/lib/seo/`: `personSchema`, `websiteSchema`,
+`profilePageSchema`, `blogSchema`, `collectionPageSchema`, `blogPostingSchema`,
+`breadcrumbSchema`, `countWords`, plus `ogImageUrl` (`og.ts`) and the title helpers
+(`meta.ts`). Open Graph PNGs are rendered by `pages/og/[...slug].png.ts`; the sitemap setup
+(`serialize` and `filter`) is `lib/seo/sitemap.ts`. See [SEO.md](SEO.md).
 
 SEO requirements: one `h1` per page; unique title and description per URL; canonical
 always absolute; `lastmod` in the sitemap from `updated ?? date`; every post has a

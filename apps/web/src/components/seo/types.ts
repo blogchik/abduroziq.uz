@@ -9,8 +9,13 @@ export interface SeoProps {
   title: string;
   description: string;
   type?: 'website' | 'article';
-  /** Absolute URL or site-relative path. Defaults to the generated OG image (not built yet). */
+  /**
+   * Absolute URL or site-relative path. Defaults to the generated Open Graph image of the
+   * page (home, blog index or post, chosen from `path`); other pages fall back to the home image.
+   */
   image?: string;
+  /** Alt text of the Open Graph image. Defaults to the page title. */
+  imageAlt?: string;
   article?: { publishedTime: Date; modifiedTime?: Date; tags: string[] };
   /** Defaults to all locales; a post passes only its own unless translated. */
   alternateLocales?: Locale[];

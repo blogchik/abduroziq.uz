@@ -1,7 +1,16 @@
 ---
-import { PUBLIC_ALLOW_INDEXING, PUBLIC_SITE_URL } from 'astro:env/client';
+import {
+  PUBLIC_BING_SITE_VERIFICATION,
+  PUBLIC_GOOGLE_SITE_VERIFICATION,
+  PUBLIC_YANDEX_VERIFICATION,
+} from 'astro:env/client';
 import { profile } from '@abduroziq/content';
 import { defaultLocale, localePath, locales, t, type Locale } from '@/i18n';
+import { palette } from '@/lib/seo/brand';
+import { formatTitle, limits, plainText } from '@/lib/seo/meta';
+import { OG_HEIGHT, OG_WIDTH, defaultOgTarget, ogImageUrl } from '@/lib/seo/og';
+import { absoluteUrl, indexingAllowed, ogLocale } from '@/lib/seo/site';
+import JsonLd from './JsonLd.astro';
 import type { SeoProps } from './types';
 
 type Props = SeoProps;
@@ -10,9 +19,10 @@ const {
   locale,
   path,
   title,
-  description,
+  description: rawDescription,
   type = 'website',
   image,
+  imageAlt,
   article,
   alternateLocales = [...locales],
   alternates,
@@ -21,33 +31,52 @@ const {
 } = Astro.props;
 
 const siteName = profile.name;
-const absolute = (href: string) => new URL(href, PUBLIC_SITE_URL).href;
-
-const fullTitle = title.includes(siteName) ? title : `${title} — ${siteName}`;
-const canonical = absolute(localePath(locale, path));
+const description = plainText(rawDescription);
+const cleanTitle = plainText(title);
+const fullTitle = formatTitle(locale, cleanTitle, { siteName, isHome: path === '/' });
+const pageUrl = localePath(locale, path);
+const canonical = absoluteUrl(pageUrl);
 
 const robots =
-  PUBLIC_ALLOW_INDEXING === 'true' && !noindex
-    ? 'index, follow, max-image-preview:large'
-    : 'noindex, nofollow';
+  indexingAllowed && !noindex ? 'index, follow, max-image-preview:large' : 'noindex, nofollow';
 
-// hreflang only when the page exists in more than one locale.
+// hreflang only for locales where the page really exists. The current page is always listed.
 const alternateLinks: { locale: Locale; href: string }[] = (
   alternates ?? alternateLocales.map((l) => ({ locale: l, href: localePath(l, path) }))
-).map((alt) => ({ locale: alt.locale, href: absolute(alt.href) }));
+).map((alt) => ({ locale: alt.locale, href: absoluteUrl(alt.href) }));
+if (!alternateLinks.some((alt) => alt.locale === locale)) {
+  alternateLinks.push({ locale, href: canonical });
+}
 const xDefault = alternateLinks.find((alt) => alt.locale === defaultLocale) ?? alternateLinks[0];
 
-const ogImage = image ? absolute(image) : undefined;
+// Open Graph image: the generated 1200x630 card unless the page brings its own.
+const generatedImage = image === undefined;
+const ogImage = image ? absoluteUrl(image) : ogImageUrl(locale, defaultOgTarget(path, type));
+const ogImageAlt = plainText(imageAlt ?? cleanTitle);
+
 const ldBlocks = jsonLd === undefined ? [] : Array.isArray(jsonLd) ? jsonLd : [jsonLd];
+
+// Build-time hints, never in dev and never for pages that are not meant to be indexed.
+if (import.meta.env.PROD && robots.startsWith('index')) {
+  if (fullTitle.length > limits.title + 10) {
+    console.warn(
+      `[seo] Title is ${fullTitle.length} characters, search results cut it: "${fullTitle}"`,
+    );
+  }
+  if (description.length < limits.descriptionMin || description.length > limits.descriptionMax) {
+    console.warn(`[seo] Description of ${canonical} is ${description.length} characters.`);
+  }
+}
 ---
 
 <title>{fullTitle}</title>
 <meta name="description" content={description} />
 <link rel="canonical" href={canonical} />
 <meta name="robots" content={robots} />
+<meta name="author" content={profile.fullName} />
 <meta name="color-scheme" content="light dark" />
-<meta name="theme-color" content="#ECEAE5" media="(prefers-color-scheme: light)" />
-<meta name="theme-color" content="#121110" media="(prefers-color-scheme: dark)" />
+<meta name="theme-color" content={palette.paper} media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content={palette.paperDark} media="(prefers-color-scheme: dark)" />
 
 {alternateLinks.length > 1 && (
   <>
@@ -62,39 +91,63 @@ const ldBlocks = jsonLd === undefined ? [] : Array.isArray(jsonLd) ? jsonLd : [j
   rel="alternate"
   type="application/rss+xml"
   title={t(locale, 'seo.rss.title')}
-  href={absolute(localePath(locale, '/rss.xml'))}
+  href={absoluteUrl(localePath(locale, '/rss.xml'))}
 />
+<link rel="sitemap" type="application/xml" href="/sitemap-index.xml" />
+
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+
+{PUBLIC_GOOGLE_SITE_VERIFICATION && (
+  <meta name="google-site-verification" content={PUBLIC_GOOGLE_SITE_VERIFICATION} />
+)}
+{PUBLIC_YANDEX_VERIFICATION && (
+  <meta name="yandex-verification" content={PUBLIC_YANDEX_VERIFICATION} />
+)}
+{PUBLIC_BING_SITE_VERIFICATION && (
+  <meta name="msvalidate.01" content={PUBLIC_BING_SITE_VERIFICATION} />
+)}
 
 <meta property="og:site_name" content={siteName} />
 <meta property="og:type" content={type} />
-<meta property="og:title" content={fullTitle} />
+<meta property="og:title" content={cleanTitle} />
 <meta property="og:description" content={description} />
 <meta property="og:url" content={canonical} />
-<meta property="og:locale" content={locale === 'uz' ? 'uz_UZ' : 'en_US'} />
+<meta property="og:locale" content={ogLocale[locale]} />
 {alternateLinks
   .filter((alt) => alt.locale !== locale)
   .map((alt) => (
-    <meta property="og:locale:alternate" content={alt.locale === 'uz' ? 'uz_UZ' : 'en_US'} />
+    <meta property="og:locale:alternate" content={ogLocale[alt.locale]} />
   ))}
-{ogImage && <meta property="og:image" content={ogImage} />}
+<meta property="og:image" content={ogImage} />
+{generatedImage && <meta property="og:image:type" content="image/png" />}
+{generatedImage && <meta property="og:image:width" content={String(OG_WIDTH)} />}
+{generatedImage && <meta property="og:image:height" content={String(OG_HEIGHT)} />}
+<meta property="og:image:alt" content={ogImageAlt} />
 
 {type === 'article' && article && (
   <>
     <meta property="article:published_time" content={article.publishedTime.toISOString()} />
-    {article.modifiedTime && (
-      <meta property="article:modified_time" content={article.modifiedTime.toISOString()} />
-    )}
+    <meta
+      property="article:modified_time"
+      content={(article.modifiedTime ?? article.publishedTime).toISOString()}
+    />
+    <meta property="article:author" content={absoluteUrl(localePath(locale, '/'))} />
     {article.tags.map((tag) => (
       <meta property="article:tag" content={tag} />
     ))}
   </>
 )}
 
-<meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
-<meta name="twitter:title" content={fullTitle} />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={cleanTitle} />
 <meta name="twitter:description" content={description} />
-{ogImage && <meta name="twitter:image" content={ogImage} />}
+<meta name="twitter:image" content={ogImage} />
+<meta name="twitter:image:alt" content={ogImageAlt} />
 
 {ldBlocks.map((block) => (
-  <script type="application/ld+json" set:html={JSON.stringify(block).replaceAll('<', '\\u003c')} />
+  <JsonLd data={block} />
 ))}

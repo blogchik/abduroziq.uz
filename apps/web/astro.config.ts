@@ -1,4 +1,5 @@
 import { readdirSync } from 'node:fs';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
@@ -6,6 +7,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, envField } from 'astro/config';
 import type { AstroIntegration } from 'astro';
 import { loadEnv } from 'vite';
+import { createSitemapSetup } from './src/lib/seo/sitemap';
 
 // `.env*` files are not loaded inside this config, so load them with Vite's own rules.
 // `astro dev` runs in mode "development"; build, preview and check use "production".
@@ -21,6 +23,16 @@ const site = env['PUBLIC_SITE_URL'] ?? 'http://localhost:4321';
 
 /** Routes that exist only in `astro dev`. Keep in sync with the sitemap filter below. */
 const DEV_ONLY_PATH = /^\/(styleguide|lab)(\/|$)/;
+
+// Sitemap: no 404, dev-only routes or generated images; drafts out; lastmod and hreflang for
+// translated posts come from the posts' frontmatter (see src/lib/seo/sitemap.ts).
+const sitemapSetup = createSitemapSetup({
+  siteUrl: site,
+  postsDir: path.resolve(process.cwd(), '../../packages/content/posts'),
+  locales: ['en', 'uz'],
+  defaultLocale: 'en',
+  exclude: [/^\/404\/?$/, DEV_ONLY_PATH, /^\/(uz\/)?og\//],
+});
 
 /**
  * Injects every `.astro` file under `src/dev-pages/` as a route, in dev only:
@@ -66,10 +78,8 @@ export default defineConfig({
     mdx(),
     sitemap({
       i18n: { defaultLocale: 'en', locales: { en: 'en', uz: 'uz' } },
-      filter: (page) => {
-        const { pathname } = new URL(page);
-        return !/^\/404\/?$/.test(pathname) && !DEV_ONLY_PATH.test(pathname);
-      },
+      filter: sitemapSetup.filter,
+      serialize: sitemapSetup.serialize,
     }),
   ],
   markdown: {
@@ -93,6 +103,22 @@ export default defineConfig({
       }),
       // Cloudflare Web Analytics token. Empty means no analytics script.
       PUBLIC_ANALYTICS_TOKEN: envField.string({
+        context: 'client',
+        access: 'public',
+        default: '',
+      }),
+      // Search engine ownership codes, output as meta tags when set (docs/SEO.md).
+      PUBLIC_GOOGLE_SITE_VERIFICATION: envField.string({
+        context: 'client',
+        access: 'public',
+        default: '',
+      }),
+      PUBLIC_YANDEX_VERIFICATION: envField.string({
+        context: 'client',
+        access: 'public',
+        default: '',
+      }),
+      PUBLIC_BING_SITE_VERIFICATION: envField.string({
         context: 'client',
         access: 'public',
         default: '',

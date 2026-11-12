@@ -1,5 +1,18 @@
 ---
-// Privacy-friendly analytics. STUB: renders nothing yet. The SEO owner implements it:
-// output the Cloudflare Web Analytics beacon only in production builds and only when
-// PUBLIC_ANALYTICS_TOKEN is set.
+// Cloudflare Web Analytics (cookie-free). Rendered only in production builds and only when
+// PUBLIC_ANALYTICS_TOKEN is set; development, previews and builds without a token stay silent.
+import { PUBLIC_ANALYTICS_TOKEN } from 'astro:env/client';
+
+const token = PUBLIC_ANALYTICS_TOKEN.trim();
+const enabled = import.meta.env.PROD && token !== '';
+const beacon = JSON.stringify({ token });
 ---
+
+{enabled && (
+  <script
+    is:inline
+    defer
+    src="https://static.cloudflareinsights.com/beacon.min.js"
+    data-cf-beacon={beacon}
+  />
+)}

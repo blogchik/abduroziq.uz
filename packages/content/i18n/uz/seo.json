@@ -1,23 +1,24 @@
 {
   "site": {
     "name": "Abduroziq",
-    "description": "Jabborov Abduroziqning shaxsiy sayti va blogi. Toshkentda yashovchi mahsulot muhandisi."
+    "description": "Toshkentda yashovchi mahsulot muhandisi Jabborov Abduroziqning shaxsiy sayti va blogi. Inglizcha va o'zbekcha.",
+    "titleTemplate": "{title} — {site}"
   },
   "home": {
-    "title": "Abduroziq, mahsulot muhandisi",
+    "title": "Jabborov Abduroziq, Toshkentdagi mahsulot muhandisi",
     "description": "Jabborov Abduroziq Toshkentda yashovchi mahsulot muhandisi. Loyihalar, qaydlar va raqamli mahsulotlar yaratish haqidagi yozuvlar."
   },
   "blog": {
-    "title": "Yozuvlar",
-    "description": "Abduroziqning raqamli mahsulotlar yaratish, dizayn va muhandislik haqidagi qaydlari."
+    "title": "Mahsulot, dizayn va muhandislik haqida yozuvlar",
+    "description": "Toshkentdagi mahsulot muhandisi Jabborov Abduroziqning raqamli mahsulotlar yaratish, dizayn va muhandislik haqidagi qaydlari."
   },
   "tag": {
     "title": "\"{tag}\" tegli yozuvlar",
-    "description": "Abduroziqning \"{tag}\" tegi bilan belgilangan barcha yozuvlari."
+    "description": "Abduroziqning \"{tag}\" tegi bilan belgilangan yozuvlari: raqamli mahsulotlar yaratish, dizayn va muhandislik haqida qaydlar."
   },
   "notFound": {
     "title": "Sahifa topilmadi",
-    "description": "Siz izlayotgan sahifa mavjud emas."
+    "description": "Siz izlayotgan sahifa mavjud emas. Abduroziqning bosh sahifasiga qayting."
   },
   "rss": {
     "title": "Abduroziq, yozuvlar",

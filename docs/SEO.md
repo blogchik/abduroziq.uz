@@ -1,0 +1,86 @@
+# SEO
+
+How abduroziq.uz is made findable, and how to write a post that ranks. Code lives in
+`apps/web/src/components/seo/`, `apps/web/src/lib/seo/` and `apps/web/src/pages/og/`;
+page strings in `packages/content/i18n/<locale>/seo.json`.
+
+## What every page emits
+
+`BaseLayout` renders `Seo.astro` in the head. All pages get:
+
+- `<title>` as `Title — Abduroziq` (the home page has no suffix), a meta description, an
+  absolute canonical, `robots` (`index, follow, max-image-preview:large` in production,
+  `noindex, nofollow` when `PUBLIC_ALLOW_INDEXING` is not `true` or the page sets `noindex`).
+- `hreflang` alternates plus `x-default`, only for languages where the page really exists.
+- Open Graph and Twitter `summary_large_image` tags with a generated 1200x630 image, plus
+  `og:locale` / `og:locale:alternate`.
+- RSS autodiscovery for the current language, a sitemap link, `theme-color` (light and dark),
+  icons and the web manifest, and the optional verification metas.
+
+| Page | Type | JSON-LD | OG image |
+|---|---|---|---|
+| Home `/`, `/uz/` | website | WebSite, Person, ProfilePage | `/og/<locale>/home.png` |
+| Blog index | website | Blog, BreadcrumbList | `/og/<locale>/blog.png` |
+| Tag page | website | CollectionPage, BreadcrumbList | blog image |
+| Post | article | BlogPosting, BreadcrumbList | `/og/<locale>/post/<slug>.png` |
+| 404 | website | none | home image, `noindex` |
+
+Entities have stable `@id`s (`/#person`, `/#website`, `<url>#article`, `<url>#blog`), so
+pages reference one Person instead of redefining it. Person data comes from `profile` in
+`@abduroziq/content`. Articles add `article:published_time`, `modified_time`, `author`, `tag`.
+
+Sitemap (`sitemap-index.xml`, `sitemap-0.xml`): canonical indexable URLs only (no 404, drafts,
+dev-only routes). Posts carry `lastmod = updated ?? date`. Translated posts are paired with
+hreflang through `translationKey` even when the slugs differ (`lib/seo/sitemap.ts` reads the
+frontmatter). `robots.txt` is disallow-all unless indexing is on.
+
+## Writing a post that ranks
+
+- **Title**: 30 to 60 characters, the main phrase first, one clear promise. The site suffix
+  adds 12 characters; the build warns above 70 in total. Write the title the way a person
+  would search for it (in the post's own language).
+- **Description**: 70 to 160 characters (enforced by the content schema). Say what the reader
+  gets; do not repeat the title. It is the snippet in Google and Yandex.
+- **Slug** (file name): short, lowercase, hyphenated, in the post's language
+  (`astro-seo-guide.mdx`, `seo-boyicha-qollanma.mdx`). Never rename a published slug.
+- **Tags**: 2 to 4 lowercase kebab-case tags, reused across posts. Each tag has its own page.
+- **`updated`**: set it when you materially change a published post. It feeds `lastmod`,
+  `dateModified` and `article:modified_time`. Do not touch it for typo fixes.
+- **`translationKey`**: give the same value to the English and Uzbek versions. It links them
+  with hreflang (head and sitemap) and the language switch. Without it each post stands alone.
+- **Cover**: optional. Social cards always use the generated image; `coverAlt` describes the
+  cover on the page itself (empty means decorative).
+- **Body**: one `h1` (the title, rendered by the layout), then `h2` / `h3` in order. Link to
+  your other posts, write descriptive link text, add `alt` to every image.
+- Use a plain `'` in Uzbek copy (`o'zbek`, `g'oya`): Bricolage Grotesque has no `ʻ` (U+02BB),
+  and one spelling is easier to search for.
+
+## Launch checklist (owner)
+
+1. Deploy to production (`main`); open `https://abduroziq.uz/robots.txt` and check it allows `/`.
+2. **Google Search Console**: add the property, choose the HTML tag method, copy the
+   `content` value into `PUBLIC_GOOGLE_SITE_VERIFICATION` in `apps/web/.env.production`,
+   deploy, click Verify. Then Sitemaps: submit `sitemap-index.xml`.
+3. **Yandex Webmaster**: add the site, choose the meta tag method, put the code in
+   `PUBLIC_YANDEX_VERIFICATION`, deploy, verify. Indexing > Sitemap files: add
+   `https://abduroziq.uz/sitemap-index.xml`. Set the regional link to Uzbekistan.
+4. **Bing Webmaster Tools**: add the site (or import from Search Console), meta tag code in
+   `PUBLIC_BING_SITE_VERIFICATION`, submit the sitemap.
+5. **Analytics (optional)**: create a Cloudflare Web Analytics site and put its token in
+   `PUBLIC_ANALYTICS_TOKEN`. Empty means no script.
+6. Test one post in the Rich Results Test and a share preview (Telegram, LinkedIn). In Search
+   Console use URL Inspection > Request indexing for the home page and each new post.
+7. **IndexNow (optional)**: Bing and Yandex accept instant URL pings. Generate a key, host
+   `https://abduroziq.uz/<key>.txt` from `public/`, and POST new URLs to
+   `https://api.indexnow.org/indexnow`. Google does not use IndexNow.
+
+Verification codes are public values, so committing them is fine.
+
+## Maintenance
+
+- Icons: `node apps/web/scripts/generate-icons.mjs` regenerates the PNG, ICO and SVG icons in
+  `public/` from the accent dot (outputs are committed).
+- OG layout: `lib/seo/og-image.ts`. Long titles shrink and wrap (checked at 20, 60 and 110
+  characters). Colours mirror `docs/DESIGN.md` 2.1 in `lib/seo/brand.ts`.
+- Verify production output with `PUBLIC_ALLOW_INDEXING=true pnpm build` and inspect
+  `apps/web/dist`; with `PUBLIC_ALLOW_INDEXING=false` every page is `noindex`.

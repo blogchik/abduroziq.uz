@@ -1,7 +1,14 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "stream",
-  "globalEnv": ["PUBLIC_SITE_URL", "PUBLIC_ALLOW_INDEXING", "PUBLIC_ANALYTICS_TOKEN"],
+  "globalEnv": [
+    "PUBLIC_SITE_URL",
+    "PUBLIC_ALLOW_INDEXING",
+    "PUBLIC_ANALYTICS_TOKEN",
+    "PUBLIC_GOOGLE_SITE_VERIFICATION",
+    "PUBLIC_YANDEX_VERIFICATION",
+    "PUBLIC_BING_SITE_VERIFICATION"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

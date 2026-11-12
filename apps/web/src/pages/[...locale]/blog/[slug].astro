@@ -12,6 +12,7 @@ import {
   parsePostId,
   toPostSummary,
 } from '@/lib/posts';
+import { blogPostingSchema, breadcrumbSchema, countWords } from '@/lib/seo/schema';
 
 // A post exists at one URL, in its own language: /blog/<slug>/ or /uz/blog/<slug>/.
 export const getStaticPaths = (async () =>
@@ -47,6 +48,14 @@ const alternates = [
       tags,
     },
     alternates,
+    jsonLd: [
+      blogPostingSchema(post, { locale, slug: post.slug, wordCount: countWords(entry.body) }),
+      breadcrumbSchema(locale, [
+        { name: t(locale, 'common.nav.home'), path: '/' },
+        { name: t(locale, 'blog.title'), path: '/blog/' },
+        { name: post.title, path: post.url },
+      ]),
+    ],
   }}
 >
   <article>
