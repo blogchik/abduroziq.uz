@@ -28,7 +28,7 @@ const titles = Object.fromEntries(locales.map((l) => [l, t(l, 'seo.notFound.titl
   path="/404/"
   title={t(locale, 'seo.notFound.title')}
   description={t(locale, 'seo.notFound.description')}
-  seo={{ noindex: true, alternates: alternates('/') }}
+  seo={{ noindex: true, canonical: false, alternates: alternates('/') }}
 >
   <script is:inline data-astro-rerun define:vars={{ titles }}>
     // Before the band is painted: the Uzbek set for Uzbek paths.
