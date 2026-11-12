@@ -1,0 +1,173 @@
+/*
+ * Design tokens, docs/DESIGN.md section 2. Components read these as `var(--token)` in scoped
+ * styles, or through the Tailwind utilities generated from the @theme block below
+ * (`bg-paper`, `text-ink-soft`, `border-rule`, `font-mono`, `px-gutter`, `mt-section`, ...).
+ */
+
+/* 2.1 Colour. Light is the default; `data-theme` on <html> switches. The `--inv-*` set is
+   the opposite theme with `ink` as background: it powers `surface-ink` (the ink band). */
+:root {
+  --paper: #eceae5;
+  --paper-raised: #f6f4f0;
+  --ink: #141310;
+  --ink-soft: #5c574e;
+  --rule: #d2cec6;
+  --accent: #e28413;
+  --accent-text: #9c5200;
+  --on-accent: #141310;
+
+  --inv-paper: #141310;
+  --inv-paper-raised: #1b1a17;
+  --inv-ink: #eceae5;
+  --inv-ink-soft: #9c968a;
+  --inv-rule: #2c2a26;
+  --inv-accent-text: #e28413;
+
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --paper: #121110;
+  --paper-raised: #1b1a17;
+  --ink: #efece6;
+  --ink-soft: #9c968a;
+  --rule: #2c2a26;
+  --accent-text: #e28413;
+
+  --inv-paper: #efece6;
+  --inv-paper-raised: #f6f4f0;
+  --inv-ink: #121110;
+  --inv-ink-soft: #5c574e;
+  --inv-rule: #d2cec6;
+  --inv-accent-text: #9c5200;
+
+  color-scheme: dark;
+}
+
+/* Before the theme script has run (or without JavaScript) follow the system preference. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --paper: #121110;
+    --paper-raised: #1b1a17;
+    --ink: #efece6;
+    --ink-soft: #9c968a;
+    --rule: #2c2a26;
+    --accent-text: #e28413;
+
+    --inv-paper: #efece6;
+    --inv-paper-raised: #f6f4f0;
+    --inv-ink: #121110;
+    --inv-ink-soft: #5c574e;
+    --inv-rule: #d2cec6;
+    --inv-accent-text: #9c5200;
+
+    color-scheme: dark;
+  }
+}
+
+:root {
+  /* 2.2 Type: fluid sizes, linear between a 360px and a 1440px viewport.
+     slope = (max - min) / 1080px, intercept = min - slope * 360px. */
+  --fs-sentence: clamp(2.25rem, 1.0833rem + 5.1852vw, 5.75rem); /* 36 -> 92 */
+  --fs-display: clamp(3.5rem, 1.1667rem + 10.3704vw, 10.5rem); /* 56 -> 168 */
+  --fs-numeral: clamp(2.75rem, 2.1667rem + 2.5926vw, 4.5rem); /* 44 -> 72 */
+  --fs-title: clamp(1.5rem, 1.1667rem + 1.4815vw, 2.5rem); /* 24 -> 40 */
+  --fs-lead: clamp(1.375rem, 1.125rem + 1.1111vw, 2.125rem); /* 22 -> 34 */
+  --fs-body: clamp(1rem, 0.9583rem + 0.1852vw, 1.125rem); /* 16 -> 18 */
+  --fs-article-title: clamp(2.125rem, 1.5rem + 2.7778vw, 4rem); /* 34 -> 64 */
+  --fs-article-body: clamp(1.1875rem, 1.1458rem + 0.1852vw, 1.3125rem); /* 19 -> 21 */
+  --fs-label: clamp(0.6875rem, 0.6667rem + 0.0926vw, 0.75rem); /* 11 -> 12 */
+  --fs-micro: clamp(0.5625rem, 0.5417rem + 0.0926vw, 0.625rem); /* 9 -> 10 */
+  --fs-hand: clamp(1.25rem, 1.125rem + 0.5556vw, 1.625rem); /* 20 -> 26 */
+
+  /* 2.3 Space and grid. */
+  --container-max: 1440px;
+  --gutter: 16px;
+  --col-gap: 16px;
+  --section: clamp(6rem, 4.3333rem + 7.4074vw, 11rem); /* 96 -> 176 */
+  --header-h: 56px;
+  --hairline: 1px;
+
+  /* 2.4 Motion durations. Easings, radius and the desk shadow live in `@theme static` below.
+     The spring lives in GSAP (`elastic.out(1, 0.6)`, `back.out(1.6)`). */
+  --dur-1: 160ms;
+  --dur-2: 320ms;
+  --dur-3: 700ms;
+  --dur-4: 1100ms;
+
+  /* Focus ring colour; surfaces override it (on-accent on accent fills). */
+  --focus-color: var(--ink);
+}
+
+@media (width >= 48rem) {
+  :root {
+    --gutter: 24px;
+    --header-h: 64px;
+  }
+}
+
+@media (width >= 64rem) {
+  :root {
+    --gutter: 40px;
+    --col-gap: 24px;
+  }
+}
+
+/* Reduced motion: colour feedback (dur-1) stays, everything that moves becomes instant. */
+:root[data-motion='reduced'] {
+  --dur-2: 0ms;
+  --dur-3: 0ms;
+  --dur-4: 0ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-2: 0ms;
+    --dur-3: 0ms;
+    --dur-4: 0ms;
+  }
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-raised: var(--paper-raised);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-rule: var(--rule);
+  --color-accent: var(--accent);
+  --color-accent-text: var(--accent-text);
+  --color-on-accent: var(--on-accent);
+
+  --font-display:
+    'Bricolage Grotesque Variable', 'Bricolage Fallback', ui-sans-serif, system-ui, sans-serif;
+  --font-display-condensed:
+    'Bricolage Grotesque Variable', 'Bricolage Condensed Fallback', ui-sans-serif, system-ui,
+    sans-serif;
+  --font-serif: 'Newsreader Variable', 'Newsreader Fallback', Georgia, serif;
+  --font-serif-display: 'Newsreader Variable', 'Newsreader Display Fallback', Georgia, serif;
+  --font-mono: 'Geist Mono', 'Geist Mono Fallback', ui-monospace, monospace;
+  --font-hand: 'Caveat', 'Caveat Fallback', cursive;
+
+  --spacing-gutter: var(--gutter);
+  --spacing-col-gap: var(--col-gap);
+  --spacing-section: var(--section);
+  --spacing-header: var(--header-h);
+
+  --default-transition-duration: var(--dur-1);
+  --default-transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Always emitted as CSS variables, so scoped component styles can use them too. */
+@theme static {
+  /* Radius: 0 for strips, tape, bands and rows; pill for capsules, chips and the cursor;
+     card for desk objects and code blocks. Nothing else. */
+  --radius-pill: 999px;
+  --radius-card: 10px;
+
+  /* The only shadow on the site: lifted desk objects (stronger while dragged). */
+  --shadow-desk: 0 1px 0 rgb(0 0 0 / 0.06), 0 10px 24px -12px rgb(0 0 0 / 0.35);
+  --shadow-desk-lift: 0 2px 0 rgb(0 0 0 / 0.05), 0 24px 40px -16px rgb(0 0 0 / 0.45);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}

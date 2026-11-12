@@ -1,0 +1,65 @@
+---
+/**
+ * Outlined mono chip (1px rule border, pill radius). A link when `href` is given, otherwise
+ * plain text (use that form inside other links, such as post rows). `active` fills it with
+ * ink and marks the link as the current page.
+ */
+interface Props {
+  label: string;
+  href?: string;
+  active?: boolean;
+  /** Optional count shown after the label in ink-soft, e.g. posts per tag. */
+  count?: number;
+  class?: string;
+}
+
+const { label, href, active = false, count, class: className } = Astro.props;
+const Element = href ? 'a' : 'span';
+---
+
+<Element
+  class:list={['tag type-label', { 'is-active': active, 'is-link': href }, className]}
+  href={href}
+  aria-current={href && active ? 'page' : undefined}
+>
+  <span>{label}</span>
+  {count !== undefined && <span class="tag__count">{count}</span>}
+</Element>
+
+<style>
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6em;
+    min-height: 2.25em;
+    padding: 0.42em 0.95em 0.38em;
+    border: var(--hairline) solid var(--rule);
+    border-radius: var(--radius-pill);
+    color: var(--ink);
+    white-space: nowrap;
+    text-decoration: none;
+    transition:
+      border-color var(--dur-1) var(--ease-out),
+      background-color var(--dur-1) var(--ease-out),
+      color var(--dur-1) var(--ease-out);
+  }
+
+  .tag__count {
+    color: var(--ink-soft);
+    transition: color var(--dur-1) var(--ease-out);
+  }
+
+  .tag.is-link:hover {
+    border-color: var(--ink);
+  }
+
+  .tag.is-active {
+    border-color: var(--ink);
+    background-color: var(--ink);
+    color: var(--paper);
+  }
+
+  .tag.is-active .tag__count {
+    color: color-mix(in srgb, var(--paper) 70%, var(--ink));
+  }
+</style>

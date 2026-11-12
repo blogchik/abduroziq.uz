@@ -1,0 +1,50 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * `NN — NAME`: the section label. Number in accent-text, a 24px rule, then the name, all in
+ * the mono `label` style. The number and rule are decorative (hidden from assistive tech),
+ * so `as="h2"` gives a clean heading. On an accent fill everything turns on-accent.
+ */
+interface Props extends HTMLAttributes<'p'> {
+  number: number | string;
+  name: string;
+  as?: 'p' | 'h2' | 'h3' | 'div' | 'span';
+}
+
+const { number, name, as: Element = 'p', class: className, ...rest } = Astro.props;
+const digits = typeof number === 'number' ? String(number).padStart(2, '0') : number;
+---
+
+<Element class:list={['section-label type-label', className]} {...rest}>
+  <span class="section-label__num" aria-hidden="true">
+    {digits}
+  </span>
+  <span class="section-label__rule" aria-hidden="true"></span>
+  <span class="section-label__name">{name}</span>
+</Element>
+
+<style>
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 0.9em;
+    margin: 0;
+    color: var(--ink);
+  }
+
+  .section-label__num {
+    color: var(--accent-text);
+  }
+
+  .section-label__rule {
+    flex: none;
+    width: 24px;
+    height: var(--hairline);
+    background-color: var(--accent-text);
+  }
+
+  .section-label__name {
+    min-width: 0;
+  }
+</style>

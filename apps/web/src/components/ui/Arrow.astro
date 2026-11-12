@@ -1,0 +1,56 @@
+---
+/**
+ * The site's only icon: a drawn arrow (→ ↗ ↑ ↓ ←). The fonts' latin subsets do not contain
+ * arrow characters, so arrows are drawn here instead of typed. Inherits colour and scales
+ * with the surrounding font size (about one em).
+ */
+interface Props {
+  direction?: 'right' | 'up-right' | 'up' | 'down' | 'left' | 'down-right';
+  /** Accessible name. Omit for decorative arrows next to text (the default). */
+  label?: string;
+  class?: string;
+}
+
+const { direction = 'right', label, class: className } = Astro.props;
+
+const rotation = {
+  right: 0,
+  'up-right': -45,
+  up: -90,
+  left: 180,
+  down: 90,
+  'down-right': 45,
+}[direction];
+---
+
+<svg
+  class:list={['arrow', className]}
+  data-direction={direction}
+  viewBox="0 0 16 16"
+  width="16"
+  height="16"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.5"
+  stroke-linecap="square"
+  stroke-linejoin="miter"
+  role={label ? 'img' : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : 'true'}
+  focusable="false"
+>
+  <g transform={rotation ? `rotate(${rotation} 8 8)` : undefined}>
+    <path d="M2.25 8h11M9 3.75 13.25 8 9 12.25"></path>
+  </g>
+</svg>
+
+<style>
+  .arrow {
+    display: inline-block;
+    flex: none;
+    width: 0.92em;
+    height: 0.92em;
+    vertical-align: -0.1em;
+    overflow: visible;
+  }
+</style>

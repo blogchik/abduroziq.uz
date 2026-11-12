@@ -1,0 +1,20 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+/**
+ * The page shell: max 1440px, side padding 16 / 24 / 40px. With `grid` it is also the
+ * 12-column grid (gap 16 / 24px).
+ */
+type Tag = 'div' | 'section' | 'header' | 'footer' | 'nav' | 'article' | 'aside';
+
+interface Props extends HTMLAttributes<'div'> {
+  as?: Tag;
+  grid?: boolean;
+}
+
+const { as: Element = 'div', grid = false, class: className, ...rest } = Astro.props;
+---
+
+<Element class:list={['shell', grid && 'grid-12', className]} {...rest}>
+  <slot />
+</Element>

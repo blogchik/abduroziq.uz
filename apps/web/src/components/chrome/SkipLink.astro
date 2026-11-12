@@ -1,0 +1,35 @@
+---
+import { t, type Locale } from '@/i18n';
+
+/** First focusable element of every page: jumps to <main id="main">. Visible on focus only. */
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+---
+
+<a href="#main" class="skip-link type-label">
+  {t(locale, 'common.skip')}
+</a>
+
+<style>
+  .skip-link {
+    position: fixed;
+    inset-block-start: 0.5rem;
+    inset-inline-start: 0.5rem;
+    z-index: 100;
+    padding: 0.9em 1.2em 0.8em;
+    border-radius: var(--radius-pill);
+    background-color: var(--ink);
+    color: var(--paper);
+    text-decoration: none;
+    translate: 0 calc(-100% - 1rem);
+    transition: translate var(--dur-2) var(--ease-out);
+    --focus-color: var(--ink);
+  }
+
+  .skip-link:focus {
+    translate: 0 0;
+  }
+</style>

@@ -1,21 +1,37 @@
 {
   "skip": "Asosiy mazmunga o'tish",
   "nav": {
-    "label": "Asosiy",
+    "label": "Asosiy menyu",
     "home": "Bosh sahifa",
+    "homeLabel": "abduroziq.uz, bosh sahifa",
     "building": "Loyihalar",
-    "writing": "Yozuvlar"
+    "writing": "Yozuvlar",
+    "menu": "Menyu",
+    "close": "Yopish",
+    "menuLabel": "Sayt menyusi"
   },
   "lang": {
     "label": "Til",
     "en": "EN",
     "uz": "UZ",
     "enName": "Inglizcha",
-    "uzName": "O'zbekcha"
+    "uzName": "O'zbekcha",
+    "writtenIn": {
+      "en": "Ingliz tilida yozilgan",
+      "uz": "O'zbek tilida yozilgan"
+    }
+  },
+  "theme": {
+    "toggle": "Tungi rejim"
+  },
+  "a11y": {
+    "newTab": "(yangi oynada ochiladi)"
   },
   "footer": {
-    "hello": "Salom ayting",
+    "hello": "Salom yo'llang",
     "contact": "Aloqa",
+    "elsewhere": "Tarmoqlarda",
+    "email": "E-pochta",
     "rights": "Barcha huquqlar himoyalangan.",
     "backToTop": "Yuqoriga"
   },

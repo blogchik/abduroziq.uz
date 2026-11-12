@@ -1,0 +1,108 @@
+/*
+ * Fonts: self-hosted Fontsource CSS (docs/STACK-NOTES.md section 6, option B) plus
+ * metric-adjusted local fallbacks, so the swap from fallback to web font does not move text.
+ *
+ * Family names as emitted by Fontsource: 'Bricolage Grotesque Variable' (wght 200-800,
+ * wdth 75-100, opsz 12-96), 'Newsreader Variable' (roman + italic, wght 200-800, opsz 6-72),
+ * 'Geist Mono' (400, 500), 'Caveat' (500). The latin subset of each covers U+02BB-02BC
+ * (Uzbek oʻ gʻ) and the plain apostrophe. Arrows (↗ →) are NOT in any subset: use the
+ * drawn <Arrow /> primitive instead of arrow characters.
+ *
+ * Fallback overrides were measured in Chromium against the real fonts (average advance of an
+ * English + Uzbek sample, ascent and descent from the rendered line box):
+ *   size-adjust       = web font average advance / fallback average advance
+ *   ascent-override   = web font ascent  / size-adjust
+ *   descent-override  = web font descent / size-adjust
+ * Display fallbacks are tuned for the large sizes (opsz 72, weight 300) where a swap is most
+ * visible; text fallbacks for body sizes.
+ */
+@import '@fontsource-variable/bricolage-grotesque/standard.css';
+@import '@fontsource-variable/newsreader/standard.css';
+@import '@fontsource-variable/newsreader/standard-italic.css';
+@import '@fontsource/geist-mono/400.css';
+@import '@fontsource/geist-mono/500.css';
+@import '@fontsource/caveat/500.css';
+
+/* Bricolage (ascent .93, descent .27) on Arial-like grotesques. */
+@font-face {
+  font-family: 'Bricolage Fallback';
+  src:
+    local('Arial'), local('ArialMT'), local('Helvetica Neue'), local('Helvetica'), local('Roboto');
+  size-adjust: 105.16%;
+  ascent-override: 88.44%;
+  descent-override: 25.68%;
+  line-gap-override: 0%;
+}
+
+/* Bricolage at wdth 75 (display titles, day numerals) is about half as wide as Arial. Matching
+   the width keeps line breaks identical across the swap; line height is set in em of the
+   element, so the box does not move even though the fallback glyphs are smaller. */
+@font-face {
+  font-family: 'Bricolage Condensed Fallback';
+  src:
+    local('Arial'), local('ArialMT'), local('Helvetica Neue'), local('Helvetica'), local('Roboto');
+  size-adjust: 50%;
+  ascent-override: 186%;
+  descent-override: 54%;
+  line-gap-override: 0%;
+}
+
+/* Newsreader (ascent .735, descent .265) on Times, text sizes. */
+@font-face {
+  font-family: 'Newsreader Fallback';
+  src: local('Times New Roman'), local('TimesNewRomanPSMT'), local('Times');
+  size-adjust: 99.9%;
+  ascent-override: 73.57%;
+  descent-override: 26.53%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Newsreader Fallback';
+  font-style: italic;
+  src: local('Times New Roman Italic'), local('TimesNewRomanPS-ItalicMT'), local('Times Italic');
+  size-adjust: 92.3%;
+  ascent-override: 79.63%;
+  descent-override: 28.71%;
+  line-gap-override: 0%;
+}
+
+/* Newsreader at display sizes (the hero sentence, article titles). */
+@font-face {
+  font-family: 'Newsreader Display Fallback';
+  src: local('Times New Roman'), local('TimesNewRomanPSMT'), local('Times');
+  size-adjust: 106.11%;
+  ascent-override: 69.27%;
+  descent-override: 24.97%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Newsreader Display Fallback';
+  font-style: italic;
+  src: local('Times New Roman Italic'), local('TimesNewRomanPS-ItalicMT'), local('Times Italic');
+  size-adjust: 96.16%;
+  ascent-override: 76.43%;
+  descent-override: 27.56%;
+  line-gap-override: 0%;
+}
+
+/* Geist Mono (ascent 1.005, descent .295) on Courier New: same advance, only the box differs. */
+@font-face {
+  font-family: 'Geist Mono Fallback';
+  src: local('Courier New'), local('CourierNewPSMT'), local('Courier');
+  size-adjust: 99.98%;
+  ascent-override: 100.52%;
+  descent-override: 29.51%;
+  line-gap-override: 0%;
+}
+
+/* Caveat (ascent .96, descent .30) is much narrower than any system face. */
+@font-face {
+  font-family: 'Caveat Fallback';
+  src: local('Arial'), local('ArialMT'), local('Helvetica'), local('Roboto');
+  size-adjust: 75.8%;
+  ascent-override: 126.65%;
+  descent-override: 39.58%;
+  line-gap-override: 0%;
+}

@@ -1,11 +1,15 @@
 ---
 import { ClientRouter } from 'astro:transitions';
+import bricolageUrl from '@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-standard-normal.woff2?url';
+import newsreaderUrl from '@fontsource-variable/newsreader/files/newsreader-latin-standard-normal.woff2?url';
+import geistMonoUrl from '@fontsource/geist-mono/files/geist-mono-latin-500-normal.woff2?url';
 import Footer from '@/components/chrome/Footer.astro';
 import Header from '@/components/chrome/Header.astro';
+import SkipLink from '@/components/chrome/SkipLink.astro';
 import Analytics from '@/components/seo/Analytics.astro';
 import Seo from '@/components/seo/Seo.astro';
 import type { SeoProps } from '@/components/seo/types';
-import { locales, localePath, t, type Locale } from '@/i18n';
+import { locales, localePath, type Locale } from '@/i18n';
 import '@/styles/global.css';
 import '@/motion/motion.css';
 
@@ -32,6 +36,11 @@ const switchHrefs = Object.fromEntries(
       : localePath(target, path),
   ]),
 ) as Record<Locale, string>;
+
+// Above-the-fold fonts: Bricolage (body, names, titles) and the mono labels on every page;
+// the serif only where it opens the page (the home sentence, a post's title).
+const serifFirst = path === '/' || /^\/blog\/(?!tag\/)[^/]+\/$/.test(path);
+const preloads = [bricolageUrl, geistMonoUrl, ...(serifFirst ? [newsreaderUrl] : [])];
 ---
 
 <!doctype html>
@@ -39,6 +48,9 @@ const switchHrefs = Object.fromEntries(
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {preloads.map((href) => (
+      <link rel="preload" as="font" type="font/woff2" href={href} crossorigin="anonymous" />
+    ))}
     <Seo {...seo} locale={locale} path={path} title={title} description={description} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script is:inline>
@@ -76,15 +88,10 @@ const switchHrefs = Object.fromEntries(
     </script>
     <ClientRouter />
   </head>
-  <body>
-    <a
-      href="#main"
-      class="bg-ink text-paper fixed top-2 left-2 z-50 -translate-y-20 px-3 py-2 focus:translate-y-0"
-    >
-      {t(locale, 'common.skip')}
-    </a>
-    <Header locale={locale} switchHrefs={switchHrefs} />
-    <main id="main" class={mainClass}>
+  <body id="top">
+    <SkipLink locale={locale} />
+    <Header locale={locale} path={path} switchHrefs={switchHrefs} />
+    <main id="main" tabindex="-1" class={mainClass}>
       <slot />
     </main>
     <Footer locale={locale} />

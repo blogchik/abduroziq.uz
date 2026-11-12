@@ -1,0 +1,40 @@
+---
+import { isoMonth, monthLong, year } from '@/components/ui/date-parts';
+import type { Locale } from '@/i18n';
+
+/**
+ * Month group header of the blog index (DESIGN 5.2): a small ink tab, `NOVEMBER 2026` in
+ * paper on ink, sitting on a 2px ink rule. Post rows follow directly under it.
+ */
+interface Props {
+  /** Any date inside the month. */
+  date: Date;
+  locale: Locale;
+  as?: 'h2' | 'h3' | 'div';
+  id?: string;
+  class?: string;
+}
+
+const { date, locale, as: Element = 'h2', id, class: className } = Astro.props;
+const text = `${monthLong(date, locale)} ${year(date, locale)}`;
+---
+
+<div class:list={['month-tab', className]} id={id}>
+  <Element class="month-tab__tab type-label">
+    <time datetime={isoMonth(date)}>{text}</time>
+  </Element>
+</div>
+
+<style>
+  .month-tab {
+    display: flex;
+    border-block-end: 2px solid var(--ink);
+  }
+
+  .month-tab__tab {
+    margin: 0;
+    padding: 0.62em 1.05em 0.5em;
+    background-color: var(--ink);
+    color: var(--paper);
+  }
+</style>
