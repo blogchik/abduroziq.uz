@@ -1,0 +1,107 @@
+---
+import Arrow from '@/components/ui/Arrow.astro';
+import Barcode from '@/components/ui/Barcode.astro';
+import { withArrows } from '../lib';
+import QrBlock from './QrBlock.astro';
+
+/**
+ * The accent ticket (DESIGN 4.2): a body and a tear-off stub, two rounded cards whose
+ * corners meet in the notches of a perforated edge. `text` is `KICKER · TITLE`; an arrow
+ * character in it is drawn.
+ */
+interface Props {
+  text: string;
+  /** Printed on the stub. */
+  year: string | number;
+}
+
+const { text, year } = Astro.props;
+const [kicker = '', ...rest] = text.split('·').map((part) => part.trim());
+const title = withArrows(rest.join(' · ') || kicker);
+---
+
+<div class="ticket">
+  <div class="ticket__body desk-shadow">
+    <p class="ticket__row type-micro">
+      <span>{rest.length > 0 ? kicker : ''}</span>
+      <span>No. 0001</span>
+    </p>
+    <p class="ticket__title type-body">
+      {title.map((part) =>
+        part.kind === 'arrow' ? <Arrow class="ticket__arrow" /> : <span>{part.value}</span>,
+      )}
+    </p>
+    <div class="ticket__bars">
+      <Barcode seed="desk-ticket" bars={44} height="10px" fill />
+    </div>
+  </div>
+  <div class="ticket__stub desk-shadow">
+    <QrBlock seed="abduroziq.uz" class="ticket__qr" />
+    <span class="type-micro">{year}</span>
+  </div>
+</div>
+
+<style>
+  .ticket {
+    display: flex;
+    color: var(--on-accent);
+  }
+
+  .ticket__body,
+  .ticket__stub {
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--radius-card);
+    background-color: var(--accent);
+  }
+
+  .ticket__body {
+    justify-content: space-between;
+    gap: 9px;
+    width: calc(196px * var(--desk-k, 1));
+    padding: 10px 14px 12px;
+  }
+
+  .ticket__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0;
+  }
+
+  .ticket__title {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    margin: 0;
+    font-stretch: 75%;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .ticket__bars {
+    display: flex;
+  }
+
+  .ticket__title :global(.ticket__arrow) {
+    width: 0.8em;
+    height: 0.8em;
+  }
+
+  /* The perforation: a dashed line where the stub tears off. */
+  .ticket__stub {
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 10px 11px 9px;
+    border-inline-start: var(--hairline) dashed
+      color-mix(in srgb, var(--on-accent) 55%, var(--accent));
+  }
+
+  .ticket__stub :global(.ticket__qr) {
+    width: calc(46px * var(--desk-k, 1));
+  }
+</style>

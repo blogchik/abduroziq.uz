@@ -1,0 +1,199 @@
+---
+import { profile } from '@abduroziq/content';
+import Container from '@/components/ui/Container.astro';
+import GiantName from '@/components/ui/GiantName.astro';
+import SectionLabel from '@/components/ui/SectionLabel.astro';
+import { t, type Locale } from '@/i18n';
+import Desk from './desk/Desk.astro';
+import LabelStrip from './LabelStrip.astro';
+import { TASHKENT_UTC_OFFSET } from './lib';
+import MetaBar from './MetaBar.astro';
+import Sentence from './Sentence.astro';
+
+/**
+ * `00 — Hello` (DESIGN 4.1 and 4.2): the section label, the sentence (the page's `h1`), the
+ * supporting line, the giant name, the label strip and the meta bar, with the desk lying
+ * over the whole block on wide screens and in its own band below it on small ones.
+ *
+ * Live data (Tashkent sky, clock, month) is painted by the inline script at the end of the
+ * section, before first paint, and kept current by `hero.ts`, which also runs the entrance
+ * (DESIGN 7.1). `data-hero-part` marks what the entrance brings in: those parts are held
+ * back by CSS only while JavaScript and full motion are on, with the same 2.5s failsafe as
+ * the motion kit.
+ */
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const { lat, lon } = profile.location;
+---
+
+<section class="hero" data-hero>
+  <Container class="hero__shell">
+    <SectionLabel number={0} name={t(locale, 'home.hero.label')} data-hero-part="label" />
+
+    <div class="hero__sentence" data-hero-part="sentence">
+      <Sentence locale={locale} />
+    </div>
+    <p class="hero__support type-body" data-hero-part="support">
+      {profile.support[locale]}
+    </p>
+
+    <div class="hero__name" data-hero-part="name">
+      <GiantName decorative />
+    </div>
+    <div data-hero-part="strip">
+      <LabelStrip />
+    </div>
+    <div data-hero-part="meta">
+      <MetaBar locale={locale} />
+    </div>
+
+    <div class="hero__desk">
+      <Desk locale={locale} variant="hero" entrance={1.1} />
+    </div>
+    <Desk locale={locale} variant="band" entrance={0.15} class="hero__band" />
+  </Container>
+
+  <script is:inline data-astro-rerun define:vars={{ lat, lon, offset: TASHKENT_UTC_OFFSET }}>
+    // Tashkent right now, painted before first paint: the sky capsule (day, night, or the
+    // accent half hour around sunrise and sunset, with the sun or moon placed along its
+    // arc), the clock, the month of the availability mark and the year of the label.
+    // `hero.ts` calls the same function every second.
+    (() => {
+      const MONTHS = 'JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC'.split(' ');
+      const rad = Math.PI / 180;
+      const put = (root, selector, text) => {
+        for (const el of root.querySelectorAll(selector)) {
+          if (el.textContent !== text) el.textContent = text;
+        }
+      };
+      const paint = (hero) => {
+        // Shifted so that the UTC getters read Tashkent wall-clock time.
+        const now = new Date(Date.now() + offset * 36e5);
+        const year = now.getUTCFullYear();
+        const hour = now.getUTCHours() + now.getUTCMinutes() / 60;
+        const day =
+          (Date.UTC(year, now.getUTCMonth(), now.getUTCDate()) - Date.UTC(year, 0, 0)) / 864e5;
+        // Sunrise and sunset from the solar declination (accurate to a quarter of an hour).
+        const decl = -23.44 * Math.cos((2 * Math.PI * (day + 10)) / 365) * rad;
+        const half = Math.acos(-Math.tan(lat * rad) * Math.tan(decl)) / rad / 15;
+        const noon = 12 + offset - lon / 15;
+        const rise = noon - half;
+        const set = noon + half;
+        const up = hour >= rise && hour <= set;
+        const progress = up
+          ? (hour - rise) / (set - rise)
+          : ((hour - set + 24) % 24) / (24 - (set - rise));
+        const edge = Math.min(Math.abs(hour - rise), Math.abs(hour - set)) < 0.25;
+        hero.dataset.sky = edge ? 'dusk' : up ? 'day' : 'night';
+        hero.style.setProperty('--sky-x', (14 + 72 * progress).toFixed(1));
+        hero.style.setProperty('--sky-y', (70 - 46 * Math.sin(Math.PI * progress)).toFixed(1));
+        put(hero, '[data-hero-clock]', now.toISOString().slice(11, 19));
+        put(hero, '[data-hero-month]', MONTHS[now.getUTCMonth()] + '.' + year);
+        put(hero, '[data-hero-year]', String(year));
+      };
+      window.__heroNow = paint;
+      const hero =
+        document.currentScript?.closest('[data-hero]') ?? document.querySelector('[data-hero]');
+      if (!hero) return;
+      paint(hero);
+      // The band's objects wait for the rest of the entrance only if they are on screen.
+      const band = hero.querySelector('[data-desk-variant="band"]');
+      if (band && band.getBoundingClientRect().top < innerHeight) {
+        band.setAttribute('data-desk-entrance', '1.1');
+      }
+    })();
+  </script>
+</section>
+
+<script>
+  import './hero';
+</script>
+
+<style>
+  .hero {
+    position: relative;
+    padding-block-start: clamp(1.75rem, 1.2rem + 2.4vw, 3.5rem);
+  }
+
+  .hero :global(.hero__shell) {
+    position: relative;
+  }
+
+  /* The sentence: three lines on desktop, about 9 of 12 columns. */
+  .hero__sentence {
+    margin-block-start: clamp(1.5rem, 1.1rem + 1.8vw, 2.75rem);
+  }
+
+  .hero__sentence :global(.sentence) {
+    /* Nine of the twelve columns at most, so the right of the hero stays free. */
+    max-width: min(11.2em, 100%);
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .hero__support {
+    max-width: 23em; /* about 46ch; em, so it does not move when the font swaps */
+    margin: clamp(1.25rem, 1rem + 1.1vw, 2rem) 0 0;
+    color: var(--ink-soft);
+  }
+
+  .hero__name {
+    margin-block-start: clamp(3rem, 1.6rem + 6.2vw, 5.5rem);
+  }
+
+  /* ------------------------------------------------------------------ desks */
+
+  /* Wide screens: the desk is the whole hero box, above the text. Only the objects take
+     pointer events, so the sentence under the empty desk stays selectable. */
+  .hero__desk {
+    display: none;
+    position: absolute;
+    inset: 0 var(--gutter);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .hero__desk :global(.desk) {
+    height: 100%;
+  }
+
+  .hero :global(.hero__band) {
+    margin-block-start: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+  }
+
+  @media (width >= 64rem) {
+    .hero__desk {
+      display: block;
+    }
+
+    .hero :global(.hero__band) {
+      display: none;
+    }
+
+    .hero__sentence :global(.sentence) {
+      max-width: min(11.2em, 74.6%);
+    }
+
+    /* Room around the supporting line for the objects that lie there. */
+    .hero__name {
+      margin-block-start: clamp(8.5rem, 2rem + 9vw, 10.5rem);
+    }
+  }
+
+  /* --------------------------------------------------------------- entrance */
+
+  /* Held back until hero.ts takes over (it sets `data-hero-ready` in the same task in
+     which it applies the start poses). Never without JavaScript or under reduced motion. */
+  :global(html.js[data-motion='full']) .hero:not([data-hero-ready]) [data-hero-part] {
+    opacity: 0;
+    animation: m-failsafe 0.01s linear 2.5s forwards;
+  }
+
+  /* Nothing in the hero animates while it is off screen. */
+  .hero[data-offscreen] :global(.status__dot::after) {
+    animation-play-state: paused;
+  }
+</style>

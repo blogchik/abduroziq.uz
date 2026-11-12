@@ -1,0 +1,72 @@
+---
+import { Image } from 'astro:assets';
+import { portrait } from '../portrait';
+
+/** Polaroid (DESIGN 4.2): the portrait in a light frame with a hand-written caption. */
+interface Props {
+  caption: string;
+}
+
+const { caption } = Astro.props;
+---
+
+<div class="polaroid desk-shadow">
+  <div class="polaroid__photo">
+    <Image
+      src={portrait}
+      alt=""
+      width={384}
+      height={384}
+      quality={76}
+      loading="lazy"
+      decoding="async"
+      draggable="false"
+    />
+  </div>
+  <p class="polaroid__caption type-hand">{caption}</p>
+</div>
+
+<style>
+  .polaroid {
+    width: calc(156px * var(--desk-k, 1));
+    padding: calc(9px * var(--desk-k, 1));
+    padding-block-end: 0;
+    background-color: var(--desk-paper);
+    color: var(--desk-ink);
+  }
+
+  .polaroid__photo {
+    position: relative;
+    aspect-ratio: 1;
+    overflow: hidden;
+    background-color: var(--desk-ink);
+  }
+
+  /* A hairline inside the photo edge, as on a print. */
+  .polaroid__photo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: var(--hairline) solid color-mix(in srgb, var(--desk-ink) 16%, transparent);
+  }
+
+  .polaroid__photo :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* The face sits near 56% / 35% of the square photo. */
+    object-position: 56% 35%;
+    scale: 1.18;
+    transform-origin: 56% 38%;
+  }
+
+  .polaroid__caption {
+    display: grid;
+    place-items: center;
+    height: calc(42px * var(--desk-k, 1));
+    margin: 0;
+    rotate: -1.5deg;
+    white-space: nowrap;
+  }
+</style>

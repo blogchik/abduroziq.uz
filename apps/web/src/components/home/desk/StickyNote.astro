@@ -1,0 +1,47 @@
+---
+/** Sticky note (DESIGN 4.2): a light paper square with one line in the hand face. */
+interface Props {
+  text: string;
+}
+
+const { text } = Astro.props;
+---
+
+<div class="sticky desk-shadow">
+  <p class="sticky__text type-hand">{text}</p>
+  <svg class="sticky__line" viewBox="0 0 96 10" aria-hidden="true" focusable="false">
+    <path d="M2 6.5c9-4.5 14 3.5 23-.5s14-3.5 23 0 15 3.5 24 0 13-3 22 .5"></path>
+  </svg>
+</div>
+
+<style>
+  .sticky {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    width: calc(148px * var(--desk-k, 1));
+    height: calc(148px * var(--desk-k, 1));
+    padding: 14px 16px 12px;
+    /* The gummed edge: a slightly darker band along the top. */
+    border-block-start: calc(20px * var(--desk-k, 1)) solid
+      color-mix(in srgb, var(--desk-ink) 6%, var(--desk-paper));
+    background-color: var(--desk-paper);
+    color: var(--desk-ink);
+  }
+
+  .sticky__text {
+    margin: 0;
+    rotate: -3deg;
+  }
+
+  .sticky__line {
+    width: 64%;
+    overflow: visible;
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    rotate: -3deg;
+  }
+</style>
