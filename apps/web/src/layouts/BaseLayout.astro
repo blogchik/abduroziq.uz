@@ -52,7 +52,6 @@ const preloads = [bricolageUrl, geistMonoUrl, ...(serifFirst ? [newsreaderUrl] :
       <link rel="preload" as="font" type="font/woff2" href={href} crossorigin="anonymous" />
     ))}
     <Seo {...seo} locale={locale} path={path} title={title} description={description} />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script is:inline>
       // Root state, set before first paint and again after every client-side swap (Astro
       // replaces the <html> attributes on navigation):
