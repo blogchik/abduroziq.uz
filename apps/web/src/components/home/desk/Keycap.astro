@@ -1,0 +1,59 @@
+---
+/**
+ * A single key (DESIGN 4.2): a dark base with a slightly lighter top face (the bevel is two
+ * flat tones, no gradient). A leading command sign in the legend is drawn, because the
+ * fonts do not have the glyph.
+ */
+interface Props {
+  legend: string;
+}
+
+const { legend } = Astro.props;
+const command = legend.startsWith('⌘');
+const text = command ? legend.slice(1) : legend;
+---
+
+<div class="keycap desk-shadow">
+  <span class="keycap__face type-body">
+    {command && (
+      <svg class="keycap__cmd" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M9 9h6v6H9zM9 9H6a3 3 0 1 1 3-3zM15 9V6a3 3 0 1 1 3 3zM15 15h3a3 3 0 1 1-3 3zM9 15v3a3 3 0 1 1-3-3z" />
+      </svg>
+    )}
+    <span>{text}</span>
+  </span>
+</div>
+
+<style>
+  .keycap {
+    width: calc(72px * var(--desk-k, 1));
+    height: calc(72px * var(--desk-k, 1));
+    padding: 4px 6px 10px;
+    border-radius: var(--radius-card);
+    background-color: color-mix(in srgb, var(--ink) 82%, var(--paper));
+    color: var(--paper);
+  }
+
+  .keycap__face {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.12em;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--radius-card);
+    background-color: var(--ink);
+    font-weight: 500;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .keycap__cmd {
+    width: 1.05em;
+    height: 1.05em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linejoin: round;
+  }
+</style>

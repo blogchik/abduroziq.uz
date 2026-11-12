@@ -1,0 +1,239 @@
+---
+import { profile } from '@abduroziq/content';
+import { t, type Locale } from '@/i18n';
+import CursorFlag from './CursorFlag.astro';
+import DeskObject from './DeskObject.astro';
+import DeskTicket from './DeskTicket.astro';
+import Keycap from './Keycap.astro';
+import Piala from './Piala.astro';
+import Polaroid from './Polaroid.astro';
+import StickyNote from './StickyNote.astro';
+
+/**
+ * A desk (DESIGN 4.2): objects that can be picked up and thrown, through the motion kit's
+ * desk contract. Three layouts share the object components:
+ *
+ *  - `hero`: six objects in the free space of the hero (right of the sentence and around the
+ *    supporting line). The desk is the whole hero box; poses are percent of it.
+ *  - `band`: the mobile and tablet version, its own 320px band with four objects.
+ *  - `notfound` and `notfound-band`: three objects to throw on the 404 page, over the whole
+ *    ink band on wide screens and in a band of their own on small ones.
+ *
+ * Decoration only: hidden from assistive technology, nothing in it is focusable.
+ */
+type Kind = 'sticky' | 'polaroid' | 'ticket' | 'keycap' | 'piala' | 'flag';
+
+interface Pose {
+  kind: Kind;
+  x: number;
+  y: number;
+  rotate: number;
+}
+
+interface Props {
+  locale: Locale;
+  variant: 'hero' | 'band' | 'notfound' | 'notfound-band';
+  /** Seconds before the objects drop in (the kit's `data-desk-entrance`). */
+  entrance?: number;
+  class?: string;
+}
+
+const { locale, variant, entrance, class: className } = Astro.props;
+
+const layouts: Record<Props['variant'], Pose[]> = {
+  hero: [
+    { kind: 'polaroid', x: 84.9, y: 2.9, rotate: 5 },
+    { kind: 'sticky', x: 77.1, y: 24, rotate: -4 },
+    { kind: 'flag', x: 64.5, y: 4, rotate: 0 },
+    { kind: 'ticket', x: 37, y: 47.5, rotate: -5 },
+    { kind: 'keycap', x: 62.5, y: 48.5, rotate: 9 },
+    { kind: 'piala', x: 86, y: 42.5, rotate: 0 },
+  ],
+  band: [
+    { kind: 'sticky', x: 2, y: 5, rotate: -5 },
+    { kind: 'polaroid', x: 62, y: 2, rotate: 6 },
+    { kind: 'piala', x: 27, y: 44, rotate: 0 },
+    { kind: 'flag', x: 66, y: 86, rotate: 0 },
+  ],
+  notfound: [
+    { kind: 'sticky', x: 67, y: 7, rotate: 5 },
+    { kind: 'piala', x: 87.5, y: 33, rotate: 0 },
+    { kind: 'keycap', x: 64, y: 45, rotate: -10 },
+  ],
+  'notfound-band': [
+    { kind: 'piala', x: 30, y: 14, rotate: 0 },
+    { kind: 'sticky', x: 64, y: 3, rotate: 5 },
+    { kind: 'keycap', x: 74, y: 70, rotate: -10 },
+  ],
+};
+
+const year = new Date().getFullYear();
+const notFound = variant.startsWith('notfound');
+---
+
+<div
+  class:list={['desk', `desk--${variant}`, className]}
+  data-desk
+  data-desk-entrance={entrance}
+  data-desk-variant={variant}
+  aria-hidden="true"
+>
+  {layouts[variant].map((pose) => (
+    <DeskObject kind={pose.kind} x={pose.x} y={pose.y} rotate={pose.rotate}>
+      {pose.kind === 'sticky' && (
+        <StickyNote text={notFound ? t(locale, 'home.notFound.note') : profile.desk.stickyNote} />
+      )}
+      {pose.kind === 'polaroid' && <Polaroid caption={profile.desk.polaroidCaption} />}
+      {pose.kind === 'ticket' && (
+        <>
+          <DeskTicket text={profile.desk.ticket} year={year} />
+          <span class="note note--ticket">
+            <svg class="note__arrow" viewBox="0 0 48 40" focusable="false">
+              <path d="M44 36C30 36 14 28 8 6M6 14.8 8 6l6.2 6.6" />
+            </svg>
+            <span class="note__text type-hand">{t(locale, 'home.desk.notes.ticket')}</span>
+          </span>
+        </>
+      )}
+      {pose.kind === 'keycap' && (
+        <Keycap legend={notFound ? t(locale, 'home.notFound.keycap') : profile.desk.keycap} />
+      )}
+      {pose.kind === 'piala' && (
+        <>
+          <Piala
+            counterLabel={t(locale, 'home.desk.cups')}
+            refillLabel={t(locale, 'home.desk.refill')}
+          />
+          <span class="note note--piala">
+            <span class="note__text type-hand">{profile.desk.pialaNote[locale]}</span>
+            <svg class="note__arrow" viewBox="0 0 56 44" focusable="false">
+              <path d="M4 4c10 2 22 10 20 20-2 8-12 6-9-2 3-8 20-4 34 14M47.5 27.1 49 36l-8.2-3.7" />
+            </svg>
+          </span>
+        </>
+      )}
+      {pose.kind === 'flag' && (
+        <>
+          <CursorFlag name={profile.desk.cursorFlag} />
+          {!notFound && (
+            <span class="note note--flag">
+              <svg class="note__arrow" viewBox="0 0 44 28" focusable="false">
+                <path d="M40 6C30 22 16 24 5 16M8.9 24.1 5 16l8.9 1.3" />
+              </svg>
+              <span class="note__text type-hand">{t(locale, 'home.desk.notes.flag')}</span>
+            </span>
+          )}
+        </>
+      )}
+    </DeskObject>
+  ))}
+</div>
+
+<style>
+  .desk {
+    position: relative;
+  }
+
+  /* Objects are a little smaller where there is less room. */
+  .desk--band {
+    --desk-k: 0.82;
+    height: 320px;
+  }
+
+  .desk--notfound-band {
+    --desk-k: 0.82;
+    height: 240px;
+  }
+
+  @media (width < 80rem) {
+    .desk--hero {
+      --desk-k: 0.84;
+    }
+  }
+
+  /* Hand notes: pencil on the page, attached to their object. */
+  .note {
+    position: absolute;
+    display: flex;
+    align-items: flex-start;
+    color: var(--ink-soft);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .note__arrow {
+    flex: none;
+    overflow: visible;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Left of the bowl, two short lines, the arrow looping into the bowl. */
+  .note--piala {
+    inset-block-start: calc(2px * var(--desk-k, 1));
+    inset-inline-end: calc(100% - 10px);
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .note--piala .note__text {
+    max-width: 5.4em;
+    text-align: end;
+    white-space: normal;
+    rotate: -6deg;
+  }
+
+  .note--piala .note__arrow {
+    width: 46px;
+    margin-block-start: 16px;
+  }
+
+  .note--ticket {
+    inset-block-end: calc(100% + 2px);
+    inset-inline-start: 30%;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .note--ticket .note__arrow {
+    width: 34px;
+    margin-block-start: 14px;
+    scale: 1 -1;
+  }
+
+  .note--ticket .note__text {
+    rotate: -4deg;
+  }
+
+  .note--flag {
+    inset-block-start: calc(100% + 2px);
+    inset-inline-start: 38px;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .note--flag .note__arrow {
+    width: 30px;
+    rotate: 78deg;
+    margin-block-end: 6px;
+  }
+
+  .note--flag .note__text {
+    rotate: -4deg;
+  }
+
+  /* Below 1440px the cursor flag lies close to the sentence: no room for its note. */
+  @media (width < 90rem) {
+    .note--flag {
+      display: none;
+    }
+  }
+
+  /* On the band there is no room for the second and third notes. */
+  .desk--band .note--flag {
+    display: none;
+  }
+</style>

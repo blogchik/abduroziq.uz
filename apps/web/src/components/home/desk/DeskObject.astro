@@ -1,0 +1,81 @@
+---
+/**
+ * One object on a desk: the element the motion kit places, drags and throws (`data-draggable`
+ * with its start pose in `data-x`, `data-y`, `data-rotate`). The visual goes in the slot; mark
+ * the part that casts the shadow with the class `desk-shadow`.
+ *
+ * Before the kit takes over, and without JavaScript, the same pose is applied in CSS from
+ * the custom properties, so the static desk looks like the live one.
+ */
+interface Props {
+  kind: string;
+  /** Percent of the desk for the top-left corner. */
+  x: number;
+  y: number;
+  /** Degrees. */
+  rotate?: number;
+  class?: string;
+}
+
+const { kind, x, y, rotate = 0, class: className } = Astro.props;
+---
+
+<div
+  class:list={['desk-obj', className]}
+  data-draggable
+  data-x={x}
+  data-y={y}
+  data-rotate={rotate}
+  data-cursor="drag"
+  data-desk-obj={kind}
+  style={`--x:${x};--y:${y};--r:${rotate}`}
+>
+  <slot />
+</div>
+
+<style is:global>
+  /* The desk objects are physical things: light paper, dark ink, in both themes. Resolved
+     on the root so they stay the same inside an ink band. */
+  :root {
+    --desk-paper: var(--paper-raised);
+    --desk-ink: var(--ink);
+    --desk-ink-soft: var(--ink-soft);
+    --desk-rule: var(--rule);
+  }
+
+  @supports (color: light-dark(#000, #fff)) {
+    :root {
+      --desk-paper: light-dark(var(--paper-raised), var(--inv-paper-raised));
+      --desk-ink: light-dark(var(--ink), var(--inv-ink));
+      --desk-ink-soft: light-dark(var(--ink-soft), var(--inv-ink-soft));
+      --desk-rule: light-dark(var(--rule), var(--inv-rule));
+    }
+  }
+
+  .desk-obj {
+    width: max-content;
+    pointer-events: auto;
+    cursor: grab;
+  }
+
+  .desk-obj[data-dragging] {
+    cursor: grabbing;
+  }
+
+  /* Static pose: no JavaScript, or the moment before the kit places the objects. */
+  html [data-desk]:not([data-desk-ready]) .desk-obj[data-draggable] {
+    position: absolute;
+    top: calc(var(--y) * 1%);
+    left: calc(var(--x) * 1%);
+    rotate: calc(var(--r) * 1deg);
+  }
+
+  .desk-obj .desk-shadow {
+    box-shadow: var(--shadow-desk);
+    transition: box-shadow var(--dur-2) var(--ease-out);
+  }
+
+  .desk-obj[data-dragging] .desk-shadow {
+    box-shadow: var(--shadow-desk-lift);
+  }
+</style>

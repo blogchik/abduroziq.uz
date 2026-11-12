@@ -1,0 +1,181 @@
+---
+import ArrowLink from '@/components/ui/ArrowLink.astro';
+import Container from '@/components/ui/Container.astro';
+import PostRow from '@/components/ui/PostRow.astro';
+import SectionLabel from '@/components/ui/SectionLabel.astro';
+import StatusDot from '@/components/ui/StatusDot.astro';
+import { monthShort, year } from '@/components/ui/date-parts';
+import { localePath, t, type Locale } from '@/i18n';
+import type { PostSummary } from '@/lib/posts';
+
+/**
+ * `03 — Writing` (DESIGN 4.6): the latest posts as post rows and a link to all of them.
+ * With nothing published yet the section shows one quiet row built like a post row (date
+ * block, title, note) that says the first post is being written, and offers the feed.
+ */
+interface Props {
+  locale: Locale;
+  posts: PostSummary[];
+}
+
+const { locale, posts } = Astro.props;
+const now = new Date();
+---
+
+<Container as="section" grid class="writing" id="writing" aria-labelledby="writing-title">
+  <SectionLabel
+    as="h2"
+    number={3}
+    name={t(locale, 'home.writing.title')}
+    id="writing-title"
+    class="writing__label"
+    data-reveal="fade"
+  />
+
+  <div class="writing__body">
+    {posts.length > 0 ? (
+      <ul class="writing__list" data-reveal-group>
+        {posts.map((post) => (
+          <li class="writing__item" data-reveal-item>
+            <PostRow post={post} locale={locale} as="div" />
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <div class="soon" data-reveal="rise">
+        <p class="soon__date" aria-hidden="true">
+          <span class="type-label">{t(locale, 'home.writing.emptyKicker')}</span>
+          <span class="type-numeral soon__numeral">01</span>
+          <span class="type-label">
+            {monthShort(now, locale)} {year(now, locale)}
+          </span>
+        </p>
+        <div class="soon__body">
+          <p class="type-title soon__title">{t(locale, 'home.writing.empty')}</p>
+          <p class="type-body soon__note">{t(locale, 'home.writing.emptyNote')}</p>
+        </div>
+        <StatusDot
+          status="design"
+          label={t(locale, 'home.writing.emptyStatus')}
+          class="soon__status"
+        />
+      </div>
+    )}
+
+    <p class="writing__more" data-reveal="fade">
+      {posts.length > 0 ? (
+        <ArrowLink href={localePath(locale, '/blog/')} label={t(locale, 'home.writing.all')} />
+      ) : (
+        <ArrowLink
+          href={localePath(locale, '/rss.xml')}
+          label={t(locale, 'home.writing.rss')}
+          direction="up-right"
+        />
+      )}
+    </p>
+  </div>
+</Container>
+
+<style>
+  .writing {
+    padding-block-start: var(--section);
+    row-gap: clamp(1.5rem, 1.2rem + 1.4vw, 2.5rem);
+  }
+
+  .writing :global(.writing__label) {
+    grid-column: 1 / -1;
+    align-self: start;
+  }
+
+  .writing__body {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .writing__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Each row is alone in its list item, so it draws both of its hairlines: overlap them. */
+  .writing__item + .writing__item {
+    margin-block-start: calc(-1 * var(--hairline));
+  }
+
+  .writing__more {
+    display: flex;
+    justify-content: flex-end;
+    margin: clamp(1.25rem, 1rem + 1vw, 1.75rem) 0 0;
+  }
+
+  /* The quiet row: the same grid as a post row, nothing to click. */
+  .soon {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr);
+    column-gap: var(--col-gap);
+    row-gap: 1rem;
+    padding-block: clamp(1.5rem, 1.1rem + 1.2vw, 2.25rem);
+    border-block: var(--hairline) solid var(--rule);
+  }
+
+  .soon__date {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.45rem;
+    margin: 0;
+    color: var(--ink-soft);
+  }
+
+  .soon__numeral {
+    color: var(--rule);
+  }
+
+  .soon__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    min-width: 0;
+  }
+
+  .soon__title {
+    margin: calc(var(--fs-label) * 1.3 + 0.45rem) 0 0;
+  }
+
+  .soon__note {
+    max-width: 36em;
+    margin: 0;
+    color: var(--ink-soft);
+  }
+
+  .soon :global(.soon__status) {
+    grid-column: 2;
+    color: var(--ink-soft);
+  }
+
+  @media (width >= 40rem) {
+    .soon {
+      grid-template-columns: 6rem minmax(0, 1fr) auto;
+    }
+
+    /* Level with the first line of the title, where a post row has its arrow. */
+    .soon :global(.soon__status) {
+      grid-column: 3;
+      align-self: start;
+      margin-block-start: calc(var(--fs-label) * 1.3 + 0.45rem + var(--fs-title) * 0.34);
+    }
+  }
+
+  @media (width >= 64rem) {
+    .writing :global(.writing__label) {
+      grid-column: 1 / span 3;
+      /* Level with the weekday label of the first row. */
+      padding-block-start: calc(clamp(1.5rem, 1.1rem + 1.2vw, 2.25rem) + var(--hairline));
+    }
+
+    .writing__body {
+      grid-column: 4 / span 9;
+    }
+  }
+</style>

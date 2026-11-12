@@ -1,0 +1,32 @@
+---
+import { qrPath } from '../lib';
+
+/**
+ * A QR-like block in currentColor (three finder patterns and seeded noise). Decorative: it
+ * only looks like a code. Shared by the desk ticket and the project ticket previews.
+ */
+interface Props {
+  seed: string;
+  class?: string;
+}
+
+const { seed, class: className } = Astro.props;
+---
+
+<svg
+  class:list={['qr', className]}
+  viewBox="0 0 21 21"
+  aria-hidden="true"
+  focusable="false"
+  shape-rendering="crispEdges"
+>
+  <path d={qrPath(seed)} fill="currentColor"></path>
+</svg>
+
+<style>
+  .qr {
+    display: block;
+    flex: none;
+    aspect-ratio: 1;
+  }
+</style>

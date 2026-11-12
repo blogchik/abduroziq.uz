@@ -1,0 +1,188 @@
+---
+/**
+ * The piala (DESIGN 4.2): an Uzbek tea bowl seen from above, with the dark band and cotton
+ * bolls of the classic pattern, tea in the accent. It is the gag of the desk: a click (not
+ * a drag) refills it, a little steam rises and the counter of the day goes up (`piala.ts`).
+ *
+ * The bowl is a button so that the kit leaves clicks on it alone, but it is not focusable:
+ * the desk is decoration and hidden from assistive technology.
+ */
+interface Props {
+  /** `Cups today`, shown uppercase before the count. */
+  counterLabel: string;
+  /** Cursor label while hovering the bowl. */
+  refillLabel: string;
+}
+
+const { counterLabel, refillLabel } = Astro.props;
+const bolls = Array.from({ length: 8 }, (_, i) => i * 45);
+---
+
+<div class="piala" data-piala>
+  <svg class="piala__steam" viewBox="0 0 60 40" aria-hidden="true" focusable="false">
+    <path data-piala-steam d="M14 36c-6-7 6-10 0-17s5-9 1-15"></path>
+    <path data-piala-steam d="M30 38c-7-8 7-11 0-19s6-10 1-17"></path>
+    <path data-piala-steam d="M46 36c-6-7 6-10 0-17s5-9 1-15"></path>
+  </svg>
+
+  <button
+    class="piala__bowl desk-shadow"
+    type="button"
+    tabindex="-1"
+    data-piala-button
+    data-cursor="drag"
+    data-cursor-label={refillLabel}
+  >
+    <svg class="piala__ceramic" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+      <circle class="piala__rim" cx="60" cy="60" r="59.5"></circle>
+      <circle class="piala__band" cx="60" cy="60" r="50.5"></circle>
+      {bolls.map((angle) => (
+        <g transform={`rotate(${angle} 60 60)`}>
+          <g class="piala__boll">
+            <circle cx="57.8" cy="10.6" r="2.1" />
+            <circle cx="62.2" cy="10.6" r="2.1" />
+            <circle cx="60" cy="7.6" r="2.1" />
+            <path d="M60 12.2v2.6" />
+          </g>
+          <circle class="piala__dot" cx="60" cy="9.5" r="1.1" transform="rotate(22.5 60 60)" />
+        </g>
+      ))}
+      <circle class="piala__wall" cx="60" cy="60" r="44.5"></circle>
+      <circle class="piala__line" cx="60" cy="60" r="39.5"></circle>
+    </svg>
+    <span class="piala__tea" data-piala-tea>
+      <svg viewBox="0 0 68 68" aria-hidden="true" focusable="false">
+        <path class="piala__sheen" d="M14.5 24.5c4-6.5 10.5-10.5 18-11"></path>
+        <path class="piala__leaf" d="M41 44c3.5-3.5 8-3.2 10 .2-3.2 2.3-7.2 2.3-10-.2z"></path>
+      </svg>
+    </span>
+  </button>
+
+  <p class="piala__count type-label">
+    {counterLabel}: <span data-piala-count>0</span>
+  </p>
+</div>
+
+<script>
+  import './piala';
+</script>
+
+<style>
+  .piala {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .piala__bowl {
+    position: relative;
+    display: block;
+    width: calc(124px * var(--desk-k, 1));
+    height: calc(124px * var(--desk-k, 1));
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: none;
+    cursor: inherit;
+    touch-action: none;
+  }
+
+  .piala__bowl:focus {
+    outline: none;
+  }
+
+  .piala__ceramic {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .piala__rim,
+  .piala__wall {
+    fill: var(--desk-paper);
+    stroke: var(--desk-ink);
+    stroke-width: 1;
+  }
+
+  /* The dark band of the pattern: a thick ring. */
+  .piala__band {
+    fill: none;
+    stroke: var(--desk-ink);
+    stroke-width: 11;
+  }
+
+  .piala__boll {
+    fill: var(--desk-paper);
+    stroke: var(--desk-paper);
+    stroke-width: 1;
+    stroke-linecap: round;
+  }
+
+  .piala__dot {
+    fill: var(--accent);
+  }
+
+  .piala__line {
+    fill: none;
+    stroke: var(--desk-rule);
+    stroke-width: 1;
+  }
+
+  /* Tea: a disc that is small when the bowl is nearly empty and fills the bowl when full. */
+  .piala__tea {
+    position: absolute;
+    inset: 21.5%;
+    border-radius: var(--radius-pill);
+    background-color: var(--accent);
+    transform: scale(0.4);
+  }
+
+  .piala[data-filled] .piala__tea {
+    transform: none;
+  }
+
+  .piala__tea svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke-linecap: round;
+  }
+
+  .piala__sheen {
+    stroke: var(--desk-paper);
+    stroke-width: 1.6;
+    opacity: 0.7;
+  }
+
+  .piala__leaf {
+    fill: var(--on-accent);
+    opacity: 0.75;
+  }
+
+  .piala__steam {
+    position: absolute;
+    inset-block-end: calc(100% - 6px);
+    inset-inline-start: 50%;
+    width: calc(60px * var(--desk-k, 1));
+    translate: -50% 0;
+    overflow: visible;
+    fill: none;
+    stroke: var(--ink-soft);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    pointer-events: none;
+  }
+
+  .piala__steam path {
+    opacity: 0;
+  }
+
+  .piala__count {
+    margin: 0;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+</style>

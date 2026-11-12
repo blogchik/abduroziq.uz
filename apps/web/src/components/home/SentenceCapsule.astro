@@ -1,0 +1,77 @@
+---
+import { Image } from 'astro:assets';
+import Capsule from '@/components/ui/Capsule.astro';
+import { portrait } from './portrait';
+
+/**
+ * One of the three capsules of the hero sentence (styles live in Sentence.astro):
+ *
+ *  - portrait: the photo, cropped to the pill around the face.
+ *  - craft: a selection frame that turns into `</>` and back (CSS only).
+ *  - tashkent: the sky over Tashkent right now. Its state lives on the hero root
+ *    (`data-sky`, `--sky-x`, `--sky-y`, set by the inline script in Hero.astro), not on the
+ *    capsule, so it survives the entrance animation re-creating the children of the heading.
+ */
+interface Props {
+  id: 'portrait' | 'craft' | 'tashkent';
+}
+
+const { id } = Astro.props;
+---
+
+{id === 'portrait' && (
+  <Capsule tone="ink" class="capsule-portrait">
+    <Image
+      src={portrait}
+      alt=""
+      width={384}
+      height={384}
+      quality={76}
+      loading="eager"
+      decoding="async"
+    />
+  </Capsule>
+)}
+{id === 'craft' && (
+  <Capsule tone="paper" class="capsule-craft">
+    <svg class="craft" viewBox="0 0 48 25" focusable="false">
+      <path class="craft__edge craft__edge--top" d="M13 6.5h22" />
+      <path class="craft__edge craft__edge--bottom" d="M13 18.5h22" />
+      <g class="craft__side craft__side--left">
+        <path class="craft__arm craft__arm--lu" d="M13 12.5v-6" />
+        <path class="craft__arm craft__arm--ld" d="M13 12.5v6" />
+      </g>
+      <g class="craft__side craft__side--right">
+        <path class="craft__arm craft__arm--ru" d="M35 12.5v-6" />
+        <path class="craft__arm craft__arm--rd" d="M35 12.5v6" />
+      </g>
+      <path class="craft__slash" d="M21.8 17.8 26.2 7.2" />
+      <g class="craft__handles">
+        <rect x="11.5" y="5" width="3" height="3" />
+        <rect x="33.5" y="5" width="3" height="3" />
+        <rect x="11.5" y="17" width="3" height="3" />
+        <rect x="33.5" y="17" width="3" height="3" />
+      </g>
+      <path
+        class="craft__still"
+        d="M21 10.2 18.7 12.5 21 14.8M27 10.2l2.3 2.3-2.3 2.3M22.9 15.3l2.2-5.6"
+      />
+    </svg>
+  </Capsule>
+)}
+{id === 'tashkent' && (
+  <Capsule class="capsule-sky">
+    <span class="sky">
+      <span class="sky__stars" />
+      <span class="sky__dot" />
+      <svg
+        class="sky__city"
+        viewBox="0 0 96 50"
+        preserveAspectRatio="xMidYMax slice"
+        focusable="false"
+      >
+        <path d="M0 43h18v-5h7v5h9v-8h5v8h30l4-17 4 17h19M73 26V9M70.5 22h5" />
+      </svg>
+    </span>
+  </Capsule>
+)}

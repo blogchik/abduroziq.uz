@@ -1,0 +1,120 @@
+---
+import { profile } from '@abduroziq/content';
+import Barcode from '@/components/ui/Barcode.astro';
+import StatusDot from '@/components/ui/StatusDot.astro';
+import { t, type Locale } from '@/i18n';
+import { TASHKENT_UTC_OFFSET } from './lib';
+
+/**
+ * The meta bar under the label strip (DESIGN 4.1): between two runs of barcode ticks, the
+ * availability mark with the current month, the live Tashkent clock and the coordinates.
+ *
+ * The month and the clock are filled by the hero's inline script before first paint and
+ * tick from then on (`hero.ts`). Without JavaScript the month is the build's and the clock
+ * shows only the time zone. The print is label shorthand, so assistive technology gets one
+ * plain sentence instead.
+ */
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+
+const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+const now = new Date(Date.now() + TASHKENT_UTC_OFFSET * 3_600_000);
+const month = `${MONTHS[now.getUTCMonth()]}.${now.getUTCFullYear()}`;
+const { lat, lon } = profile.location;
+const zone = `UTC${TASHKENT_UTC_OFFSET >= 0 ? '+' : ''}${TASHKENT_UTC_OFFSET}`;
+---
+
+<div class="meta" data-hero-meta>
+  <p class="sr-only">{t(locale, 'home.hero.meta')}</p>
+  <div class="meta__row type-label" aria-hidden="true">
+    <Barcode seed="meta-left" bars={84} height="10px" fill class="meta__bars" />
+    <p class="meta__items">
+      <span class="meta__item">
+        <span class="meta__bracket">[</span>
+        <StatusDot status="live" pulse="always" label="" hideLabel class="meta__dot" />
+        <span>
+          AVLB : <span data-hero-month>{month}</span>
+        </span>
+        <span class="meta__bracket">]</span>
+      </span>
+      <span class="meta__item">
+        <span class="meta__clock" data-hero-clock>
+          --:--:--
+        </span>{' '}
+        {zone}
+      </span>
+      <span class="meta__item meta__item--place">
+        {lat.toFixed(4)}° N {lon.toFixed(4)}° E
+      </span>
+    </p>
+    <Barcode seed="meta-right" bars={84} height="10px" fill class="meta__bars" />
+  </div>
+</div>
+
+<style>
+  .meta {
+    padding-block-start: clamp(0.75rem, 0.6rem + 0.6vw, 1.125rem);
+  }
+
+  .meta__row {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.75rem, 0.3rem + 1.6vw, 1.75rem);
+  }
+
+  .meta__row :global(.meta__bars) {
+    display: none;
+  }
+
+  .meta__items {
+    display: flex;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem clamp(0.75rem, 0.3rem + 1.6vw, 1.75rem);
+    margin: 0;
+  }
+
+  .meta__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7em;
+    white-space: nowrap;
+  }
+
+  .meta__item--place {
+    color: var(--ink-soft);
+  }
+
+  /* The clock never changes width: mono digits in a fixed box. */
+  .meta__clock {
+    display: inline-block;
+    min-width: 8ch;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The dot of the availability mark needs no label next to it. */
+  .meta__item :global(.meta__dot) {
+    gap: 0;
+  }
+
+  @media (width >= 48rem) {
+    .meta__row :global(.meta__bars) {
+      display: block;
+    }
+
+    .meta__items {
+      flex: none;
+      flex-wrap: nowrap;
+      justify-content: center;
+    }
+
+    .meta__item--place {
+      color: inherit;
+    }
+  }
+</style>

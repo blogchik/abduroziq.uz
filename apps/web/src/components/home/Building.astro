@@ -1,0 +1,321 @@
+---
+import { projects } from '@abduroziq/content';
+import Arrow from '@/components/ui/Arrow.astro';
+import Container from '@/components/ui/Container.astro';
+import SectionLabel from '@/components/ui/SectionLabel.astro';
+import StatusDot from '@/components/ui/StatusDot.astro';
+import { t, type Locale } from '@/i18n';
+import ProjectTicket from './ProjectTicket.astro';
+
+/**
+ * `02 — Building` (DESIGN 4.5): the projects as a hairline table.
+ *
+ * A row with a URL must be one link, which a `<tr>` cannot be, so the table is built from
+ * ARIA table roles on a grid: assistive technology gets rows, column headers and a row
+ * header (the project), and the link inside the project cell is stretched over its row
+ * (the arrow at the end of a row is only its visual sign).
+ * Hovering or focusing a row shows the project's ticket next to the pointer (the motion
+ * kit's follower); on small screens the rows stack and there is no preview.
+ */
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const column = (key: string) => t(locale, `home.building.columns.${key}`);
+---
+
+<Container as="section" class="building" id="building" aria-labelledby="building-title">
+  <SectionLabel
+    as="h2"
+    number={2}
+    name={t(locale, 'home.building.title')}
+    id="building-title"
+    data-reveal="fade"
+  />
+
+  <div class="ptable" data-follower-scope>
+    <div role="table" aria-labelledby="building-title">
+      <div role="rowgroup">
+        <div class="ptable__head type-label" role="row" data-reveal="fade">
+          <span role="columnheader">{column('year')}</span>
+          <span role="columnheader">{column('project')}</span>
+          <span role="columnheader">{column('role')}</span>
+          <span role="columnheader">{column('status')}</span>
+        </div>
+      </div>
+
+      <div role="rowgroup" data-reveal-group>
+        {projects.map((project) => {
+          const status = t(locale, `home.building.status.${project.status}`);
+          return (
+            <div
+              class="prow"
+              role="row"
+              data-reveal-item
+              data-follower-item={project.id}
+              data-pulse-scope
+            >
+              <span class="prow__year type-label" role="cell">
+                {project.year}
+              </span>
+              <div class="prow__project" role="rowheader">
+                {project.url ? (
+                  <a
+                    class="prow__name type-title"
+                    href={project.url}
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    <span class="prow__label">{project.name}</span>
+                    <span class="sr-only">{` ${t(locale, 'common.a11y.newTab')}`}</span>
+                  </a>
+                ) : (
+                  <span class="prow__name type-title">
+                    <span class="prow__label">{project.name}</span>
+                  </span>
+                )}
+                <p class="prow__desc type-body">{project.description[locale]}</p>
+              </div>
+              <span class="prow__role type-label" role="cell">
+                {project.role[locale]}
+              </span>
+              <span class="prow__status" role="cell">
+                <StatusDot status={project.status} label={status} />
+              </span>
+              <span class="prow__arrow" aria-hidden="true">
+                {project.url && <Arrow direction="up-right" />}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+
+    <div class="ptable__preview" data-follower-panel aria-hidden="true">
+      {projects.map((project, index) => (
+        <ProjectTicket
+          project={project}
+          index={index}
+          status={t(locale, `home.building.status.${project.status}`)}
+          data-follower-for={project.id}
+        />
+      ))}
+    </div>
+  </div>
+</Container>
+
+<style>
+  .building {
+    padding-block-start: var(--section);
+  }
+
+  .ptable {
+    margin-block-start: clamp(1.5rem, 1.2rem + 1.4vw, 2.5rem);
+  }
+
+  /* Rows reach half a gutter past the text on both sides, so the hover fill has air. */
+  .ptable__head,
+  .prow {
+    --bleed: calc(var(--gutter) / 2);
+    display: grid;
+    column-gap: var(--col-gap);
+    margin-inline: calc(-1 * var(--bleed));
+    padding-inline: var(--bleed);
+  }
+
+  /* Small screens: the column headers are for assistive technology only. */
+  .ptable__head {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .prow {
+    position: relative;
+    grid-template-columns: minmax(0, 1fr) auto 1.25rem;
+    grid-template-areas:
+      'year status status'
+      'project project arrow'
+      'role role role';
+    row-gap: 0.7rem;
+    align-items: start;
+    padding-block: 1.4rem 1.5rem;
+    border-block-start: var(--hairline) solid var(--rule);
+    transition: background-color var(--dur-1) var(--ease-out);
+  }
+
+  .prow:last-child {
+    border-block-end: var(--hairline) solid var(--rule);
+  }
+
+  .prow__year {
+    grid-area: year;
+    color: var(--ink-soft);
+  }
+
+  .prow__project {
+    grid-area: project;
+    min-width: 0;
+  }
+
+  .prow__name {
+    display: block;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  /* The shift is on the text, not on the link: a transformed link would become the
+     containing block of the overlay below and shrink it to the name. */
+  .prow__label {
+    display: inline-block;
+    transition: translate var(--dur-2) var(--ease-out);
+  }
+
+  /* The link covers its whole row. */
+  a.prow__name::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  a.prow__name:focus-visible {
+    outline: none;
+  }
+
+  a.prow__name:focus-visible::after {
+    outline: 2px solid var(--focus-color);
+    outline-offset: -2px;
+  }
+
+  .prow__desc {
+    max-width: 30em;
+    margin: 0.55rem 0 0;
+    color: var(--ink-soft);
+  }
+
+  .prow__role {
+    grid-area: role;
+    color: var(--ink-soft);
+  }
+
+  .prow__status {
+    grid-area: status;
+    display: flex;
+    justify-self: end;
+  }
+
+  /* Centred on the first line of the project name. */
+  .prow__arrow {
+    grid-area: arrow;
+    display: flex;
+    align-items: center;
+    justify-self: end;
+    height: 1.08em;
+    color: var(--accent-text);
+    font-size: var(--fs-title);
+  }
+
+  .prow__arrow :global(.arrow) {
+    width: 0.62em;
+    height: 0.62em;
+    transition: rotate var(--dur-2) var(--ease-out);
+  }
+
+  .prow:is(:hover, :focus-within) {
+    background-color: var(--paper-raised);
+  }
+
+  .prow:is(:hover, :focus-within) .prow__label {
+    translate: 12px 0;
+  }
+
+  .prow:is(:hover, :focus-within) .prow__arrow :global(.arrow) {
+    rotate: 45deg;
+  }
+
+  .ptable__preview {
+    width: 240px;
+  }
+
+  @media (width >= 48rem) {
+    .ptable__head,
+    .prow {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      grid-template-areas: none;
+    }
+
+    .ptable__head {
+      position: static;
+      width: auto;
+      height: auto;
+      overflow: visible;
+      clip-path: none;
+      padding-block-end: 0.9rem;
+      color: var(--ink-soft);
+    }
+
+    .ptable__head > :nth-child(1),
+    .prow__year {
+      grid-area: auto;
+      grid-column: 1 / span 2;
+    }
+
+    .ptable__head > :nth-child(2),
+    .prow__project {
+      grid-area: auto;
+      grid-column: 3 / span 5;
+    }
+
+    .ptable__head > :nth-child(3),
+    .prow__role {
+      grid-area: auto;
+      grid-column: 8 / span 2;
+    }
+
+    .ptable__head > :nth-child(4),
+    .prow__status {
+      grid-area: auto;
+      grid-column: 10 / span 2;
+      justify-self: start;
+    }
+
+    .prow__arrow {
+      grid-area: auto;
+      grid-column: 12;
+      justify-self: end;
+    }
+
+    .prow {
+      row-gap: 0;
+      padding-block: clamp(1.5rem, 1.1rem + 1.2vw, 2.25rem);
+    }
+
+    /* Mono cells sit on the baseline of the project name's first line. */
+    .prow__year,
+    .prow__role,
+    .prow__status {
+      padding-block-start: calc(var(--fs-title) * 0.85 - var(--fs-label) * 0.917);
+    }
+
+    .prow__role {
+      color: var(--ink);
+    }
+  }
+
+  @media (width >= 64rem) {
+    /* Project names start on the same column line as the About paragraph. */
+    .ptable__head > :nth-child(1),
+    .prow__year {
+      grid-column: 1 / span 3;
+    }
+
+    .ptable__head > :nth-child(2),
+    .prow__project {
+      grid-column: 4 / span 4;
+    }
+  }
+</style>
