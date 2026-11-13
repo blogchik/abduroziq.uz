@@ -9,8 +9,11 @@ summary:
   en: Donations and real-time stream alerts for streamers in Uzbekistan.
   uz: "O'zbekistondagi striymerlar uchun donatlar va jonli efir bildirishnomalari."
 description:
-  en: EzDonation, a planned service for donations and real-time stream alerts for streamers in Uzbekistan, by Abduroziq Jabborov.
-  uz: "EzDonation: O'zbekistondagi striymerlar uchun donatlar va jonli efir bildirishnomalari. Rejada, muallifi Jabborov Abduroziq."
-stack: []
+  en: 'EzDonation is a planned service for streamers in Uzbekistan: donations and real-time alerts on the stream. Where it stands and the planned stack.'
+  uz: "EzDonation: O'zbekistondagi striymerlar uchun rejalashtirilgan xizmat, donatlar va jonli efirdagi bildirishnomalar. Hozirgi holat va rejadagi texnologiyalar."
+stack:
+  - NestJS
+  - Next.js
+  - RabbitMQ
 colors: ['#E28413', '#18181B']
 glyph: Ez

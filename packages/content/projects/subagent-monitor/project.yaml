@@ -10,8 +10,23 @@ summary:
   en: 'A Claude Code mod: a live side panel for running subagents. Open source.'
   uz: 'Claude Code mod: ishlayotgan subagentlar uchun jonli yon panel. Ochiq kod.'
 description:
-  en: 'subagent-monitor, an open-source Claude Code mod by Abduroziq Jabborov: a live side panel for the subagents that are running.'
-  uz: 'subagent-monitor: Jabborov Abduroziqning ochiq kodli Claude Code modi, ishlayotgan subagentlar uchun jonli yon panel.'
-stack: []
+  en: 'subagent-monitor is an open source Claude Code mod: a live side panel that shows what every running subagent is doing, with a creature per agent.'
+  uz: "subagent-monitor: Claude Code uchun ochiq kodli mod. Jonli yon panel har bir subagent nima qilayotganini ko'rsatadi, har bir agentning o'z jonzoti bor."
+stack:
+  - TypeScript
+  - Claude Code mods API
+  - SVG
 colors: ['#141417', '#C4B5FD']
 glyph: sm
+cover: ./media/panel.svg
+coverAlt:
+  en: 'The Subagents panel: a header with two active agents and one done, an activity sparkline, and three agent cards with creatures, live tool activity, model, effort, tokens and tool counts.'
+  uz: "Subagents paneli: ikkita faol va bitta tugagan agent ko'rsatilgan sarlavha, faollik grafigi va uchta agent kartochkasi: jonzot, jonli tool faolligi, model, effort, tokenlar va toollar soni."
+gallery:
+  - image: ./media/creatures.svg
+    alt:
+      en: 'One creature in five moods (running, waiting, done, failed, idle) and nine different creatures for nine agents.'
+      uz: "Bitta jonzot besh holatda (ishlayapti, kutyapti, tugadi, xato, bo'sh) va to'qqizta agent uchun to'qqizta turli jonzot."
+    caption:
+      en: Every agent gets its own creature, derived from its id.
+      uz: "Har bir agentning o'z jonzoti bor, u agentning id'sidan yasaladi."

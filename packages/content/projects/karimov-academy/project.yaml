@@ -10,8 +10,50 @@ summary:
   en: Website, lead API and an in-house cabinet for a trading academy.
   uz: Treyding akademiyasi uchun sayt, lead API va ichki kabinet.
 description:
-  en: 'Karimov Academy Ecosystem: the website, lead API and in-house cabinet of a trading academy, engineered by Abduroziq Jabborov.'
-  uz: 'Karimov Academy Ecosystem: treyding akademiyasi uchun sayt, lead API va ichki kabinet. Muhandislik ishlari: Jabborov Abduroziq.'
-stack: []
+  en: 'Karimov Academy Ecosystem: the public website, the lead API and the in-house cabinet of a trading academy. What it is, how it is built and my part in it.'
+  uz: 'Karimov Academy Ecosystem: treyding akademiyasining ochiq sayti, lead API va ichki kabineti. Bu nima, qanday qurilgan va undagi mening ishim.'
+stack:
+  - Next.js
+  - React
+  - TypeScript
+  - Tailwind CSS
+  - NestJS
+  - Prisma
+  - PostgreSQL
+  - Docker
+  - Caddy
 colors: ['#0B0B0B', '#D5AF6F']
 glyph: KA
+cover: ./media/cover.webp
+coverAlt:
+  en: 'The Karimov Academy home page: a large serif headline on a dark background with gold accents, and two buttons under it.'
+  uz: "Karimov Academy bosh sahifasi: to'q fonda tilla urg'uli katta sarlavha va uning ostida ikkita tugma."
+gallery:
+  - image: ./media/courses.webp
+    alt:
+      en: 'The courses page: the title Courses and the first course cards.'
+      uz: 'Kurslar sahifasi: Courses sarlavhasi va birinchi kurs kartochkalari.'
+    caption:
+      en: The courses.
+      uz: Kurslar.
+  - image: ./media/course.webp
+    alt:
+      en: 'The Online Premium course page: the course title, a short description and the apply button.'
+      uz: 'Online Premium kursi sahifasi: kurs nomi, qisqa tavsif va ariza tugmasi.'
+    caption:
+      en: A course page.
+      uz: Kurs sahifasi.
+  - image: ./media/academy.webp
+    alt:
+      en: 'The page about the academy: a headline on a dark band, then a light section about how the academy teaches.'
+      uz: "Akademiya haqidagi sahifa: to'q tasmadagi sarlavha, keyin akademiya qanday o'qitishi haqidagi yorug' bo'lim."
+    caption:
+      en: About the academy.
+      uz: Akademiya haqida.
+  - image: ./media/mobile.webp
+    alt:
+      en: The Karimov Academy home page on a phone.
+      uz: Karimov Academy bosh sahifasi telefonda.
+    caption:
+      en: The same website on a phone.
+      uz: "O'sha sayt telefonda."

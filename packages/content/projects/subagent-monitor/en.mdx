@@ -1,0 +1,17 @@
+## What it is
+
+A mod for Claude Code that opens a side panel when the first subagent starts. Every agent gets a card: what it is doing right now, which model and effort it runs on, how many tokens and tools it has used, and how long it has been running. Every agent also gets its own animated creature, generated from the agent's id, so the same agent always looks the same.
+
+## Why
+
+I work with AI agents every day and build tools for them. With several subagents running at once, the panel shows what each of them is doing.
+
+## How it is built
+
+One hooks module in TypeScript and a creature generator that draws SVG in the desktop app and text faces in the terminal. The mod only observes events from the Claude Code mods API, so it never blocks or changes what the agents do.
+
+It is MIT licensed and installs straight from GitHub:
+
+```
+/plugin install subagent-monitor --marketplace blogchik/subagent-monitor
+```

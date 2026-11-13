@@ -10,8 +10,52 @@ summary:
   en: Marketplace for game top-ups and in-game currency in Uzbekistan and the CIS.
   uz: "O'zbekiston va MDH uchun o'yin valyutalari va hisob to'ldirish platformasi."
 description:
-  en: Payzone, a marketplace for game top-ups and in-game currency in Uzbekistan and the CIS, built and run by Abduroziq Jabborov.
-  uz: "Payzone: O'zbekiston va MDH uchun o'yin valyutalari va hisob to'ldirish platformasi. Jabborov Abduroziq quradi va yuritadi."
-stack: []
+  en: 'Payzone is a marketplace for game top-ups and in-game currency in Uzbekistan and the CIS: what it is, how it is built and my part in it.'
+  uz: "Payzone: O'zbekiston va MDH uchun o'yin valyutalari va hisob to'ldirish platformasi. Bu nima, qanday qurilgan va undagi mening ishim."
+stack:
+  - Next.js
+  - React
+  - TypeScript
+  - Tailwind CSS
+  - Python
+  - FastAPI
+  - PostgreSQL
+  - Redis
+  - RabbitMQ
+  - Docker
+  - Kubernetes
 colors: ['#18181B', '#E28413']
 glyph: Pz
+cover: ./media/cover.webp
+coverAlt:
+  en: 'The Payzone home page: a carousel of games, the Quick Charge form and a row of popular games.'
+  uz: "Payzone bosh sahifasi: o'yinlar karuseli, Quick Charge formasi va mashhur o'yinlar qatori."
+gallery:
+  - image: ./media/catalog.webp
+    alt:
+      en: 'The Payzone catalog: a grid of games with filters for PC, mobile and cross-platform titles.'
+      uz: "Payzone katalogi: PC, mobil va kross-platforma filtrlari bilan o'yinlar to'ri."
+    caption:
+      en: The catalog, filtered by platform.
+      uz: "Katalog, platforma bo'yicha filtr bilan."
+  - image: ./media/game.webp
+    alt:
+      en: 'The PUBG Mobile page on Payzone: the list of games on the left, UC packages with prices in the middle and the order panel on the right.'
+      uz: "Payzone'dagi PUBG Mobile sahifasi: chapda o'yinlar ro'yxati, o'rtada narxlari bilan UC paketlari, o'ngda buyurtma paneli."
+    caption:
+      en: 'A game page: packages, prices and the order panel on one screen.'
+      uz: "O'yin sahifasi: paketlar, narxlar va buyurtma paneli bitta ekranda."
+  - image: ./media/peasy-coin.webp
+    alt:
+      en: 'The Peasy Coin page: a headline about cashback on every purchase next to a drawn coin.'
+      uz: 'Peasy Coin sahifasi: har bir xariddan keshbek haqidagi sarlavha va chizilgan tanga.'
+    caption:
+      en: "Peasy Coin, the store's own cashback currency."
+      uz: "Peasy Coin, do'konning o'z keshbek valyutasi."
+  - image: ./media/mobile.webp
+    alt:
+      en: 'Payzone on a phone: the game carousel and the quick top-up form.'
+      uz: "Payzone telefonda: o'yinlar karuseli va tezkor to'ldirish formasi."
+    caption:
+      en: The same store on a phone.
+      uz: "O'sha do'kon telefonda."
