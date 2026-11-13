@@ -1,36 +1,33 @@
 ---
 import { profile, type SentencePart } from '@abduroziq/content';
+import Capsule from '@/components/ui/Capsule.astro';
 import type { Locale } from '@/i18n';
-import { starPath } from './meeting/field';
-import StatementChip from './StatementChip.astro';
 
 /**
- * The statement (DESIGN 4.1): the `h1` of the page, set in `type-statement`, with living
- * things inside the sentence: three chips on the line (StatementChip.astro), one letter
- * drawn as a turning starburst and one word circled by hand.
+ * The statement (DESIGN 4.1): the `h1` of the page, set in `type-statement`: one plain
+ * sentence with a single living thing in it, the eyes after the name.
  *
- * The text of the heading is the plain sentence. The chips carry no text, the starburst
- * only covers its letter (which stays in the markup, unseen), and the ring is a drawing
- * behind its word. Spaces come from the content strings only (`compressHTML` would remove
- * whitespace written between inline elements in the template).
+ * The eyes are a drawn stand-in for the author: two eyes on an accent pill, as tall as a
+ * capital letter and standing on the baseline, so they never change the height of a line.
+ * They follow the pointer, look around on their own, blink and wink when clicked
+ * (`eyes.ts`); without JavaScript they glance at the name beside them. They are decoration,
+ * hidden from assistive technology, so the text of the heading is the plain sentence.
  *
- * Everything between two spaces stays on one line: a chip never parts from the word it
- * belongs to or from the comma after it, and a word is never broken at its starburst.
+ * Spaces come from the content strings only (`compressHTML` would remove whitespace written
+ * between inline elements in the template). The eyes stay on one line with the name before
+ * them and the comma after them.
  */
 interface Props {
   locale: Locale;
   id?: string;
 }
 
-type Word = SentencePart[];
-
 const { locale, id } = Astro.props;
 
-// Words: the parts between two spaces. Text is cut at its spaces; a circled phrase, a chip
-// and a star letter are never cut.
-const words: Word[] = [[]];
+// Words: the parts between two spaces. The eyes belong to the word they touch.
+const words: SentencePart[][] = [[]];
 for (const part of profile.sentence[locale]) {
-  if (part.kind !== 'text' || part.ring) {
+  if (part.kind !== 'text') {
     words.at(-1)?.push(part);
     continue;
   }
@@ -39,187 +36,162 @@ for (const part of profile.sentence[locale]) {
     if (piece) words.at(-1)?.push({ kind: 'text', value: piece });
   });
 }
-
-/**
- * The ring: one loop of a pen around a box `aspect` times as wide as it is high. It starts
- * at the left, runs over the top and around, drifts outwards and overshoots its start.
- */
-function ringPath(aspect: number): { width: number; d: string } {
-  const height = 100;
-  const width = Math.round(height * aspect);
-  const points: [number, number][] = [];
-  const steps = 30;
-  for (let i = 0; i <= steps; i++) {
-    const t = i / steps;
-    const angle = ((-172 + 404 * t) * Math.PI) / 180;
-    const drift = 0.9 + 0.1 * t + 0.022 * Math.sin(t * 9 + 1);
-    points.push([
-      width / 2 + Math.cos(angle) * (width / 2 - 5) * drift,
-      height / 2 + Math.sin(angle) * (height / 2 - 6) * (drift - 0.03 * Math.cos(t * 7)),
-    ]);
-  }
-  // A smooth curve through the points (Catmull-Rom as cubic Béziers).
-  const at = (i: number): [number, number] =>
-    points[Math.min(points.length - 1, Math.max(0, i))] ?? [0, 0];
-  let d = `M${at(0)[0].toFixed(1)} ${at(0)[1].toFixed(1)}`;
-  for (let i = 0; i < points.length - 1; i++) {
-    const [p0, p1, p2, p3] = [at(i - 1), at(i), at(i + 1), at(i + 2)];
-    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
-    const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
-    d += `C${c1.map((v) => v.toFixed(1)).join(' ')} ${c2.map((v) => v.toFixed(1)).join(' ')} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
-  }
-  return { width, d };
-}
-
-/** Rough width of a word in em of the statement (Bricolage 500 with its tight tracking). */
-const emWidth = (text: string): number =>
-  [...text].reduce(
-    (sum, ch) => sum + (/[iljtfr.,:;'! ]/.test(ch) ? 0.3 : /[mwMW]/.test(ch) ? 0.84 : 0.535),
-    0,
-  );
-
-/** The ring's box: the word plus 0.3em on each side, 1.14em high. */
-const RING = { padX: 0.3, height: 1.14 };
-const star = starPath(10);
 ---
 
 <h1 class="statement type-statement" id={id} data-hero-statement>
   {words.map((word, index) => {
     const nodes = word.map((part, i) => {
-      if (part.kind === 'chip') {
-        // A word space towards a word, none towards punctuation.
-        const prev = word[i - 1];
-        const next = word[i + 1];
-        const before = prev?.kind === 'text' && /[\p{L}\p{N}]$/u.test(prev.value);
-        const after = next?.kind === 'text' && /^[\p{L}\p{N}]/u.test(next.value);
-        return <StatementChip id={part.id} before={before} after={after} />;
-      }
-      if (part.kind === 'star') {
-        return (
-          <span class="star-o">
-            <span class="star-o__letter">{part.value}</span>
-            <svg class="star-o__burst" viewBox="-12 -12 24 24" aria-hidden="true" focusable="false">
-              <path d={star} />
-            </svg>
-          </span>
-        );
-      }
-      if (part.ring) {
-        const ring = ringPath((emWidth(part.value) + RING.padX * 2) / RING.height);
-        return (
-          <span class="circled">
-            {part.value}
-            <svg
-              class="circled__ring"
-              viewBox={`0 0 ${ring.width} 100`}
-              preserveAspectRatio="none"
-              aria-hidden="true"
-              focusable="false"
-            >
-              <path d={ring.d} pathLength="1" data-hero-ring />
-            </svg>
-          </span>
-        );
-      }
-      return part.value;
+      if (part.kind === 'text') return part.value;
+      // A word space towards the word before, none towards the punctuation after.
+      const prev = word[i - 1];
+      const spaced = prev?.kind === 'text' && /[\p{L}\p{N}]$/u.test(prev.value);
+      return (
+        <span
+          class:list={['statement__eyes', { 'statement__eyes--spaced': spaced }]}
+          data-hero-eyes
+        >
+          <Capsule tone="accent" class="capsule-eyes">
+            <span class="eyes" data-eyes data-cursor="link">
+              <span class="eye" data-eye>
+                <span class="eye__pupil" />
+              </span>
+              <span class="eye" data-eye>
+                <span class="eye__pupil" />
+              </span>
+            </span>
+          </Capsule>
+        </span>
+      );
     });
-    const plain = word.length === 1 && word[0]?.kind === 'text' && !word[0].ring;
+    const plain = word.length === 1 && word[0]?.kind === 'text';
     return [index > 0 ? ' ' : '', plain ? nodes : <span class="statement__keep">{nodes}</span>];
   })}
 </h1>
 
 <style is:global>
   .statement {
-    /* Four lines in both languages; about nine of the twelve columns on a desktop. */
-    max-width: min(13.6em, 100%);
+    /* Three lines in both languages from tablets up, where this measure is the whole content
+       width (`--fs-statement` is derived from it). The longest line is 16.6em. */
+    max-width: min(17.3em, 100%);
     margin: 0;
+  }
+
+  /* There the lines break where the sentence does: who, what, from where to where. Phones
+     keep the balanced wrapping of the type style. */
+  @media (width >= 48rem) {
+    .statement {
+      text-wrap: wrap;
+    }
   }
 
   .statement__keep {
     white-space: nowrap;
   }
 
-  /* ---------------------------------------------------------------- the ring */
+  /* -------------------------------------------------------------------- eyes */
 
-  .circled {
+  .statement__eyes {
     position: relative;
     display: inline-block;
+    width: 1.42em;
+    /* From just under the baseline to just over the capitals (cap height 0.66em). */
+    height: 0.74em;
+    vertical-align: -0.04em;
+    /* The entrance (hero.ts) pops the eyes from their centre. */
+    transform-origin: 50% 60%;
   }
 
-  /* Around the word: from above the ascenders to below the descenders, and into the word
-     spaces on both sides. Nearly the same proportions as its viewBox, so the line keeps one
-     thickness; a slight turn, as a hand would draw it. */
-  .circled__ring {
-    position: absolute;
-    top: -0.05em;
-    left: -0.3em;
-    width: calc(100% + 0.6em);
-    height: calc(100% + 0.12em);
-    overflow: visible;
-    fill: none;
-    stroke: var(--accent);
-    stroke-width: 2.6;
-    stroke-linecap: round;
-    rotate: -2.5deg;
-    pointer-events: none;
+  /* The word space to the name (a space is about 0.2em). */
+  .statement__eyes--spaced {
+    margin-inline-start: 0.2em;
   }
 
-  /* One dash as long as the path: hero.ts draws it by sliding the dash in. */
-  .circled__ring path {
-    stroke-dasharray: 1;
+  /* The capsule primitive fills the chip instead of setting its own size on the line. */
+  .statement__eyes .capsule.capsule-eyes {
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    /* Physical tones: the whites stay light and the pupils dark in both themes. */
+    --eye-white: var(--paper-raised);
+    --eye-ink: var(--ink);
   }
 
-  /* ---------------------------------------------------------- the star letter */
-
-  .star-o {
-    position: relative;
-    display: inline-block;
-  }
-
-  /* The letter keeps its place in the line and in the text; it is just not painted. */
-  .star-o__letter {
-    opacity: 0;
-  }
-
-  /* Centred on the letter: half the x-height (0.49em) above the baseline, which lies 0.84em
-     under the top of the line box. */
-  .star-o__burst {
-    position: absolute;
-    top: 0.595em;
-    left: 50%;
-    width: 0.66em;
-    height: 0.66em;
-    margin: -0.33em 0 0 -0.33em;
-    overflow: visible;
-    fill: var(--accent);
-    stroke: var(--accent);
-    stroke-width: 1.6;
-    stroke-linejoin: round;
-    pointer-events: none;
-  }
-
-  @keyframes star-turn {
-    to {
-      rotate: 360deg;
+  @supports (color: light-dark(#000, #fff)) {
+    .statement__eyes .capsule.capsule-eyes {
+      --eye-white: light-dark(var(--paper-raised), var(--inv-paper-raised));
+      --eye-ink: light-dark(var(--ink), var(--inv-ink));
     }
   }
 
-  html[data-motion='full'] .star-o__burst {
-    animation: star-turn 18s linear infinite;
+  /* The capsule lays its child out as a block; the eyes need a centred row. */
+  .capsule.capsule-eyes > .eyes {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.06em;
+    transition: scale var(--dur-2) var(--ease-out);
   }
 
-  [data-hero][data-offscreen] .star-o__burst {
+  .capsule-eyes:hover .eyes {
+    scale: 1.1;
+  }
+
+  .eye {
+    /* How far a pupil travels from the centre of its eye. */
+    --travel: 0.125em;
+    position: relative;
+    display: block;
+    flex: none;
+    width: 0.47em;
+    height: 0.47em;
+    border-radius: 50%;
+    background-color: var(--eye-white);
+  }
+
+  /* Without JavaScript (and under reduced motion) the eyes glance at the name beside them;
+     eyes.ts moves `--look-x` / `--look-y` between -1 and 1. */
+  .eye__pupil {
+    position: absolute;
+    inset: 0;
+    width: 0.21em;
+    height: 0.21em;
+    margin: auto;
+    border-radius: 50%;
+    background-color: var(--eye-ink);
+    translate: calc(var(--look-x, -0.6) * var(--travel)) calc(var(--look-y, 0.15) * var(--travel));
+    transition: translate var(--dur-1) var(--ease-out);
+  }
+
+  /* Wandering on their own, the eyes move slowly. */
+  .eyes[data-idle] .eye__pupil {
+    transition-duration: var(--dur-3);
+  }
+
+  @keyframes eye-blink {
+    0%,
+    93%,
+    100% {
+      scale: 1 1;
+    }
+
+    96.5% {
+      scale: 1 0.06;
+    }
+  }
+
+  html[data-motion='full'] .eye {
+    animation: eye-blink 5.4s ease-in-out 1.6s infinite;
+  }
+
+  /* Nothing in the hero animates while it is off screen (hero.ts sets the attribute). */
+  [data-hero][data-offscreen] .eye {
     animation-play-state: paused;
   }
 
-  @media (forced-colors: active) {
-    .circled__ring {
-      stroke: Highlight;
-    }
-
-    .star-o__burst {
-      fill: Highlight;
-      stroke: Highlight;
-    }
+  /* A click winks the right eye. */
+  html[data-motion='full'] .eyes[data-wink] .eye:last-child {
+    animation: none;
+    scale: 1 0.06;
   }
 </style>

@@ -4,101 +4,67 @@ import ArrowLink from '@/components/ui/ArrowLink.astro';
 import Container from '@/components/ui/Container.astro';
 import SectionLabel from '@/components/ui/SectionLabel.astro';
 import { t, type Locale } from '@/i18n';
-import HeroMeta from './HeroMeta.astro';
 import { TASHKENT_UTC_OFFSET } from './lib';
 import Meeting from './meeting/Meeting.astro';
 import Statement from './Statement.astro';
 
 /**
- * `00 — Hello` (DESIGN 4.1 and 4.2): two zones, one idea each.
+ * `00 — Hello` (DESIGN 4.1 and 4.2): two things to look at, in this order.
  *
- *  1. The statement: the section label, the sentence (the page's `h1`) with its living
- *     chips, one supporting line and two text actions. The meta chips sit in the label's
- *     row from tablets up and close the section on phones.
+ *  1. The statement: one plain sentence (the page's `h1`) with the eyes after the name, and
+ *     one quiet action under it.
  *  2. The meeting: the thin name edge to edge, and in front of it the dotted graphic of two
- *     cursors about to touch.
+ *     cursors about to touch. It is the visual centre of the first screen.
  *
- * The statement, the supporting line and the actions are painted with the first frame and
- * never hidden or moved (the sentence is the page's largest paint). Only decoration is held
- * back by CSS, and only while JavaScript and full motion are on, with a 2.5s failsafe: the
- * chips, the ring and the starburst here (popped and drawn by `hero.ts`), the picture and
- * the tags of the meeting (`meeting.ts`), and what the motion kit reveals (meta, name).
+ * Around them only the section label and, opposite it, one quiet line of meta: the city and
+ * its time now.
  *
- * Live data (Tashkent sky, clock, month) is painted by the inline script at the end of the
- * section, before first paint, and kept current by `hero.ts`.
+ * The statement and the action are painted with the first frame and never hidden or moved
+ * (the sentence is the page's largest paint). Only decoration is held back by CSS, and only
+ * while JavaScript and full motion are on, with a 2.5s failsafe: the eyes here (popped by
+ * `hero.ts`), the picture and the tags of the meeting (`meeting.ts`), and the name, which
+ * the motion kit reveals.
+ *
+ * The time is written by the inline script at the end of the section, before first paint,
+ * and kept current by `hero.ts`. Without JavaScript the line shows the city and its zone.
  */
 interface Props {
   locale: Locale;
 }
 
 const { locale } = Astro.props;
-const { lat, lon } = profile.location;
+const zone = `UTC${TASHKENT_UTC_OFFSET >= 0 ? '+' : ''}${TASHKENT_UTC_OFFSET}`;
 ---
 
 <section class="hero" data-hero aria-labelledby="hero-title">
   <Container class="hero__shell">
-    <SectionLabel number={0} name={t(locale, 'home.hero.label')} class="hero__label" />
-
-    <div class="hero__statement">
-      <Statement locale={locale} id="hero-title" />
-      <p class="hero__support type-body">{profile.support[locale]}</p>
-      <p class="hero__actions">
-        <ArrowLink
-          href="#contact"
-          label={t(locale, 'home.hero.actions.contact')}
-          direction="down"
-        />
-        <ArrowLink
-          href="#building"
-          label={t(locale, 'home.hero.actions.building')}
-          direction="down"
-        />
+    <div class="hero__top">
+      <SectionLabel number={0} name={t(locale, 'home.hero.label')} />
+      <p class="hero__meta type-label">
+        {profile.location.city[locale]} <span data-hero-clock></span> {zone}
       </p>
     </div>
 
-    <HeroMeta locale={locale} class="hero__meta" />
+    <Statement locale={locale} id="hero-title" />
+    <p class="hero__action">
+      <ArrowLink href="#contact" label={t(locale, 'home.hero.action')} direction="down" />
+    </p>
 
     <div class="hero__meeting">
       <Meeting locale={locale} />
     </div>
   </Container>
 
-  <script is:inline data-astro-rerun define:vars={{ lat, lon, offset: TASHKENT_UTC_OFFSET }}>
-    // Tashkent right now, painted before first paint: the sky capsule (day, night, or the
-    // accent half hour around sunrise and sunset, with the sun or moon placed along its
-    // arc), the clock and the month of the availability mark. `hero.ts` calls the same
-    // function every second.
+  <script is:inline data-astro-rerun define:vars={{ offset: TASHKENT_UTC_OFFSET }}>
+    // The time in Tashkent, written before first paint; `hero.ts` calls the same function
+    // every minute.
     (() => {
-      const MONTHS = 'JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC'.split(' ');
-      const rad = Math.PI / 180;
-      const put = (root, selector, text) => {
-        for (const el of root.querySelectorAll(selector)) {
-          if (el.textContent !== text) el.textContent = text;
-        }
-      };
       const paint = (hero) => {
         // Shifted so that the UTC getters read Tashkent wall-clock time.
-        const now = new Date(Date.now() + offset * 36e5);
-        const year = now.getUTCFullYear();
-        const hour = now.getUTCHours() + now.getUTCMinutes() / 60;
-        const day =
-          (Date.UTC(year, now.getUTCMonth(), now.getUTCDate()) - Date.UTC(year, 0, 0)) / 864e5;
-        // Sunrise and sunset from the solar declination (accurate to a quarter of an hour).
-        const decl = -23.44 * Math.cos((2 * Math.PI * (day + 10)) / 365) * rad;
-        const half = Math.acos(-Math.tan(lat * rad) * Math.tan(decl)) / rad / 15;
-        const noon = 12 + offset - lon / 15;
-        const rise = noon - half;
-        const set = noon + half;
-        const up = hour >= rise && hour <= set;
-        const progress = up
-          ? (hour - rise) / (set - rise)
-          : ((hour - set + 24) % 24) / (24 - (set - rise));
-        const edge = Math.min(Math.abs(hour - rise), Math.abs(hour - set)) < 0.25;
-        hero.dataset.sky = edge ? 'dusk' : up ? 'day' : 'night';
-        hero.style.setProperty('--sky-x', (14 + 72 * progress).toFixed(1));
-        hero.style.setProperty('--sky-y', (70 - 46 * Math.sin(Math.PI * progress)).toFixed(1));
-        put(hero, '[data-hero-clock]', now.toISOString().slice(11, 19));
-        put(hero, '[data-hero-month]', MONTHS[now.getUTCMonth()] + '.' + year);
+        const time = new Date(Date.now() + offset * 36e5).toISOString().slice(11, 16);
+        for (const el of hero.querySelectorAll('[data-hero-clock]')) {
+          if (el.textContent !== time) el.textContent = time;
+        }
       };
       window.__heroNow = paint;
       const hero =
@@ -118,85 +84,46 @@ const { lat, lon } = profile.location;
     padding-block-start: clamp(1.25rem, 1rem + 1.1vw, 2rem);
   }
 
-  /* One column; the meta closes the section on phones. */
-  .hero :global(.hero__shell) {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      'label'
-      'statement'
-      'meeting'
-      'meta';
-  }
-
-  .hero :global(.hero__label) {
-    grid-area: label;
-    align-self: center;
-  }
-
-  .hero__statement {
-    grid-area: statement;
-    min-width: 0;
-    margin-block-start: clamp(1.25rem, 1rem + 1.1vw, 2rem);
-  }
-
-  .hero__support {
-    max-width: 30em;
-    margin: clamp(1rem, 0.85rem + 0.7vw, 1.5rem) 0 0;
-    color: var(--ink-soft);
-  }
-
-  .hero__actions {
+  /* The label, and opposite it the one line of meta. */
+  .hero__top {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem clamp(1.5rem, 1rem + 2vw, 2.5rem);
-    margin: clamp(1.1rem, 0.95rem + 0.7vw, 1.6rem) 0 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--col-gap);
   }
 
-  .hero :global(.hero__meta) {
-    grid-area: meta;
-    margin-block-start: clamp(1.25rem, 1rem + 1.1vw, 2rem);
+  .hero__meta {
+    margin: 0;
+    color: var(--ink-soft);
+    white-space: nowrap;
   }
 
+  .hero :global(.statement) {
+    margin-block-start: clamp(1.5rem, 1.1rem + 1.8vw, 2.75rem);
+  }
+
+  .hero__action {
+    margin: clamp(1.5rem, 1.25rem + 1.1vw, 2.25rem) 0 0;
+  }
+
+  /* Air above the picture: the eye goes to the statement first, then to the object. */
   .hero__meeting {
-    grid-area: meeting;
-    min-width: 0;
-    margin-block-start: clamp(2rem, 1.5rem + 2.2vw, 3.5rem);
+    margin-block-start: clamp(2.75rem, 2.1rem + 2.8vw, 4.5rem);
   }
 
-  /* From tablets up the meta sits top right, in the label's row. */
-  @media (width >= 48rem) {
-    .hero :global(.hero__shell) {
-      grid-template-columns: minmax(0, 1fr) auto;
-      grid-template-areas:
-        'label meta'
-        'statement statement'
-        'meeting meeting';
-      column-gap: var(--col-gap);
-    }
-
-    .hero :global(.hero__meta) {
-      margin-block-start: 0;
-    }
-  }
-
-  /* Short desktop screens (1280x720): a little less air, so that the statement, the actions
-     and the upper half of the meeting share the first screen. */
+  /* Short desktop screens (1280x720): a little less air, so that the statement, the action
+     and the whole picture share the first screen. */
   @media (width >= 64rem) and (height <= 50rem) {
     .hero {
       padding-block-start: 0.75rem;
     }
 
-    .hero__statement {
+    .hero :global(.statement) {
+      margin-block-start: 1.5rem;
+    }
+
+    .hero__action {
       margin-block-start: 1.25rem;
-    }
-
-    .hero__support {
-      margin-block-start: 0.9rem;
-    }
-
-    .hero__actions {
-      margin-block-start: 1rem;
     }
 
     .hero__meeting {
@@ -206,18 +133,11 @@ const { lat, lon } = profile.location;
 
   /* --------------------------------------------------------------- entrance */
 
-  /* The chips, the ring and the starburst wait for hero.ts (it sets `data-hero-ready` in the
-     same task in which it applies their start poses); the words around them are painted at
-     once. Never without JavaScript or under reduced motion. */
-  :global(html.js[data-motion='full'])
-    .hero:not([data-hero-ready])
-    :global(:is([data-chip], .circled__ring, .star-o__burst)) {
+  /* The eyes wait for hero.ts (it sets `data-hero-ready` in the same task in which it
+     applies their start pose); the words around them are painted at once. Never without
+     JavaScript or under reduced motion. */
+  :global(html.js[data-motion='full']) .hero:not([data-hero-ready]) :global([data-hero-eyes]) {
     opacity: 0;
     animation: m-failsafe 0.01s linear 2.5s forwards;
-  }
-
-  /* Nothing in the hero animates while it is off screen. */
-  .hero[data-offscreen] :global(.status__dot::after) {
-    animation-play-state: paused;
   }
 </style>

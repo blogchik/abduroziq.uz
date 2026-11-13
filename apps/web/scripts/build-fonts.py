@@ -3,7 +3,6 @@
 Newsreader ships as a variable font with weight and optical-size axes (about 130KB per
 style). The site only uses a handful of cuts, so each one is instantiated as a small
 static file. Caveat is used for a few hand-written notes, so it is subset to Basic Latin.
-Geist Pixel (the `geist` package) sets the meta chips of the home hero: one cut, Basic Latin.
 
 Usage:  python scripts/build-fonts.py   (from apps/web; needs `pip install fonttools brotli`)
 """
@@ -22,7 +21,6 @@ os.makedirs(out, exist_ok=True)
 roman = os.path.join(nm, '@fontsource-variable', 'newsreader', 'files', 'newsreader-latin-standard-normal.woff2')
 italic = os.path.join(nm, '@fontsource-variable', 'newsreader', 'files', 'newsreader-latin-standard-italic.woff2')
 caveat = os.path.join(nm, '@fontsource', 'caveat', 'files', 'caveat-latin-500-normal.woff2')
-pixel = os.path.join(nm, 'geist', 'dist', 'fonts', 'geist-pixel', 'GeistPixel-Square.woff2')
 
 # Display cuts are pinned to the largest optical size (article titles, pull quotes); text
 # cuts to a reading size (article body).
@@ -58,19 +56,3 @@ font.flavor = 'woff2'
 target = os.path.join(out, 'caveat-500.woff2')
 font.save(target)
 print(f"{'caveat-500.woff2':40s} {os.path.getsize(target) / 1024:6.1f} KB")
-
-# Geist Pixel Square: label shorthand only (capitals, digits, punctuation), so Basic Latin,
-# the degree sign and the middle dot, without layout features (alternates, fractions).
-unicodes = list(range(0x20, 0x7F)) + [0xA0, 0xB0, 0xB7, 0x2013, 0x2014, 0x2019, 0x02BB, 0x02BC]
-options = subset.Options()
-options.flavor = 'woff2'
-options.layout_features = []
-options.notdef_outline = True
-font = TTFont(pixel)
-subsetter = subset.Subsetter(options)
-subsetter.populate(unicodes=unicodes)
-subsetter.subset(font)
-font.flavor = 'woff2'
-target = os.path.join(out, 'geist-pixel-square.woff2')
-font.save(target)
-print(f"{'geist-pixel-square.woff2':40s} {os.path.getsize(target) / 1024:6.1f} KB")

@@ -1,11 +1,7 @@
 {
   "hero": {
     "label": "Salom",
-    "actions": {
-      "contact": "Salom yo'llang",
-      "building": "Nimalar quryapman"
-    },
-    "meta": "Yangi loyihalar uchun ochiqman. Toshkent vaqti: UTC+5.",
+    "action": "Salom yo'llang",
     "meeting": "Bir-biriga tegay deb turgan ikki kursor: Abduroziqning qo'li va AI agentning strelkasi."
   },
   "desk": {

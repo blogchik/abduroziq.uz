@@ -47,7 +47,7 @@ export function personSchema(locale: Locale): JsonLdNode {
       height: 800,
     },
     jobTitle: profile.role[locale],
-    description: profile.support[locale],
+    description: profile.summary[locale],
     knowsLanguage: [...locales],
     homeLocation: {
       '@type': 'Place',

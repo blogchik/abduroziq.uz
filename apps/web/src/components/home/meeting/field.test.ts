@@ -6,14 +6,18 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { ARROW, buildField, fieldToPaths, HAND, starPath, STRIDE, type Field } from './field.ts';
 
-/** Stage sizes the hero really produces: 26% of the width, never lower than 160px. */
+/**
+ * Stage sizes the hero really produces: 29% of the width, never lower than 160px, and lower
+ * than that where the screen is short (1185 x 331 is a 1280 x 720 window).
+ */
 const STAGES: [number, number][] = [
   [328, 160],
   [358, 160],
-  [720, 187],
-  [944, 245],
-  [1200, 312],
-  [1360, 354],
+  [720, 209],
+  [929, 269],
+  [1185, 331],
+  [1200, 348],
+  [1360, 394],
 ];
 
 function bounds(field: Field): { x0: number; y0: number; x1: number; y1: number } {
@@ -57,7 +61,7 @@ test('a few thousand dots at most, and both cursors are there', () => {
 });
 
 test('the hand ends left of the meeting point, the arrow starts right of it', () => {
-  const field = buildField(1360, 354);
+  const field = buildField(1360, 394);
   let handRight = -Infinity;
   let arrowLeft = Infinity;
   for (let k = 0; k < field.count; k++) {
@@ -72,9 +76,9 @@ test('the hand ends left of the meeting point, the arrow starts right of it', ()
 });
 
 test('the field is the same every time, and the light changes sides in the dark theme', () => {
-  const light = buildField(1200, 312);
-  assert.deepEqual(buildField(1200, 312).cells, light.cells);
-  const dark = buildField(1200, 312, { dark: true });
+  const light = buildField(1200, 348);
+  assert.deepEqual(buildField(1200, 348).cells, light.cells);
+  const dark = buildField(1200, 348, { dark: true });
   assert.equal(dark.meet.x, light.meet.x);
   assert.notDeepEqual(dark.cells, light.cells);
 });
@@ -90,7 +94,7 @@ test('the name tags stay on the stage', () => {
 });
 
 test('the static picture is a few short paths', () => {
-  const field = buildField(1200, 312, { pitch: 1200 / 112 });
+  const field = buildField(1200, 348, { pitch: 1200 / 112 });
   const paths = fieldToPaths(field);
   assert.ok(paths.dots.length >= 3 && paths.dots.length <= 5);
   assert.match(paths.body.d, /^M[\d.]+ [\d.]+h[\d.]+/);

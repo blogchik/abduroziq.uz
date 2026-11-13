@@ -20,34 +20,28 @@ export const profile: Profile = {
   sentence: {
     en: [
       { kind: 'text', value: "I'm Abduroziq" },
-      { kind: 'chip', id: 'eyes' },
-      { kind: 'text', value: ', a product engineer who designs' },
-      { kind: 'chip', id: 'design' },
-      { kind: 'text', value: ' interfaces, builds' },
-      { kind: 'chip', id: 'build' },
-      { kind: 'text', value: ' systems and ' },
-      { kind: 'text', value: 'ships', ring: true },
-      { kind: 'text', value: ' pr' },
-      { kind: 'star', value: 'o' },
-      { kind: 'text', value: 'ducts.' },
+      { kind: 'eyes' },
+      // The no-break spaces keep "from Figma to" together: too long to end the second line
+      // on a desktop, so the last line starts with "from".
+      {
+        kind: 'text',
+        value:
+          ', a product engineer designing and building products, from\u00a0Figma\u00a0to production.',
+      },
     ],
     uz: [
       { kind: 'text', value: 'Men Abduroziq' },
-      { kind: 'chip', id: 'eyes' },
-      { kind: 'text', value: ', product engineerman: ' },
-      { kind: 'chip', id: 'design' },
-      { kind: 'text', value: 'interfeys chizaman, ' },
-      { kind: 'chip', id: 'build' },
-      { kind: 'text', value: 'tizim quraman va mahsul' },
-      { kind: 'star', value: 'o' },
-      { kind: 'text', value: 't ' },
-      { kind: 'text', value: 'chiqaraman', ring: true },
-      { kind: 'text', value: '.' },
+      { kind: 'eyes' },
+      {
+        kind: 'text',
+        value:
+          ", product engineerman: mahsulotni Figma'dan production'gacha loyihalayman va quraman.",
+      },
     ],
   },
-  support: {
-    en: 'From Figma to production, in Tashkent.',
-    uz: "Figma'dan production'gacha, Toshkentda.",
+  summary: {
+    en: 'I design and build products, from Figma to production.',
+    uz: "Mahsulotlarni loyihalayman va quraman: Figma'dan production'gacha.",
   },
   about: {
     en: [

@@ -1,11 +1,7 @@
 {
   "hero": {
     "label": "Hello",
-    "actions": {
-      "contact": "Say hello",
-      "building": "What I'm building"
-    },
-    "meta": "Available for new projects. Local time in Tashkent is UTC+5.",
+    "action": "Say hello",
     "meeting": "Two cursors about to touch: Abduroziq's pointing hand and an AI agent's arrow."
   },
   "desk": {

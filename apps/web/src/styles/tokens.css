@@ -68,7 +68,9 @@
 :root {
   /* 2.2 Type: fluid sizes, linear between a 360px and a 1440px viewport.
      slope = (max - min) / 1080px, intercept = min - slope * 360px. */
-  --fs-statement: clamp(2.375rem, 1.5833rem + 3.5185vw, 4.75rem); /* 38 -> 76 */
+  /* The statement is sized from its measure, not between two viewports: 17.3em of it is the
+     content width from 1024px up (three lines in both languages). */
+  --fs-statement: clamp(2.375rem, 5.75vw - 0.32rem, 4.875rem); /* 38 -> 78 */
   --fs-display: clamp(3.5rem, 1.1667rem + 10.3704vw, 10.5rem); /* 56 -> 168 */
   --fs-numeral: clamp(2.75rem, 2.1667rem + 2.5926vw, 4.5rem); /* 44 -> 72 */
   --fs-title: clamp(1.5rem, 1.1667rem + 1.4815vw, 2.5rem); /* 24 -> 40 */
@@ -78,7 +80,6 @@
   --fs-article-body: clamp(1.1875rem, 1.1458rem + 0.1852vw, 1.3125rem); /* 19 -> 21 */
   --fs-label: clamp(0.6875rem, 0.6667rem + 0.0926vw, 0.75rem); /* 11 -> 12 */
   --fs-micro: clamp(0.5625rem, 0.5417rem + 0.0926vw, 0.625rem); /* 9 -> 10 */
-  --fs-pixel: clamp(0.75rem, 0.7292rem + 0.0926vw, 0.8125rem); /* 12 -> 13 */
   --fs-hand: clamp(1.25rem, 1.125rem + 0.5556vw, 1.625rem); /* 20 -> 26 */
 
   /* 2.3 Space and grid. */
@@ -155,7 +156,6 @@
   --font-serif: 'Newsreader Text', 'Newsreader Fallback', Georgia, serif;
   --font-serif-display: 'Newsreader Display', 'Newsreader Display Fallback', Georgia, serif;
   --font-mono: 'Geist Mono', 'Geist Mono Fallback', ui-monospace, monospace;
-  --font-pixel: 'Geist Pixel', 'Geist Mono', 'Geist Mono Fallback', ui-monospace, monospace;
   --font-hand: 'Caveat', 'Caveat Fallback', cursive;
 
   --spacing-gutter: var(--gutter);

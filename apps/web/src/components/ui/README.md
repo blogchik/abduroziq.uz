@@ -33,8 +33,7 @@ and corrects its year on the client.
 
 - **Type**: use the `type-*` utilities (`type-statement`, `type-display`, `type-numeral`,
   `type-title`, `type-lead`, `type-body`, `type-article-title`, `type-article-body`,
-  `type-label`, `type-micro`, `type-pixel`, `type-hand`, `type-name`). Never set font sizes
-  by hand.
+  `type-label`, `type-micro`, `type-hand`, `type-name`). Never set font sizes by hand.
 - **Layout**: `shell` (or `Container`) for the page box, `grid-12` for columns, `pt-section` /
   `section-y` between sections, `hairline` / `hairline-b` / `hairline-ink` for rules,
   `full-bleed` to break out to the viewport. Spacing tokens: `px-gutter`, `gap-col-gap`.

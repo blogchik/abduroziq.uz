@@ -6,12 +6,3 @@ packages:
 onlyBuiltDependencies:
   - esbuild
   - workerd
-
-# `geist` is installed only for its font files (Geist Pixel, see apps/web/scripts/build-fonts.py).
-# Its `next` peer is for the next/font wrappers we do not use: without this pnpm would
-# auto-install Next.js and React.
-packageExtensions:
-  geist@1.9.2:
-    peerDependenciesMeta:
-      next:
-        optional: true

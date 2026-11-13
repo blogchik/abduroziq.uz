@@ -188,11 +188,9 @@ translation in the requested locale.
 export type Locale = 'en' | 'uz';
 export type Localized<T = string> = Record<Locale, T>;
 
-// One piece of the hero statement. Joined in order, the `value`s read as the plain sentence.
-export type SentencePart =
-  | { kind: 'text'; value: string; ring?: boolean }      // words; `ring` circles them by hand
-  | { kind: 'chip'; id: 'eyes' | 'design' | 'build' }    // a living drawing set on the line
-  | { kind: 'star'; value: string };                     // a letter drawn as the starburst
+// One piece of the hero statement: words, or the eyes after the name. Joined in order, the
+// `value`s read as the plain sentence.
+export type SentencePart = { kind: 'text'; value: string } | { kind: 'eyes' };
 
 export interface Profile {
   name: string;                 // "Abduroziq"
@@ -202,7 +200,7 @@ export interface Profile {
   tagline: string;              // "Think beyond limits."
   location: { city: Localized; country: Localized; lat: number; lon: number; timeZone: string };
   sentence: Localized<SentencePart[]>;
-  support: Localized;
+  summary: Localized;           // one line about him, for structured data
   about: Localized<{ text: string; strong?: boolean }[][]>;   // paragraphs of spans
   facts: { id: string; label: Localized; value: Localized }[];
   agentTag: string;             // "AI agent": the name tag of the second cursor in the hero
@@ -223,11 +221,11 @@ export interface Project {
 `@abduroziq/content` exports `profile`, `projects` and the types. Only information that
 is already public may go in here.
 
-The statement is written as parts so that the page can set living things inside it and
-still output a plain sentence as the text of its `h1`. Spaces live in the text parts: a
-chip stays on one line with whatever touches it without a space (`'designs'`, chip,
-`' interfaces'` keeps the chip with the verb; `'engineerman: '`, chip, `'interfeys'` keeps
-it with the noun). `apps/web/src/components/home/Statement.astro` renders the parts.
+The statement is written as parts so that the page can set the eyes inside it and still
+output a plain sentence as the text of its `h1`. The eyes stay on one line with whatever
+touches them without a space (the name before, the comma after). No-break spaces in a text
+part keep words on one line, which is how the English sentence starts its last line with
+"from". `apps/web/src/components/home/Statement.astro` renders the parts.
 
 ## 6. Layout and SEO contracts
 
@@ -248,10 +246,9 @@ interface Props {
 It renders `<html lang>`, the head (font preloads, Seo, the root-state script,
 `<ClientRouter />`), the skip link, Header, `<main id="main">`, Footer and the motion entry
 script. Fonts are declared in `styles/fonts.css`: Bricolage Grotesque and Geist Mono from
-their Fontsource packages; Newsreader, Caveat and Geist Pixel as static cuts in
-`src/assets/fonts/` (built by `scripts/build-fonts.py`; Geist Pixel comes from the `geist`
-package). Preloaded: Bricolage and the mono labels everywhere, the pixel face on the home
-page only, the serif on post pages only.
+their Fontsource packages; Newsreader and Caveat as static cuts in `src/assets/fonts/`
+(built by `scripts/build-fonts.py`). Preloaded: Bricolage and the mono labels everywhere,
+the serif on post pages only.
 
 The language switch in the Header keeps the current path, unless `seo.alternates` is given
 (translated posts live at different paths); a locale without an equivalent page links to
@@ -346,7 +343,7 @@ export { gsap, ScrollTrigger };
 Page code imports from `@/motion` only, never from the kit's internal modules.
 
 The home hero follows the same contract with two page scripts of its own:
-`components/home/hero.ts` (live data, the entrance around the statement) and
+`components/home/hero.ts` (the time in Tashkent, the eyes' entrance) and
 `components/home/meeting/meeting.ts` (the canvas of the meeting). Both register through
 `onPageEnter`, wait for the transition gate, clean up on leave, and read reduced motion from
 the page context. The dot field itself (`meeting/field.ts`) is pure geometry without DOM:

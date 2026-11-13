@@ -4,18 +4,11 @@ export type { Locale };
 export type Localized<T = string> = Record<Locale, T>;
 
 /**
- * One piece of the hero statement. Joined in order, the `value`s read as the plain sentence
- * (chips carry no text). Spaces are written in the text parts: a chip stays on one line
- * with whatever touches it without a space, so the space goes on its other side.
- *  - `text`: words; `ring` draws a hand-drawn ellipse around them.
- *  - `chip`: a small living drawing set on the line (`eyes` follows the pointer, `design` is
- *    an interface frame with a multiplayer cursor, `build` a terminal line).
- *  - `star`: one letter that is drawn as the turning starburst; the letter stays in the text.
+ * One piece of the hero statement: words, or the eyes (a drawn stand-in for the author, set
+ * on the line after his name). Joined in order, the `value`s read as the plain sentence.
+ * The eyes stay on one line with whatever touches them without a space.
  */
-export type SentencePart =
-  | { kind: 'text'; value: string; ring?: boolean }
-  | { kind: 'chip'; id: 'eyes' | 'design' | 'build' }
-  | { kind: 'star'; value: string };
+export type SentencePart = { kind: 'text'; value: string } | { kind: 'eyes' };
 
 export interface Profile {
   name: string; // "Abduroziq"
@@ -31,7 +24,7 @@ export interface Profile {
     timeZone: string;
   };
   sentence: Localized<SentencePart[]>;
-  support: Localized;
+  summary: Localized; // one line about him, for structured data
   about: Localized<{ text: string; strong?: boolean }[][]>; // paragraphs of spans
   facts: { id: string; label: Localized; value: Localized }[];
   agentTag: string; // "AI agent": the name tag of the second cursor in the hero

@@ -1,5 +1,5 @@
 /**
- * The eyes in the first chip of the hero statement (StatementChip.astro): they follow
+ * The eyes after the name in the hero statement (Statement.astro): they follow
  * the pointer, look around on their own while it rests (and on touch screens, where there
  * is no pointer to follow), and wink when clicked. Blinking is CSS. Without JavaScript or
  * under reduced motion they keep their static glance at the name.

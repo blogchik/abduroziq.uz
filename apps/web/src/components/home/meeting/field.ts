@@ -116,22 +116,27 @@ function smin(a: number, b: number, k: number): number {
 }
 
 /**
- * The pointing hand, finger to the right, in units where the finger is 0.4 thick and its
- * tip is at (1.75, 0): the index finger, the fist, three folded fingers below it, the thumb
- * above and a cuff. Every part keeps its own volume, so the knuckles show in the shading.
+ * The pointing hand, finger to the right, in units where the finger is about 0.4 thick and
+ * its tip is at (2.14, 0): a long index finger, the fist, three folded fingers below it that
+ * step back one behind the other, the thumb raised above the fist, and a cuff. Every part
+ * keeps its own volume, so the knuckles show in the shading. The finger is half as long
+ * again as the fist is deep and the thumb stands clear of it: that is what makes it read as
+ * a hand that points, not as a fist.
  */
-const HAND_TIP = 1.75;
-const HAND_BOUNDS = { x0: -1.7, y0: -0.7, x1: 1.8, y1: 1.3 };
+const HAND_TIP = 2.14;
+const HAND_BOUNDS = { x0: -1.7, y0: -0.9, x1: 2.2, y1: 1.3 };
+/** Width of the hand from the cuff to the fingertip, in its own units. */
+const HAND_SPAN = 3.77;
 const HAND_BEVEL = 0.2;
 
 function hand(x: number, y: number): number {
-  let d = capsule(x, y, -0.1, 0, 1.55, 0, 0.2);
-  d = smin(d, box(x, y, -0.42, 0.52, 0.5, 0.63, 0.26), 0.07);
-  d = smin(d, capsule(x, y, -0.2, 0.4, 0.3, 0.4, 0.2), 0.05);
-  d = smin(d, capsule(x, y, -0.2, 0.74, 0.22, 0.74, 0.19), 0.05);
-  d = smin(d, capsule(x, y, -0.2, 1.04, 0.12, 1.04, 0.17), 0.05);
-  d = smin(d, capsule(x, y, -0.62, 0, -0.18, -0.42, 0.2), 0.05);
-  d = smin(d, box(x, y, -1.25, 0.52, 0.38, 0.5, 0.1), 0.03);
+  let d = capsule(x, y, -0.1, 0, 1.95, 0, 0.19);
+  d = smin(d, box(x, y, -0.42, 0.5, 0.48, 0.6, 0.26), 0.07);
+  d = smin(d, capsule(x, y, -0.2, 0.4, 0.26, 0.4, 0.2), 0.05);
+  d = smin(d, capsule(x, y, -0.2, 0.73, 0.16, 0.73, 0.185), 0.05);
+  d = smin(d, capsule(x, y, -0.2, 1.02, 0.04, 1.02, 0.165), 0.05);
+  d = smin(d, capsule(x, y, -0.66, 0.02, -0.22, -0.6, 0.19), 0.04);
+  d = smin(d, box(x, y, -1.27, 0.5, 0.36, 0.47, 0.1), 0.03);
   return d;
 }
 
@@ -244,22 +249,22 @@ const BODY = 0.3;
 const BODY_RADIUS = 0.74;
 
 /**
- * The composition measured in hand units (the finger is 0.4 units thick): its width and
- * height, and where the meeting point lies inside it. `field.test.ts` keeps them honest.
+ * The composition measured in hand units (the finger is about 0.4 units thick): its width
+ * and height, and where the meeting point lies inside it. `field.test.ts` keeps them honest.
  */
-const SPAN = { width: 5.7, height: 2.8, meetX: 3.52, meetY: 1.34 };
+const SPAN = { width: 6.16, height: 2.86, meetX: 3.96, meetY: 1.35 };
 /** The part of the stage height the cursors may fill. */
 const FILL = 0.92;
 
 /**
  * Lays the two cursors out on a stage of `width` x `height` px, centred, and returns their
- * dots. The hand is 30% of the width (never smaller than 150px, never more than 46%), unless
+ * dots. The hand is 34% of the width (never smaller than 170px, never more than 52%), unless
  * the stage is too low for that.
  */
 export function buildField(width: number, height: number, options: FieldOptions = {}): Field {
   const pitch = options.pitch ?? clamp(width / 215, 3.4, 6.4);
-  const handWidth = Math.min(width * 0.46, Math.max(width * 0.3, 150));
-  const unit = Math.min(handWidth / 3.35, (height * FILL) / SPAN.height);
+  const handWidth = Math.min(width * 0.52, Math.max(width * 0.34, 170));
+  const unit = Math.min(handWidth / HAND_SPAN, (height * FILL) / SPAN.height);
   const star = clamp(unit * 0.125, 6.5, 15);
   const gap = star * 2 + clamp(unit * 0.14, 6, 16);
   const meet = {

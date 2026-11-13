@@ -5,10 +5,9 @@
  * Families: 'Bricolage Grotesque Variable' (wght 200-800, wdth 75-100, opsz 12-96, the
  * unmodified Fontsource file), 'Newsreader Display' (optical size 72: weight 400, roman +
  * italic), 'Newsreader Text' (optical size 20: 400 roman + italic, 600), 'Geist Mono'
- * (400, 500), 'Geist Pixel' (the Square cut, Basic Latin: the meta chips of the home hero)
- * and 'Caveat' (500). Bricolage has no glyph for U+02BB-02BC, so Uzbek copy uses the plain
- * apostrophe. Arrows are NOT in any subset: use the drawn <Arrow /> primitive instead of
- * arrow characters.
+ * (400, 500) and 'Caveat' (500). Bricolage has no glyph for U+02BB-02BC, so Uzbek copy uses
+ * the plain apostrophe. Arrows are NOT in any subset: use the drawn <Arrow /> primitive
+ * instead of arrow characters.
  *
  * Fallback overrides were measured in Chromium against the real fonts (average advance of an
  * English + Uzbek sample, ascent and descent from the rendered line box):
@@ -21,8 +20,8 @@
 /*
  * Only the latin subset is declared (it covers English and Uzbek, including U+02BB-02BC).
  * Bricolage Grotesque and Geist Mono come unmodified from their Fontsource packages;
- * Newsreader, Caveat and Geist Pixel are small static cuts built by scripts/build-fonts.py
- * (see src/assets/fonts/README.md).
+ * Newsreader and Caveat are small static cuts built by scripts/build-fonts.py (see
+ * src/assets/fonts/README.md).
  */
 @font-face {
   font-family: 'Bricolage Grotesque Variable';
@@ -114,17 +113,6 @@
   unicode-range:
     U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
     U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-
-/* Geist Pixel has the vertical metrics of Geist Mono, which is also its fallback: a swap
-   changes the letter shapes inside a chip, never the height of the row. */
-@font-face {
-  font-family: 'Geist Pixel';
-  font-style: normal;
-  font-display: swap;
-  font-weight: 400;
-  src: url('../assets/fonts/geist-pixel-square.woff2') format('woff2');
-  unicode-range: U+0020-007E, U+00A0, U+00B0, U+00B7, U+02BB-02BC, U+2013-2014, U+2019;
 }
 
 @font-face {

@@ -22,14 +22,16 @@
   font-kerning: none;
 }
 
-/* The hero statement: the brand sans, medium, tight. Sized so that a 13.6em measure (four
-   lines in both languages) is about nine of the twelve columns on a desktop. */
+/* The hero statement: the brand sans, medium, tight. Optical size is pinned (as for the
+   name), so its lines are the same number of em wide at every size: that lets
+   `--fs-statement` be derived from the measure (see tokens.css and Statement.astro). */
 @utility type-statement {
   font-family: var(--font-display);
   font-size: var(--fs-statement);
   font-weight: 500;
   font-stretch: 100%;
-  font-optical-sizing: auto;
+  font-optical-sizing: none;
+  font-variation-settings: 'opsz' 96;
   line-height: 1.02;
   letter-spacing: -0.035em;
   text-wrap: balance;
@@ -142,14 +144,4 @@
   font-weight: 500;
   line-height: 1.1;
   letter-spacing: 0;
-}
-
-/* Pixel labels: the meta chips of the home hero only. */
-@utility type-pixel {
-  font-family: var(--font-pixel);
-  font-size: var(--fs-pixel);
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
 }
