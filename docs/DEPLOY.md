@@ -34,14 +34,10 @@ Until the two secrets below exist, the workflow still succeeds: it builds, then 
    `gh secret set CLOUDFLARE_API_TOKEN` and `gh secret set CLOUDFLARE_ACCOUNT_ID`.
    The workflow uses a `production` environment; GitHub creates it on first run. Secrets at
    repository level are visible to it. If you prefer, put them in that environment instead.
-5. Run `Deploy` (push to `main` or run it manually). The first deploy lands on
-   `https://abduroziq-uz.<your-subdomain>.workers.dev`. The URL is printed in the job
-   summary. The first run may ask Cloudflare to register a workers.dev subdomain for the
-   account; if it fails with that message, open Workers & Pages in the dashboard once and
-   pick a subdomain, then re-run.
-
-The workers.dev URL sends `X-Robots-Tag: noindex` (see `apps/web/public/_headers`), so it
-is never indexed.
+5. Run `Deploy` (push to `main` or run it manually). The deploy publishes to
+   `https://abduroziq.uz` only: `wrangler.jsonc` turns the `*.workers.dev` URL and preview
+   URLs off. (If they are ever turned back on, `apps/web/public/_headers` already sends
+   `X-Robots-Tag: noindex` there.)
 
 ## Connecting abduroziq.uz
 
@@ -55,8 +51,11 @@ Cloudflare zone"; a hostname with an existing CNAME cannot be used).
    **Not verified:** whether `.uz` registrars (UZINFOCOM and its resellers) accept
    third-party nameservers and whether Cloudflare accepts a `.uz` zone. Test it with the
    steps above; the zone becomes "Active" within minutes to hours if it works.
-2. Enable the route. In `wrangler.jsonc` uncomment the `routes` line, commit to `dev`, merge to `main`. The deploy creates the
-   DNS record and certificate for `abduroziq.uz` automatically.
+   Done on 2026-11-13: the registrar accepted the Cloudflare nameservers and the zone is
+   active on the Free plan.
+2. The route. `wrangler.jsonc` lists `abduroziq.uz` as a custom domain; the deploy creates
+   the DNS record and certificate for it. The API token needs Zone > Workers Routes > Edit
+   on the `abduroziq.uz` zone for that (the "Edit Cloudflare Workers" template has it).
 3. `www` -> apex redirect. `_redirects` cannot match on host (the docs list
    domain-level redirects as unsupported), so use a dashboard rule:
    - DNS: add a proxied (orange cloud) `A` record `www` -> `192.0.2.0`.
