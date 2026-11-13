@@ -37,6 +37,7 @@ abduroziq.uz/
 │        │  ├─ chrome/           Header, Footer, ThemeToggle, LangSwitch, SkipLink
 │        │  ├─ home/             hero (statement, meeting), about, desk, building, writing
 │        │  ├─ blog/             index and article pieces, MDX components
+│        │  ├─ projects/         list row, project page pieces, the picture frame
 │        │  └─ seo/              Seo.astro, JsonLd.astro
 │        ├─ motion/              client motion kit (cursor, reveal, marquee, desk, scroll, transitions)
 │        ├─ styles/              global.css (tokens), fonts, prose.css
@@ -206,8 +207,8 @@ role: { en, uz }
 summary: { en, uz }            # one sentence, lists and under the title
 description: { en, uz }        # meta description, 70 to 160 characters
 stack: [Next.js]               # display order, may be empty
-colors: ['#18181B', '#E28413'] # ticket background, foreground
-glyph: Pz                      # one or two characters
+colors: ['#18181B', '#E28413'] # background, foreground: the ticket, the plate, the matte
+glyph: Pz                      # one or two characters, drawn on the ticket and the plate
 cover: ./media/cover.png       # optional image(), relative to the yaml
 coverAlt: { en, uz }           # required with a cover
 gallery:                       # optional
@@ -249,6 +250,24 @@ Pages render a body with `const { Content } = await render(project.body)`. The p
 (slug and body id parsing, ordering, neighbours, media paths) live in `lib/project-data.ts`
 with `project-data.test.ts`. The home page's Building table, the projects list, the project
 pages and their Open Graph cards all read from this module.
+
+### Project pages (`apps/web/src/components/projects/`)
+
+The two routes are thin: `projects/index.astro` is the blog's page head plus one `ProjectRow`
+per project, and `projects/[slug].astro` is `ProjectHeader`, the cover, `ProjectFacts` beside
+the text, `ProjectGallery` and `ProjectEnd` (DESIGN 6.2, 6.3).
+
+| File | Role |
+|---|---|
+| `ProjectCover.astro` | the picture that stands for a project: its cover in a `ProjectShot`, or the `ProjectPlate` when it has none |
+| `ProjectShot.astro` | one image in its frame, with `widths` and `sizes` for the place it is shown in; a contained picture gets its matte and stage |
+| `ProjectPlate.astro` | the ticket laid on its side, from `colors` and `glyph`; sized in container units |
+| `media.ts` (+ test) | pure rules: `stageOf(image)` decides from width, height and format whether a picture fills its frame or is contained, and on which stage; `sizesFor(area, stage)` and `widthsFor(image, contained)` build the responsive attributes; `PAGE_AREA`, `ROW_AREA`, `ASIDE_AREA` are the widths of the three places a picture can be |
+| `frame.css` | the hairline frame (theme-aware) and the view-transition rules of the picture |
+| `picture-morph.ts` | client script: holds the picture of a followed list row above the page-transition panel and hands it to the cover of the project page (section 7) |
+
+No field describes how a picture is presented: a phone screenshot or an SVG is recognised
+from the file (`stageOf`). A new picture needs nothing but `alt` (and a caption if wanted).
 
 ### 5.3 Site data (`packages/content/src`)
 
@@ -403,6 +422,15 @@ export { gsap, ScrollTrigger };
 
 Page code imports from `@/motion` only, never from the kit's internal modules.
 
+One page script works next to the kit's page transition instead of inside it:
+`components/projects/picture-morph.ts`. On `astro:before-preparation` it copies the picture
+of the followed project row into a fixed box one step above the panel (`--z-wipe` + 1, under
+the cursor) and gives the copy the `view-transition-name` `project-picture`; after the swap
+the cover of the project page (`[data-project-picture="<slug>"]`) takes the same name until
+the transition has finished. Nothing is named in the markup, so only a followed row takes
+part, and a cover reached any other way is not a shared element. It does nothing with motion
+reduced or without the View Transitions API.
+
 The home hero follows the same contract with two page scripts of its own:
 `components/home/hero.ts` (the time in Tashkent, the capsule's entrance) and
 `components/home/meeting/meeting.ts` (the canvas of the meeting). Both register through
@@ -433,7 +461,7 @@ orchestrator.
 | Home | `components/home/`, `pages/[...locale]/index.astro`, `i18n/*/home.json` |
 | Blog | `components/blog/`, `pages/[...locale]/blog/`, `pages/[...locale]/rss.xml.ts`, `lib/posts.ts`, `lib/markdown/`, `content.config.ts`, `styles/prose.css`, `i18n/*/blog.json`, `packages/content/posts/` |
 | SEO | `components/seo/`, `lib/seo/`, `pages/og/`, `pages/robots.txt.ts`, `public/` icons and manifest, `i18n/*/seo.json` |
-| Projects | `pages/[...locale]/projects/`, `lib/projects.ts`, `lib/project-data.ts`, `i18n/*/projects.json`, `packages/content/projects/` |
+| Projects | `components/projects/`, `pages/[...locale]/projects/`, `lib/projects.ts`, `lib/project-data.ts`, `i18n/*/projects.json`, `packages/content/projects/` |
 | Content | `packages/content/src/`, `packages/content/assets/` |
 | CI and deploy | `.github/`, `wrangler.*`, `lighthouserc.*`, `apps/web/public/_headers` |
 

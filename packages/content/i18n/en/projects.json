@@ -2,6 +2,7 @@
   "title": "Building",
   "intro": "Products I design, build and run",
   "all": "All projects",
+  "view": "View",
   "facts": {
     "label": "Facts",
     "year": "Year",
@@ -11,6 +12,7 @@
   "visit": "Open the site",
   "source": "Source code",
   "stack": "Stack",
+  "stackMore": "and {count} more",
   "gallery": "Gallery",
   "video": "Download the video",
   "more": "More projects",

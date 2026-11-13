@@ -1,0 +1,240 @@
+---
+import Arrow from '@/components/ui/Arrow.astro';
+import StatusDot from '@/components/ui/StatusDot.astro';
+import { t, type Locale } from '@/i18n';
+import type { ProjectSummary } from '@/lib/projects';
+import ProjectCover from './ProjectCover.astro';
+import { ROW_AREA } from './media';
+
+/**
+ * One project in the list (DESIGN 6.2): a hairline, the text on the left and the picture on
+ * the right. The name and the picture are the two things to look at; the year, the status,
+ * the role and the first names of the stack are mono lines around the name.
+ *
+ * The whole row is one link, named by the project and described by its summary and facts
+ * (not the row run together). When it is followed, its picture grows into the cover of the
+ * project page (ProjectCover). Below 64rem the row stacks, picture first.
+ */
+interface Props {
+  project: ProjectSummary;
+  /** Position in the list (a plate prints it). */
+  index: number;
+  locale: Locale;
+  /** On the first screen: the picture loads eagerly and first, and the row is not revealed. */
+  priority?: boolean;
+  /** Rises into view when scrolled to (rows below the first screen). */
+  reveal?: boolean;
+}
+
+/** How many names of the stack a row shows before `+N`. */
+const STACK_SHOWN = 3;
+
+const { project, index, locale, priority = false, reveal = false } = Astro.props;
+const id = `project-${project.slug}`;
+const shown = project.stack.slice(0, STACK_SHOWN);
+const more = project.stack.length - shown.length;
+---
+
+<li class="prow" data-reveal={reveal ? 'rise' : undefined}>
+  <a
+    class="prow__link"
+    href={project.href}
+    data-cursor="read"
+    data-cursor-label={t(locale, 'projects.view')}
+    aria-labelledby={`${id}-name`}
+    aria-describedby={`${id}-summary ${id}-meta ${id}-facts`}
+  >
+    <div class="prow__text">
+      <div class="prow__top">
+        <p class="prow__meta type-label" id={`${id}-meta`}>
+          <span>{project.year}</span>{' '}
+          <StatusDot
+            status={project.status}
+            label={t(locale, `home.building.status.${project.status}`)}
+          />
+        </p>
+        <div class="prow__head">
+          <h2 class="prow__name type-title" id={`${id}-name`}>
+            {project.name}
+          </h2>
+          <span class="prow__arrow" aria-hidden="true">
+            <Arrow />
+          </span>
+        </div>
+        <p class="prow__summary type-body" id={`${id}-summary`}>
+          {project.summary}
+        </p>
+      </div>
+
+      <div class="prow__facts type-label" id={`${id}-facts`}>
+        <p class="prow__role">{project.role}</p>
+        {shown.length > 0 && (
+          <ul class="prow__stack" aria-label={t(locale, 'projects.stack')}>
+            {shown.map((name) => (
+              <li>{name}</li>
+            ))}
+            {more > 0 && (
+              <li class="prow__more">
+                <span aria-hidden="true">+{more}</span>
+                <span class="sr-only">{t(locale, 'projects.stackMore', { count: more })}</span>
+              </li>
+            )}
+          </ul>
+        )}
+      </div>
+    </div>
+
+    <ProjectCover
+      project={project}
+      index={index}
+      area={ROW_AREA}
+      priority={priority}
+      class="prow__picture"
+    />
+  </a>
+</li>
+
+<style>
+  .prow {
+    border-block-start: var(--hairline) solid var(--rule);
+  }
+
+  .prow:last-child {
+    border-block-end: var(--hairline) solid var(--rule);
+  }
+
+  .prow__link {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 1.25rem;
+    padding-block: clamp(1.5rem, 1.2rem + 1.4vw, 2.5rem);
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .prow__link:focus-visible {
+    outline-offset: -2px;
+  }
+
+  /* The name comes first in the markup; on small screens the picture is shown above it. */
+  .prow__link :global(.prow__picture) {
+    order: -1;
+    min-width: 0;
+  }
+
+  .prow__text {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    min-width: 0;
+  }
+
+  .prow__meta {
+    display: flex;
+    align-items: center;
+    gap: 1.4em;
+    color: var(--ink-soft);
+  }
+
+  .prow__meta :global(.status) {
+    color: var(--ink);
+  }
+
+  .prow__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--col-gap);
+    margin-block-start: clamp(0.9rem, 0.7rem + 0.9vw, 1.5rem);
+  }
+
+  /* The `title` style one step up, 32 -> 56px: a row has room for it, and the name is one of
+     the two things to look at. */
+  .prow {
+    --fs-title: clamp(2rem, 1.5rem + 2.2222vw, 3.5rem);
+  }
+
+  .prow__name {
+    min-width: 0;
+    overflow-wrap: break-word;
+    transition: translate var(--dur-2) var(--ease-out);
+  }
+
+  /* Centred on the first line of the name. */
+  .prow__arrow {
+    display: flex;
+    flex: none;
+    align-items: center;
+    height: 1.08em;
+    color: var(--accent-text);
+    font-size: var(--fs-title);
+  }
+
+  .prow__arrow :global(.arrow) {
+    width: 0.46em;
+    height: 0.46em;
+    transition: translate var(--dur-2) var(--ease-out);
+  }
+
+  .prow__summary {
+    max-width: 30em;
+    margin-block-start: clamp(0.75rem, 0.6rem + 0.6vw, 1.1rem);
+    color: var(--ink-soft);
+  }
+
+  .prow__facts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .prow__stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem 0;
+    color: var(--ink-soft);
+  }
+
+  /* A slash between the names; it belongs to the name before it and is decorative. */
+  .prow__stack li:not(:last-child)::after {
+    content: '/' / '';
+    margin-inline: 0.7em;
+  }
+
+  .prow__link:is(:hover, :focus-visible) .prow__name {
+    translate: 12px 0;
+  }
+
+  .prow__link:is(:hover, :focus-visible) .prow__arrow :global(.arrow) {
+    translate: 4px 0;
+  }
+
+  /* Tablets: the picture keeps the full width; the name and the lines about it share the
+     row under it. */
+  @media (width >= 48rem) {
+    .prow__link {
+      row-gap: 1.75rem;
+    }
+  }
+
+  /* Desktop: text in the first five columns, the picture in the other seven. The text is
+     as tall as the picture: the name at its top, the facts on its bottom edge. */
+  @media (width >= 64rem) {
+    .prow__link {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--col-gap);
+    }
+
+    .prow__link :global(.prow__picture) {
+      order: 0;
+      grid-column: 6 / -1;
+      grid-row: 1;
+    }
+
+    .prow__text {
+      grid-column: 1 / span 5;
+      grid-row: 1;
+      justify-content: space-between;
+    }
+  }
+</style>

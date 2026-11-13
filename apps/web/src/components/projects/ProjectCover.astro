@@ -1,0 +1,48 @@
+---
+import type { ProjectSummary } from '@/lib/projects';
+import ProjectPlate from './ProjectPlate.astro';
+import ProjectShot from './ProjectShot.astro';
+import type { Area } from './media';
+
+/**
+ * The picture that stands for a project, in its list row and at the top of its page
+ * (DESIGN 6.1): the cover where there is one, otherwise the plate. When a row is followed,
+ * its picture grows into the picture of the page: `picture-morph.ts` finds the two by
+ * `data-project-picture`, and the class below gives the move its weight (frame.css).
+ */
+interface Props {
+  project: ProjectSummary;
+  /** Position in the list: the number printed on a plate. */
+  index: number;
+  area: Area;
+  /** Above the fold: the image loads eagerly and first. */
+  priority?: boolean;
+  class?: string;
+}
+
+const { project, index, area, priority = false, class: className } = Astro.props;
+---
+
+<div class:list={['pcover', className]} data-project-picture={project.slug}>
+  {project.cover ? (
+    <ProjectShot
+      src={project.cover.src}
+      alt={project.cover.alt}
+      area={area}
+      colors={project.colors}
+      priority={priority}
+    />
+  ) : (
+    <ProjectPlate project={project} index={index} />
+  )}
+</div>
+
+<script>
+  import './picture-morph';
+</script>
+
+<style>
+  .pcover {
+    view-transition-class: project-picture;
+  }
+</style>

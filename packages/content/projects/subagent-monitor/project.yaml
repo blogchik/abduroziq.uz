@@ -28,5 +28,5 @@ gallery:
       en: 'One creature in five moods (running, waiting, done, failed, idle) and nine different creatures for nine agents.'
       uz: "Bitta jonzot besh holatda (ishlayapti, kutyapti, tugadi, xato, bo'sh) va to'qqizta agent uchun to'qqizta turli jonzot."
     caption:
-      en: Every agent gets its own creature, derived from its id.
-      uz: "Har bir agentning o'z jonzoti bor, u agentning id'sidan yasaladi."
+      en: One creature in five moods, and nine creatures for nine agents.
+      uz: Bitta jonzot besh holatda va to'qqizta agent uchun to'qqizta jonzot.

@@ -80,6 +80,8 @@ selects → `link`, text fields → `text` (native I-beam), long-form text insid
 (or any `[data-cursor-text]`) → `text`. `drag` shows `DRAG`, and `DROP` while pressed.
 `read` is the accent pill. `hide` hides it and shows the native cursor.
 
+Project rows use `read` with their own label (`data-cursor-label`, `VIEW`).
+
 Default labels come from `common.json` (`common.cursor.*`, in the page's language):
 BaseLayout writes them to `<body data-cursor-labels>` as JSON. `data-cursor-label` on an
 element wins (and then also replaces `Drop` while pressed).

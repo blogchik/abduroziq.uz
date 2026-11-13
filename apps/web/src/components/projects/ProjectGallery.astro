@@ -1,0 +1,74 @@
+---
+import { getImage } from 'astro:assets';
+import { t, type Locale } from '@/i18n';
+import type { ProjectDetail } from '@/lib/projects';
+import ProjectShot from './ProjectShot.astro';
+import { PAGE_AREA } from './media';
+import './frame.css';
+import '@/styles/prose.css';
+
+/**
+ * The gallery of a project page (DESIGN 6.3): every picture at the full content width, one
+ * under the other, each with its caption in the mono caption style of the blog's figures.
+ * A phone screenshot or an illustration keeps its own size on a matte (ProjectShot). Videos
+ * are framed the same way and never play by themselves.
+ *
+ * The section's heading is for assistive technology and the document outline only: the
+ * pictures need no title to be understood. Each figure rises once as it is scrolled to.
+ */
+interface Props {
+  project: ProjectDetail;
+  locale: Locale;
+}
+
+const { project, locale } = Astro.props;
+
+// Video posters go through the image pipeline too; the attribute needs the built URL.
+const posters = await Promise.all(
+  project.gallery.map(async (item) =>
+    item.kind === 'video' && item.poster
+      ? (await getImage({ src: item.poster, width: 1440 })).src
+      : undefined,
+  ),
+);
+---
+
+<section class="pgallery shell" aria-labelledby="project-gallery">
+  <h2 class="sr-only" id="project-gallery">
+    {t(locale, 'projects.gallery')}
+  </h2>
+  <ul class="pgallery__list">
+    {project.gallery.map((item, index) => (
+      <li>
+        <figure class="pgallery__item" data-reveal="rise">
+          {item.kind === 'image' ? (
+            <ProjectShot src={item.src} alt={item.alt} area={PAGE_AREA} colors={project.colors} />
+          ) : (
+            <div class="pframe">
+              <video
+                src={item.src}
+                poster={posters[index]}
+                width={item.poster?.width}
+                height={item.poster?.height}
+                aria-label={item.alt}
+                controls
+                preload="none"
+                playsinline
+              >
+                <a href={item.src}>{t(locale, 'projects.video')}</a>
+              </video>
+            </div>
+          )}
+          {item.caption && <figcaption class="figure__caption">{item.caption}</figcaption>}
+        </figure>
+      </li>
+    ))}
+  </ul>
+</section>
+
+<style>
+  .pgallery__list {
+    display: grid;
+    gap: clamp(2.5rem, 1.9rem + 2.8vw, 5rem);
+  }
+</style>

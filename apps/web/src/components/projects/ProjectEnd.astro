@@ -1,0 +1,141 @@
+---
+import Arrow from '@/components/ui/Arrow.astro';
+import ArrowLink from '@/components/ui/ArrowLink.astro';
+import { localePath, t, type Locale } from '@/i18n';
+import type { ProjectSummary } from '@/lib/projects';
+
+/**
+ * The end of a project page (DESIGN 6.3): one link to follow, the next project's name set
+ * as large as a page title. Under it, quietly, the way back to the list and the previous
+ * project. The last project has no next one: there the large link is the list itself.
+ */
+interface Props {
+  locale: Locale;
+  prev?: ProjectSummary | undefined;
+  next?: ProjectSummary | undefined;
+}
+
+const { locale, prev, next } = Astro.props;
+const listUrl = localePath(locale, '/projects/');
+---
+
+<nav class="pend shell" aria-labelledby="project-more">
+  <h2 class="sr-only" id="project-more">
+    {t(locale, 'projects.more')}
+  </h2>
+
+  {next ? (
+    <a
+      class="pend__next"
+      href={next.href}
+      rel="next"
+      data-cursor="read"
+      data-cursor-label={t(locale, 'projects.view')}
+    >
+      <span class="type-label pend__label">{t(locale, 'projects.next')}</span>{' '}
+      <span class="pend__line">
+        <span class="type-statement pend__name">{next.name}</span>
+        <span class="pend__arrow" aria-hidden="true">
+          <Arrow />
+        </span>
+      </span>
+    </a>
+  ) : (
+    <a class="pend__next" href={listUrl}>
+      <span class="type-label pend__label">{t(locale, 'projects.more')}</span>{' '}
+      <span class="pend__line">
+        <span class="type-statement pend__name">{t(locale, 'projects.all')}</span>
+        <span class="pend__arrow" aria-hidden="true">
+          <Arrow />
+        </span>
+      </span>
+    </a>
+  )}
+
+  {(prev || next) && (
+    <ul class="pend__links">
+      {next && (
+        <li>
+          <ArrowLink href={listUrl} label={t(locale, 'projects.all')} direction="left" arrowFirst />
+        </li>
+      )}
+      {prev && (
+        <li>
+          <ArrowLink
+            href={prev.href}
+            label={`${t(locale, 'projects.prev')}: ${prev.name}`}
+            rel="prev"
+            direction="left"
+            arrowFirst
+          />
+        </li>
+      )}
+    </ul>
+  )}
+</nav>
+
+<style>
+  .pend {
+    margin-block-start: var(--section);
+    padding-block-end: var(--section);
+  }
+
+  .pend__next {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1rem, 0.8rem + 0.9vw, 1.5rem);
+    padding-block: clamp(2rem, 1.5rem + 2.2vw, 3.5rem);
+    border-block: var(--hairline) solid var(--ink);
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .pend__label {
+    color: var(--ink-soft);
+  }
+
+  .pend__line {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--col-gap);
+  }
+
+  .pend__name {
+    min-width: 0;
+    overflow-wrap: break-word;
+    transition: translate var(--dur-2) var(--ease-out);
+  }
+
+  /* Centred on the first line of the name. */
+  .pend__arrow {
+    display: flex;
+    flex: none;
+    align-items: center;
+    height: 1.02em;
+    color: var(--accent-text);
+    font-size: var(--fs-statement);
+  }
+
+  .pend__arrow :global(.arrow) {
+    width: 0.5em;
+    height: 0.5em;
+    transition: translate var(--dur-2) var(--ease-out);
+  }
+
+  .pend__next:is(:hover, :focus-visible) .pend__name {
+    translate: 12px 0;
+  }
+
+  .pend__next:is(:hover, :focus-visible) .pend__arrow :global(.arrow) {
+    translate: 4px 0;
+  }
+
+  .pend__links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    margin-block-start: 1.5rem;
+  }
+</style>

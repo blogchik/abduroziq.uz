@@ -1,0 +1,118 @@
+---
+import QrBlock from '@/components/home/desk/QrBlock.astro';
+import { ticketColors } from '@/components/home/lib';
+import Barcode from '@/components/ui/Barcode.astro';
+import type { ProjectSummary } from '@/lib/projects';
+import { FRAME_RATIO } from './media';
+import './frame.css';
+
+/**
+ * The picture of a project that has none yet (DESIGN 6.1): the ticket of the home page's
+ * Building table (DESIGN 4.5) laid on its side and scaled up to a picture slot. The project's
+ * two colours, its glyph as the picture, and a tear-off stub with the print of a ticket.
+ *
+ * It has the shape of a screenshot, so a list of projects keeps one rhythm. Everything in it
+ * scales with the slot (container units), which is why the glyph is sized here and not by a
+ * type token: it is a drawing made of two letters. Decorative: the row and the page say
+ * everything it prints.
+ */
+interface Props {
+  project: Pick<ProjectSummary, 'slug' | 'colors' | 'glyph' | 'year'>;
+  /** Position in the list, printed as the ticket number. */
+  index: number;
+  class?: string;
+}
+
+const { project, index, class: className } = Astro.props;
+const colors = ticketColors(project.colors);
+const number = String(index + 1).padStart(2, '0');
+---
+
+<div
+  class:list={['plate pframe', className]}
+  style={{
+    '--t-bg': colors.bg,
+    '--t-fg': colors.fg,
+    '--t-text': colors.text,
+    '--plate-ratio': FRAME_RATIO,
+  }}
+  aria-hidden="true"
+>
+  <div class="plate__body">
+    <p class="plate__row type-micro">
+      <span>No. {number}</span>
+      <span>{project.year}</span>
+    </p>
+    <p class="plate__glyph">{project.glyph}</p>
+  </div>
+  <div class="plate__stub">
+    <p class="type-micro">Admit one</p>
+    <div class="plate__codes">
+      <QrBlock seed={project.slug} class="plate__qr" />
+      <Barcode seed={project.slug} bars={22} height="2.4cqw" fill />
+    </div>
+  </div>
+</div>
+
+<style>
+  .plate {
+    container-type: inline-size;
+    display: flex;
+    aspect-ratio: var(--plate-ratio);
+    background-color: var(--t-bg);
+    color: var(--t-text);
+  }
+
+  .plate__body,
+  .plate__stub {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 0;
+    padding: 3.4cqw;
+  }
+
+  .plate__body {
+    flex: 1 1 auto;
+  }
+
+  .plate__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1em;
+  }
+
+  /* The glyph is the picture: condensed display type in the project's own colour, standing
+     on the bottom edge of the print area. */
+  .plate__glyph {
+    font-family: var(--font-display-condensed);
+    font-size: 62cqw;
+    font-weight: 400;
+    font-stretch: 75%;
+    line-height: 0.72;
+    letter-spacing: -0.02em;
+    color: var(--t-fg);
+  }
+
+  /* The perforation: a dashed line where the stub tears off. */
+  .plate__stub {
+    flex: none;
+    width: 24cqw;
+    border-inline-start: var(--hairline) dashed color-mix(in srgb, var(--t-text) 60%, var(--t-bg));
+  }
+
+  .plate__codes {
+    display: flex;
+    flex-direction: column;
+    gap: 1.6cqw;
+  }
+
+  .plate__codes :global(.plate__qr) {
+    width: 50%;
+  }
+
+  /* `fill` makes the barcode a flex item that shares a row; here it is a row of its own. */
+  .plate__codes :global(.barcode) {
+    flex: none;
+  }
+</style>

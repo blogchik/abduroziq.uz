@@ -1,0 +1,61 @@
+/*
+ * The frame of every project picture (DESIGN 6.1): shared by the screenshots (ProjectShot)
+ * and the plate that stands in for a project without one (ProjectPlate).
+ *
+ * A hairline border, not a fill, so it survives forced colours. In the light theme the edge
+ * is ink, like every frame on the site: it disappears into a dark screenshot and draws a
+ * pale one. In the dark theme a full-strength line would be louder than the picture, so it
+ * steps back to a third: enough for a dark interface not to dissolve into the page.
+ */
+.pframe {
+  --pframe-edge: var(--ink);
+  border: var(--hairline) solid var(--pframe-edge);
+}
+
+[data-theme='dark'] .pframe {
+  --pframe-edge: color-mix(in srgb, var(--ink) 30%, var(--paper));
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .pframe {
+    --pframe-edge: color-mix(in srgb, var(--ink) 30%, var(--paper));
+  }
+}
+
+/* A video in a frame is as wide as the frame; until it plays the frame shows its poster. */
+.pframe > video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/*
+ * The picture of a followed list row grows into the cover of its page (picture-morph.ts
+ * names the two; the class comes from ProjectCover). It moves with the weight of the other
+ * entrances. The two are the same picture in the same shape, so the row's copy simply stays
+ * and the page's sharper one fades in over it: if that file is still on its way, nothing
+ * shows through but the copy (which is why a frame has no placeholder fill).
+ */
+html[data-motion='full']::view-transition-group(*.project-picture) {
+  animation-duration: var(--dur-3);
+  animation-timing-function: var(--ease-out);
+}
+
+/* The copy stays opaque and the new picture fades in over it with plain stacking. The
+   browser's default pair is additive, and it sets that blend from an animation, so the
+   animations are replaced, not only the property. */
+html[data-motion='full']::view-transition-old(*.project-picture) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+html[data-motion='full']::view-transition-new(*.project-picture) {
+  animation: project-picture-in var(--dur-2) linear both;
+  mix-blend-mode: normal;
+}
+
+@keyframes project-picture-in {
+  from {
+    opacity: 0;
+  }
+}

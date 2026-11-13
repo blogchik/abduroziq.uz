@@ -85,7 +85,8 @@ yourself if you want them.
 Same rules as a post, in `packages/content/projects/<slug>/project.yaml` (see the README there):
 `description` is 70 to 160 characters in each language (enforced) and is the snippet; `summary`
 is the sentence under the title, so the two should not repeat each other word for word. The page
-title is the project name plus the site suffix. The slug is the URL in both languages: never
+title is the project name plus the site suffix (the list's own title is `seo.projects.title`,
+a full phrase, while its `h1` stays the one word of `projects.title`). The slug is the URL in both languages: never
 rename a published one. Give every image `alt` in both languages; images must carry no
 metadata (`pnpm check` fails otherwise).
 

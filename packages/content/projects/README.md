@@ -32,8 +32,8 @@ description: # the search snippet, 70 to 160 characters in each language
   en: …
   uz: …
 stack: [Next.js, FastAPI] # technology names in display order; [] for none
-colors: ['#18181B', '#E28413'] # ticket background and foreground on the home page
-glyph: Pz # one or two characters drawn on the ticket
+colors: ['#18181B', '#E28413'] # background and foreground: the ticket, the plate, the matte
+glyph: Pz # one or two characters drawn on the ticket and the plate
 cover: ./media/cover.jpg # optional, relative to this file
 coverAlt: # required with a cover
   en: …
@@ -67,6 +67,13 @@ The repository is public. Images must carry no EXIF (which holds the GPS positio
 IPTC metadata: `pnpm check` runs `apps/web/scripts/check-media.mjs` and fails on any image
 under `packages/content` that has some. Export screenshots without metadata, or strip it
 with `sharp(input).rotate().toFile(output)`.
+
+How a picture is shown is decided from the file, not by a field. A landscape screenshot
+(export desktop screens at 16:10, for example 2880x1800) fills its frame at the full content
+width. A phone screenshot, a square picture and every SVG keep a size of their own on a matte
+in the project's background colour (`colors[0]`). A project without a `cover` gets a plate
+drawn from `colors` and `glyph` instead. SVGs are served as they are, so an animated one
+keeps playing: include a `prefers-reduced-motion` rule inside the file if it loops.
 
 Keep videos short and small (they are committed and served as files): H.264 `.mp4`, no
 sound track unless it matters, and a poster. They are never played automatically.

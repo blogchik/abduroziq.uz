@@ -1,0 +1,81 @@
+---
+import ArrowLink from '@/components/ui/ArrowLink.astro';
+import { localePath, t, type Locale } from '@/i18n';
+import type { ProjectSummary } from '@/lib/projects';
+
+/**
+ * The head of a project page (DESIGN 6.3): the way back, then the name in the `statement`
+ * style with the one-sentence summary in `lead` beside it (under it below 64rem). Like the
+ * home page, a project opens with a statement and an object: the picture follows directly.
+ *
+ * Nothing here is revealed by the motion kit: it is the first thing on screen and, on a page
+ * without a cover, the largest paint.
+ */
+interface Props {
+  project: ProjectSummary;
+  locale: Locale;
+}
+
+const { project, locale } = Astro.props;
+---
+
+<header class="phead shell">
+  <p class="phead__back">
+    <ArrowLink
+      href={localePath(locale, '/projects/')}
+      label={t(locale, 'projects.all')}
+      direction="left"
+      arrowFirst
+    />
+  </p>
+  <div class="phead__row">
+    <h1 class="type-statement phead__name">{project.name}</h1>
+    <p class="type-lead phead__summary">{project.summary}</p>
+  </div>
+</header>
+
+<style>
+  .phead {
+    padding-block-start: clamp(2.5rem, 1.4rem + 4.6vw, 6.5rem);
+  }
+
+  .phead__back {
+    margin-block-end: clamp(1.5rem, 1.2rem + 1.4vw, 2.5rem);
+  }
+
+  .phead__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(1rem, 0.8rem + 0.9vw, 1.5rem) var(--col-gap);
+  }
+
+  .phead__name {
+    min-width: 0;
+    overflow-wrap: break-word;
+  }
+
+  .phead__summary {
+    max-width: 26em;
+    color: var(--ink-soft);
+  }
+
+  /* Wide screens: the name in the left half, the summary in the right half, standing on the
+     same bottom line. Below that the summary would run to three lines beside a one-line
+     name, so it stays under it. */
+  @media (width >= 80rem) {
+    .phead__row {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      align-items: end;
+    }
+
+    .phead__name {
+      grid-column: 1 / span 6;
+    }
+
+    .phead__summary {
+      grid-column: 7 / -1;
+      /* The last line of the summary sits on the baseline of the name. */
+      padding-block-end: 0.18em;
+    }
+  }
+</style>

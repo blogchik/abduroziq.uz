@@ -1,0 +1,118 @@
+---
+import ArrowLink from '@/components/ui/ArrowLink.astro';
+import StatusDot from '@/components/ui/StatusDot.astro';
+import { t, type Locale } from '@/i18n';
+import type { ProjectSummary } from '@/lib/projects';
+
+/**
+ * The facts of a project (DESIGN 6.3), set like the facts on the home page (DESIGN 4.3):
+ * hairline rows, a mono label on the left and the value on the right. Year, role, status,
+ * the stack as one running list, and under the table the links out.
+ */
+interface Props {
+  project: ProjectSummary;
+  locale: Locale;
+}
+
+const { project, locale } = Astro.props;
+const fact = (key: string) => t(locale, `projects.facts.${key}`);
+---
+
+<section class="pfacts" aria-label={fact('label')}>
+  <dl class="pfacts__list">
+    <div class="pfacts__row">
+      <dt class="type-label">{fact('year')}</dt>
+      <dd class="type-body">{project.year}</dd>
+    </div>
+    <div class="pfacts__row">
+      <dt class="type-label">{fact('role')}</dt>
+      <dd class="type-body">{project.role}</dd>
+    </div>
+    <div class="pfacts__row">
+      <dt class="type-label">{fact('status')}</dt>
+      <dd class="pfacts__status">
+        <StatusDot
+          status={project.status}
+          label={t(locale, `home.building.status.${project.status}`)}
+          pulse="none"
+        />
+      </dd>
+    </div>
+    {project.stack.length > 0 && (
+      <div class="pfacts__row">
+        <dt class="type-label">{t(locale, 'projects.stack')}</dt>
+        <dd class="type-body">
+          <ul class="pfacts__stack">
+            {project.stack.map((name) => (
+              <li>{name}</li>
+            ))}
+          </ul>
+        </dd>
+      </div>
+    )}
+  </dl>
+  {(project.url || project.repo) && (
+    <ul class="pfacts__links">
+      {project.url && (
+        <li>
+          <ArrowLink href={project.url} label={t(locale, 'projects.visit')} />
+        </li>
+      )}
+      {project.repo && (
+        <li>
+          <ArrowLink href={project.repo} label={t(locale, 'projects.source')} />
+        </li>
+      )}
+    </ul>
+  )}
+</section>
+
+<style>
+  /* One label column for all rows, as wide as the longest label (they differ a lot between
+     the two languages). */
+  .pfacts__list {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    column-gap: clamp(1.25rem, 1rem + 1.2vw, 2.25rem);
+  }
+
+  .pfacts__row {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+    align-items: baseline;
+    padding-block: 0.95rem;
+    border-block-start: var(--hairline) solid var(--rule);
+  }
+
+  .pfacts__row:last-child {
+    border-block-end: var(--hairline) solid var(--rule);
+  }
+
+  .pfacts__row dt {
+    color: var(--ink-soft);
+  }
+
+  /* The dot's row is as tall as a line of body text, so the mono label keeps the baseline. */
+  .pfacts__status {
+    display: flex;
+    align-items: center;
+    min-height: calc(var(--fs-body) * 1.55);
+  }
+
+  .pfacts__stack li {
+    display: inline;
+  }
+
+  /* The comma belongs to the name before it and is decorative: the list says it already. */
+  .pfacts__stack li:not(:last-child)::after {
+    content: ', ' / '';
+  }
+
+  .pfacts__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem 2rem;
+    margin-block-start: 1.5rem;
+  }
+</style>

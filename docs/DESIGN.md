@@ -136,7 +136,7 @@ Replaces the system cursor on fine pointers only. One small element with states:
 | default | anywhere | 10px dot |
 | link | `a`, `button`, `[data-cursor="link"]` | 36px ring with the dot in the centre |
 | open | external links, `[data-cursor="open"]` | ring plus label `OPEN ↗` |
-| read | post rows, `[data-cursor="read"]` | accent pill with label `READ` |
+| read | post rows, project rows, `[data-cursor="read"]` | accent pill with label `READ` (`VIEW` on a project) |
 | drag | desk objects, `[data-cursor="drag"]` | ring plus label `DRAG`; `DROP` while held |
 | press | mouse down anywhere | eight short rays burst outward and fade (200ms) |
 | text | inputs, long-form article text | hidden; the native I-beam shows |
@@ -167,8 +167,10 @@ A full-bleed **accent** block, text in `on-accent`:
 Navigations between pages use view transitions: a paper-coloured panel wipes up from the
 bottom with an accent hairline on its leading edge (`dur-4`, `ease-in-out`), the new page
 then reveals its own entrance sequence. A post title morphs from its list row into the
-article title when the browser supports shared-element transitions. Reduced motion: plain
-cross-fade or none.
+article title when the browser supports shared-element transitions. The picture of a project
+row is held instead: it stays where it is, above the panel, while the list is wiped away,
+then moves and grows into the picture of the project page (`dur-3`, `ease-out`) as the panel
+lifts off the rest. Reduced motion: plain cross-fade or none.
 
 ## 4. Home page
 
@@ -312,7 +314,7 @@ A table, one project per row, hairlines between rows:
   colours with its glyph, name, year and a QR-like block) follows the cursor with a soft
   lag and tilts with movement. The `LIVE` dot pulses.
 - Every row is one link to the project's own page (`/projects/<slug>/`, same tab).
-- Under the table, right-aligned: `ALL PROJECTS →` to `/projects/`.
+- Under the table, right-aligned: `ALL PROJECTS →` to `/projects/` (6.2).
 - Mobile: each row stacks (year and status on one mono line, then name and description);
   no preview card.
 
@@ -373,7 +375,85 @@ A classic, calm reading page.
 - End of article: tags, a `COPY LINK` action, then `MORE ENTRIES` with the previous and
   next post side by side (title in `title`, hairline frame, arrow), then the footer.
 
-## 6. Other pages
+## 6. Projects and other pages
+
+The two project pages show the work itself: the pictures, large, and the names. Everything
+else on them is quiet.
+
+### 6.1 Project picture (shared by the list and the project page)
+
+Every project has one picture, in the shape of a desktop screenshot (16:10), inside a
+**frame**: a 1px border and nothing else. No radius, no shadow, no browser or device drawn
+around it. In the light theme the border is `ink`: it disappears into a dark screenshot and
+draws a pale one on the paper. In the dark theme it is ink at 30% over paper, enough for a
+dark interface not to dissolve into the page.
+
+What stands in the frame is decided from the file itself, not by a field:
+
+| Picture | How it is shown |
+|---|---|
+| A landscape screenshot (raster, at least 1.25 times as wide as it is high) | fills the frame edge to edge |
+| Anything else: a phone screenshot, a square panel, an illustration (every SVG) | **contained**: at a size of its own, centred on a **matte** in the project's background colour, taking at most 84% of the stage in either direction. The stage is 16:10; a wide strip shapes its own stage; on phones a tall picture gets a stage up to 4:5. A screenshot on a matte gets a faint hairline of its own. SVGs are served untouched, so an animated illustration keeps playing |
+| No picture yet | **the plate**: the ticket of 4.5 laid on its side. The project's background colour; its glyph in condensed display type in its foreground colour, standing on the bottom edge and about two thirds of the plate high; `NO. 03` and the year in `micro` along the top; a tear-off stub behind a dashed perforation with `ADMIT ONE`, a QR-like block and a barcode. Decorative |
+
+A phone screenshot is therefore never blown up to the full width: on a desktop it stands
+about as large as the phone it was taken on.
+
+### 6.2 Projects list `/projects`
+
+- Page title `BUILDING` in `display` with the mono subtitle to its right: the same head as
+  the blog index (5.2), so the inner pages open alike.
+- Then one row per project, in order, hairlines between the rows. A row gives two things to
+  look at, **the name and the picture**:
+  - From 1024px: the text in columns 1–5, the picture (6.1) in columns 6–12. The text is as
+    tall as the picture. At its top: a mono line with the year and the status (dot + text),
+    the name in the `title` style one step up (32 → 56px) with an arrow in `accent-text`
+    opposite it, and the one-sentence summary in `body` `ink-soft`. On its bottom edge two
+    mono lines: the role in ink, and the first three names of the stack in `ink-soft`
+    separated by `/`, then `+N` for the rest.
+  - Below 1024px the row stacks: the picture at the full content width, then the same text.
+- The whole row is one link to the project page (`/projects/<slug>/`). Hover / focus: the
+  name shifts 12px right, the arrow nudges 4px, the cursor becomes the accent pill with
+  `VIEW`. The picture does not react. Following a row takes its picture along (3.4).
+- The first row shares the first screen with the title; its picture is the page's largest
+  paint, loads first and is never revealed. Rows from the third on rise once (7.2).
+
+### 6.3 Project page `/projects/<slug>`
+
+Like the home page, a project opens with a statement and an object.
+
+1. **Head.** `← ALL PROJECTS` in `label`, then the name, the page's `h1`, in the `statement`
+   style, and the one-sentence summary in `lead` `ink-soft`. From 1280px the name takes the
+   left half and the summary the right half, standing on the same bottom line; below that
+   the summary sits under the name.
+2. **The cover** in its frame (6.1), at the full content width, directly under the head. It
+   is the page's largest paint: loaded first, never revealed.
+3. **Facts and text**, side by side from 1024px (facts in columns 1–4, text in columns
+   6–12); below that the facts come first.
+   - Facts: set like the facts of 4.3, hairline rows with a mono label on the left and the
+     value on the right: `YEAR`, `ROLE`, `STATUS` (dot + mono text), `STACK` (every name, as
+     one running list). Under the table the links out as mono arrow links: `OPEN THE SITE ↗`,
+     `SOURCE CODE ↗`. The column stays in view while a longer text scrolls past.
+   - Text: the article typography of the blog (5.3) at its 680px measure: numbered `h2`
+     headings, serif body, code blocks. It starts level with the facts.
+   - A project without a cover shows its plate at the head of the facts column instead of a
+     full-width picture. The page is then one compact sheet, object and facts on the left
+     and text on the right, and nothing pretends there is something to show.
+4. **Gallery.** Every picture in its frame at the full content width, one under the other,
+   40 → 80px apart, each with its caption under it in the mono caption style of the blog's
+   figures. Contained pictures stand on their matte (6.1). A video sits in the same frame
+   with the browser's own controls and never starts by itself. Each figure rises once as it
+   is scrolled to.
+5. **End.** One link to follow, between two ink hairlines: `NEXT PROJECT` in `label` and the
+   next project's name in the `statement` style, an arrow in `accent-text` opposite it
+   (hover as in 6.2). Under it, quiet and mono: `← ALL PROJECTS` on the left and
+   `← PREVIOUS PROJECT: NAME` on the right. The last project has no next one: there the
+   large link is `All projects` under the label `MORE PROJECTS`. Then the footer.
+
+Left out on purpose: browser chrome and device mock-ups around screenshots, a lightbox or
+zoom, carousels, tags and filters, hover effects on pictures, a second column of pictures.
+
+### 6.4 Other pages
 
 - **404**: an ink band. Giant `404` in `name` style, the line
   `This page was dragged somewhere else.`, a link home, and three desk objects to throw
@@ -402,7 +482,8 @@ final state instead, and the first frame of the canvas is always drawn at once.
 ### 7.2 On scroll
 
 - Text blocks marked for reveal rise line by line when they enter the viewport, once.
-- Table rows and post rows fade and rise 16px, 60ms stagger.
+- Table rows and post rows fade and rise 16px, 60ms stagger. Project rows (from the third)
+  and the figures of a project's gallery rise the same way, one by one.
 - The tape reacts to scroll velocity (4.4). The footer name rises as it enters.
 - Smooth scrolling is light: it must not feel floaty and must not hijack the wheel.
 

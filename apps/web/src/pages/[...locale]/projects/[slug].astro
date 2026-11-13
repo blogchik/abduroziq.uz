@@ -1,23 +1,28 @@
 ---
-import { Image, getImage } from 'astro:assets';
+import { getImage } from 'astro:assets';
 import { render } from 'astro:content';
 import type { GetStaticPaths } from 'astro';
-import BlogHeader from '@/components/blog/BlogHeader.astro';
 import { mdxComponents } from '@/components/blog/mdx';
-import ArrowLink from '@/components/ui/ArrowLink.astro';
-import StatusDot from '@/components/ui/StatusDot.astro';
+import ProjectCover from '@/components/projects/ProjectCover.astro';
+import ProjectEnd from '@/components/projects/ProjectEnd.astro';
+import ProjectFacts from '@/components/projects/ProjectFacts.astro';
+import ProjectGallery from '@/components/projects/ProjectGallery.astro';
+import ProjectHeader from '@/components/projects/ProjectHeader.astro';
+import { ASIDE_AREA, PAGE_AREA } from '@/components/projects/media';
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import { localeParam, localePath, locales, resolveLocale, t } from '@/i18n';
+import { localeParam, locales, resolveLocale, t } from '@/i18n';
 import { getAdjacentProjects, getProject, getProjects } from '@/lib/projects';
 import { breadcrumbSchema, projectSchema } from '@/lib/seo/schema';
 import { absoluteUrl } from '@/lib/seo/site';
 import '@/styles/prose.css';
 
 /**
- * A project page: `/projects/<slug>/` and `/uz/projects/<slug>/`. Every project has a page in
- * every language (the yaml carries both); the long text is optional per language. In order:
- * name and summary, facts and links, stack, cover, text, gallery, neighbours and the way back.
- * Empty parts are left out entirely. Plain on purpose: the look is decided in docs/DESIGN.md.
+ * A project page (DESIGN 6.3): `/projects/<slug>/` and `/uz/projects/<slug>/`. Every project
+ * has a page in every language (the yaml carries both); the long text is optional per
+ * language. In order: name and summary; the cover at the full content width; the facts and
+ * the stack in a column beside the text; the gallery; the next project and the way back.
+ * A project without a cover shows its plate at the head of the facts column instead. Empty
+ * parts are left out entirely.
  */
 export const getStaticPaths = (async () =>
   (
@@ -36,18 +41,10 @@ if (!project) throw new Error(`Unknown project "${Astro.params.slug}".`);
 
 const { prev, next } = await getAdjacentProjects(locale, project.slug);
 const Body = project.body ? (await render(project.body)).Content : undefined;
-const fact = (key: string) => t(locale, `projects.facts.${key}`);
+// The position in the list is the number printed on a plate.
+const index = (await getProjects(locale)).findIndex((other) => other.slug === project.slug);
 
 // The cover joins the generated card in the structured data, as an absolute URL.
-// Video posters go through the image pipeline too; the attribute needs the built URL.
-const posters = await Promise.all(
-  project.gallery.map(async (item) =>
-    item.kind === 'video' && item.poster
-      ? (await getImage({ src: item.poster, width: 1440 })).src
-      : undefined,
-  ),
-);
-
 const coverImage = project.cover
   ? absoluteUrl((await getImage({ src: project.cover.src, width: 1200 })).src)
   : undefined;
@@ -70,230 +67,91 @@ const coverImage = project.cover
   }}
 >
   <article class="project">
-    <BlogHeader title={project.name} subtitle={project.summary} />
-
-    <section class="project__section shell" aria-label={fact('label')}>
-      <dl class="type-label project__facts">
-        <div>
-          <dt>{fact('year')}</dt>
-          <dd>{project.year}</dd>
-        </div>
-        <div>
-          <dt>{fact('role')}</dt>
-          <dd>{project.role}</dd>
-        </div>
-        <div>
-          <dt>{fact('status')}</dt>
-          <dd>
-            <StatusDot
-              status={project.status}
-              label={t(locale, `home.building.status.${project.status}`)}
-            />
-          </dd>
-        </div>
-      </dl>
-      {(project.url || project.repo) && (
-        <ul class="project__links">
-          {project.url && (
-            <li>
-              <ArrowLink href={project.url} label={t(locale, 'projects.visit')} />
-            </li>
-          )}
-          {project.repo && (
-            <li>
-              <ArrowLink href={project.repo} label={t(locale, 'projects.source')} />
-            </li>
-          )}
-        </ul>
-      )}
-    </section>
-
-    {project.stack.length > 0 && (
-      <section class="project__section shell" aria-labelledby="project-stack">
-        <h2 class="type-label project__heading" id="project-stack">
-          {t(locale, 'projects.stack')}
-        </h2>
-        <ul class="type-label project__stack">
-          {project.stack.map((name) => (
-            <li>{name}</li>
-          ))}
-        </ul>
-      </section>
-    )}
+    <ProjectHeader project={project} locale={locale} />
 
     {project.cover && (
-      <figure class="project__cover shell">
-        <Image
-          src={project.cover.src}
-          alt={project.cover.alt}
-          widths={[480, 960, 1440, 1840]}
-          sizes="(min-width: 960px) 920px, calc(100vw - 2rem)"
-          loading="eager"
-        />
-      </figure>
-    )}
-
-    {Body && (
-      <div class="project__body shell">
-        <div class="prose type-article-body">
-          <Body components={mdxComponents} />
-        </div>
+      <div class="project__cover shell">
+        <ProjectCover project={project} index={index} area={PAGE_AREA} priority />
       </div>
     )}
 
-    {project.gallery.length > 0 && (
-      <section class="project__section shell" aria-labelledby="project-gallery">
-        <h2 class="type-label project__heading" id="project-gallery">
-          {t(locale, 'projects.gallery')}
-        </h2>
-        <ul class="project__gallery">
-          {project.gallery.map((item, index) => (
-            <li>
-              <figure class="project__media">
-                {item.kind === 'image' ? (
-                  <Image
-                    src={item.src}
-                    alt={item.alt}
-                    widths={[480, 960, 1440, 1840]}
-                    sizes="(min-width: 960px) 920px, calc(100vw - 2rem)"
-                  />
-                ) : (
-                  <video
-                    src={item.src}
-                    poster={posters[index]}
-                    width={item.poster?.width}
-                    height={item.poster?.height}
-                    aria-label={item.alt}
-                    controls
-                    preload="none"
-                    playsinline
-                  >
-                    <a href={item.src}>{t(locale, 'projects.video')}</a>
-                  </video>
-                )}
-                {item.caption && (
-                  <figcaption class="type-label project__caption">{item.caption}</figcaption>
-                )}
-              </figure>
-            </li>
-          ))}
-        </ul>
-      </section>
-    )}
+    <div class:list={['project__main shell', { 'project__main--plate': !project.cover }]}>
+      <div class="project__aside">
+        {!project.cover && (
+          <ProjectCover project={project} index={index} area={ASIDE_AREA} class="project__plate" />
+        )}
+        <ProjectFacts project={project} locale={locale} />
+      </div>
 
-    <nav class="project__section project__more shell" aria-labelledby="project-more">
-      <h2 class="type-label project__heading" id="project-more">
-        {t(locale, 'projects.more')}
-      </h2>
-      <ul class="project__links">
-        {prev && (
-          <li>
-            <span class="type-label project__dir">{t(locale, 'projects.prev')}</span>
-            <ArrowLink href={prev.href} label={prev.name} rel="prev" direction="left" arrowFirst />
-          </li>
-        )}
-        {next && (
-          <li>
-            <span class="type-label project__dir">{t(locale, 'projects.next')}</span>
-            <ArrowLink href={next.href} label={next.name} rel="next" />
-          </li>
-        )}
-        <li>
-          <ArrowLink
-            href={localePath(locale, '/projects/')}
-            label={t(locale, 'projects.all')}
-            direction="left"
-            arrowFirst
-          />
-        </li>
-      </ul>
-    </nav>
+      {Body && (
+        <div class="project__body prose type-article-body">
+          <Body components={mdxComponents} />
+        </div>
+      )}
+    </div>
+
+    {project.gallery.length > 0 && <ProjectGallery project={project} locale={locale} />}
+
+    <ProjectEnd locale={locale} prev={prev} next={next} />
   </article>
 </BaseLayout>
 
 <style>
   .project {
-    display: block;
-    padding-block-end: var(--section);
-  }
-
-  .project__section,
-  .project__cover,
-  .project__body {
-    margin-block-start: clamp(2rem, 1.5rem + 2vw, 3.5rem);
-  }
-
-  .project__heading {
-    margin: 0 0 1rem;
-    color: var(--ink-soft);
-  }
-
-  .project__facts,
-  .project__stack,
-  .project__links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem 2rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .project__links {
-    margin-block-start: 1.25rem;
-  }
-
-  .project__heading + .project__links {
-    margin-block-start: 0;
-  }
-
-  .project__facts div {
-    display: flex;
-    gap: 0.6em;
-  }
-
-  .project__facts dt,
-  .project__dir,
-  .project__caption {
-    color: var(--ink-soft);
-  }
-
-  .project__facts dd {
-    margin: 0;
-  }
-
-  .project__dir {
-    display: block;
-    margin-block-end: 0.4rem;
-  }
-
-  .project__gallery {
-    display: grid;
-    gap: 2rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
+    --project-gap: clamp(3rem, 2.1rem + 4vw, 6rem);
   }
 
   .project__cover {
-    max-width: min(920px, 100%);
+    margin-block-start: clamp(2.5rem, 2rem + 2.2vw, 4rem);
   }
 
-  .project__media {
-    max-width: 920px;
-    margin: 0;
+  .project__main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: clamp(2.5rem, 2rem + 2.2vw, 4rem);
+    margin-block: var(--project-gap);
   }
 
-  .project__cover :global(img),
-  .project__media :global(img),
-  .project__media video {
-    display: block;
-    width: 100%;
-    height: auto;
-    background-color: var(--paper-raised);
+  .project__aside {
+    display: grid;
+    gap: clamp(1.5rem, 1.2rem + 1.4vw, 2.5rem);
+    align-content: start;
+    min-width: 0;
   }
 
-  .project__caption {
-    margin-block-start: 0.75rem;
+  /* The text keeps the reading measure of the blog and starts at the column's left edge. */
+  .project__body {
+    margin-inline: 0;
+  }
+
+  /* Its first heading starts level with the facts beside it. */
+  .project__body > :global(:first-child) {
+    margin-block-start: 0;
+  }
+
+  /* Desktop: the facts in the first four columns, the text from the sixth. */
+  @media (width >= 64rem) {
+    .project__main {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      column-gap: var(--col-gap);
+      align-items: start;
+    }
+
+    .project__aside {
+      grid-column: 1 / span 4;
+    }
+
+    .project__body {
+      grid-column: 6 / -1;
+    }
+  }
+
+  /* Only where the whole column fits under the header: a sticky box taller than the screen
+     would hide its own end. */
+  @media (width >= 64rem) and (height >= 48rem) {
+    .project__aside {
+      position: sticky;
+      inset-block-start: calc(var(--header-h) + 1.5rem);
+    }
   }
 </style>
