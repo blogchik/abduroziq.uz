@@ -111,12 +111,88 @@ source.forEach((part, index) => {
 
   /* The capsules are rendered by a primitive, so their insides are styled globally. */
 
-  /* ---------------------------------------------------------------- portrait */
-  .capsule-portrait img {
-    /* The face sits near 56% / 35% of the square photo; the pill shows a 2:1 window. */
-    object-position: 56% 27%;
-    scale: 1.35;
-    transform-origin: 56% 36%;
+  /* -------------------------------------------------------------------- eyes */
+  .capsule-eyes {
+    /* Physical tones: the whites stay light and the pupils dark in both themes. */
+    --eye-white: var(--paper-raised);
+    --eye-ink: var(--ink);
+  }
+
+  @supports (color: light-dark(#000, #fff)) {
+    .capsule-eyes {
+      --eye-white: light-dark(var(--paper-raised), var(--inv-paper-raised));
+      --eye-ink: light-dark(var(--ink), var(--inv-ink));
+    }
+  }
+
+  /* The capsule primitive lays its child out as a block; the eyes need a centred row. */
+  .capsule.capsule-eyes > .eyes {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.06em;
+    transition: scale var(--dur-2) var(--ease-out);
+  }
+
+  .capsule-eyes:hover .eyes {
+    scale: 1.1;
+  }
+
+  .eye {
+    /* How far a pupil travels from the centre of its eye. */
+    --travel: 0.13em;
+    position: relative;
+    display: block;
+    flex: none;
+    width: 0.5em;
+    height: 0.5em;
+    border-radius: 50%;
+    background-color: var(--eye-white);
+  }
+
+  /* Without JavaScript (and under reduced motion) the eyes glance at the name beside them;
+     eyes.ts moves `--look-x` / `--look-y` between -1 and 1. */
+  .eye__pupil {
+    position: absolute;
+    inset: 0;
+    width: 0.22em;
+    height: 0.22em;
+    margin: auto;
+    border-radius: 50%;
+    background-color: var(--eye-ink);
+    translate: calc(var(--look-x, -0.6) * var(--travel)) calc(var(--look-y, 0.15) * var(--travel));
+    transition: translate var(--dur-1) var(--ease-out);
+  }
+
+  /* Wandering on their own, the eyes move slowly. */
+  .eyes[data-idle] .eye__pupil {
+    transition-duration: var(--dur-3);
+  }
+
+  @keyframes eye-blink {
+    0%,
+    93%,
+    100% {
+      scale: 1 1;
+    }
+
+    96.5% {
+      scale: 1 0.06;
+    }
+  }
+
+  html[data-motion='full'] .eye {
+    animation: eye-blink 5.4s ease-in-out 1.6s infinite;
+  }
+
+  [data-hero][data-offscreen] .eye {
+    animation-play-state: paused;
+  }
+
+  /* A click winks the right eye. */
+  html[data-motion='full'] .eyes[data-wink] .eye:last-child {
+    animation: none;
+    scale: 1 0.06;
   }
 
   /* ------------------------------------------------------------------- craft */

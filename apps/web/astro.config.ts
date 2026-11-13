@@ -1,4 +1,4 @@
-import { readdirSync } from 'node:fs';
+import { existsSync, readdirSync, renameSync, rmSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import mdx from '@astrojs/mdx';
@@ -47,7 +47,7 @@ const sitemapSetup = createSitemapSetup({
   postsDir: path.resolve(appRoot, '../../packages/content/posts'),
   locales,
   defaultLocale,
-  exclude: [/^\/404\/?$/, DEV_ONLY_PATH, /^\/(uz\/)?og\//],
+  exclude: [/^\/(?:[a-z]{2}\/)?404\/?$/, DEV_ONLY_PATH, /^\/(uz\/)?og\//],
 });
 
 /**
@@ -81,6 +81,31 @@ function devOnlyPages(): AstroIntegration {
   };
 }
 
+/**
+ * Astro writes only the root `404.astro` as `404.html`; a localised one (`pages/uz/404.astro`)
+ * comes out as `uz/404/index.html`. Hosts that answer a missing path with the nearest
+ * `404.html` (Cloudflare's `not_found_handling: "404-page"`) need it at `uz/404.html`, so it
+ * is moved there after the build, and `/uz/404/` stops being a page of its own.
+ */
+function localizedNotFound(): AstroIntegration {
+  return {
+    name: 'localized-not-found',
+    hooks: {
+      'astro:build:done': ({ dir }) => {
+        const out = fileURLToPath(dir);
+        for (const locale of locales) {
+          if (locale === defaultLocale) continue;
+          const folder = path.join(out, locale, '404');
+          const page = path.join(folder, 'index.html');
+          if (!existsSync(page)) continue;
+          renameSync(page, path.join(out, locale, '404.html'));
+          rmSync(folder, { recursive: true, force: true });
+        }
+      },
+    },
+  };
+}
+
 export default defineConfig({
   site,
   trailingSlash: 'always',
@@ -100,6 +125,7 @@ export default defineConfig({
       filter: sitemapSetup.filter,
       serialize: sitemapSetup.serialize,
     }),
+    localizedNotFound(),
   ],
   markdown: {
     // Straight quotes stay straight: Uzbek uses a plain ' (o'zbek), and titles, descriptions

@@ -1,0 +1,165 @@
+---
+import Desk from '@/components/home/desk/Desk.astro';
+import ArrowLink from '@/components/ui/ArrowLink.astro';
+import Container from '@/components/ui/Container.astro';
+import GiantName from '@/components/ui/GiantName.astro';
+import SectionLabel from '@/components/ui/SectionLabel.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { alternates, localePath, locales, t, type Locale } from '@/i18n';
+
+/**
+ * The 404 page (DESIGN section 6): an ink band with a giant `404`, one line, a link home
+ * and three desk objects to throw. On wide screens the desk is the whole band, so the
+ * objects can be thrown across the digits; on small ones it is a band of its own.
+ *
+ * It is built once per locale: `pages/404.astro` becomes `/404.html` and
+ * `pages/uz/404.astro` becomes `/uz/404.html` (moved there by the `localized-not-found`
+ * integration in astro.config.ts), so a host that serves the nearest `404.html` answers a
+ * missing `/uz/...` path with a page that is Uzbek from header to footer.
+ *
+ * `bilingual` is the fallback for hosts (and `astro dev`) that serve only the root page for
+ * every missing path: that page also carries the other locales' strings (`data-nf-lang`) and
+ * an inline script shows the Uzbek set, and sets `lang` and the title, when the path starts
+ * with `/uz/`. The `h1` is `404` plus the words, visually hidden: the giant digits are
+ * decorative.
+ */
+interface Props {
+  locale: Locale;
+  bilingual?: boolean;
+}
+
+const { locale, bilingual = false } = Astro.props;
+const shown: readonly Locale[] = bilingual ? locales : [locale];
+const titles = Object.fromEntries(locales.map((l) => [l, t(l, 'seo.notFound.title')]));
+---
+
+<BaseLayout
+  locale={locale}
+  path="/404/"
+  title={t(locale, 'seo.notFound.title')}
+  description={t(locale, 'seo.notFound.description')}
+  seo={{ noindex: true, canonical: false, alternates: alternates('/') }}
+>
+  {bilingual && <script is:inline data-astro-rerun define:vars={{ titles }}>
+    // Before the band is painted: the Uzbek set for Uzbek paths.
+    if (/^\/uz(\/|$)/.test(location.pathname)) {
+      document.documentElement.lang = 'uz';
+      document.title = document.title.replace(titles.en, titles.uz);
+    }
+  </script>}
+
+  <section class="nf surface-ink" aria-labelledby="nf-title">
+    <Container class="nf__shell">
+      {shown.map((lang) => (
+        <SectionLabel
+          number="404"
+          name={t(lang, 'common.notFound.title')}
+          data-nf-lang={lang}
+          data-reveal="fade"
+        />
+      ))}
+
+      <div class="nf__grid">
+        <div class="nf__digits">
+          <h1 class="sr-only" id="nf-title">
+            404{' '}
+            {shown.map((lang) => (
+              <span data-nf-lang={lang}>{t(lang, 'common.notFound.title')}</span>
+            ))}
+          </h1>
+          <GiantName text="404" decorative reveal="chars" revealDelay={0.1} />
+        </div>
+        <div class="nf__text">
+          {shown.map((lang) => (
+            <div data-nf-lang={lang}>
+              <p class="type-lead nf__line" data-reveal="lines" data-reveal-delay="0.5">
+                {t(lang, 'home.notFound.line')}
+              </p>
+              <p class="nf__back" data-reveal="fade" data-reveal-delay="0.8">
+                <ArrowLink
+                  href={localePath(lang, '/')}
+                  label={t(lang, 'home.notFound.home')}
+                  direction="left"
+                  arrowFirst
+                />
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div class="nf__desk">
+        <Desk locale={locale} variant="notfound" entrance={0.9} />
+      </div>
+      <Desk locale={locale} variant="notfound-band" entrance={0.3} class="nf__band" />
+    </Container>
+  </section>
+</BaseLayout>
+
+<style>
+  /* One language at a time: English unless the inline script has set `lang="uz"`. */
+  :global(html:not([lang='uz']) [data-nf-lang='uz']),
+  :global(html[lang='uz'] [data-nf-lang='en']) {
+    display: none;
+  }
+
+  .nf {
+    padding-block: clamp(1.75rem, 1.2rem + 2.4vw, 3.5rem) clamp(2rem, 1.4rem + 2.6vw, 3.75rem);
+  }
+
+  .nf :global(.nf__shell) {
+    position: relative;
+  }
+
+  .nf__grid {
+    display: grid;
+    gap: clamp(1.5rem, 1.1rem + 1.8vw, 2.75rem) var(--col-gap);
+    margin-block-start: clamp(1.5rem, 1.1rem + 1.8vw, 2.75rem);
+  }
+
+  .nf__line {
+    max-width: 14em;
+    margin: 0;
+  }
+
+  .nf__back {
+    margin: clamp(1.25rem, 1rem + 1vw, 1.75rem) 0 0;
+  }
+
+  .nf__desk {
+    display: none;
+    position: absolute;
+    inset: 0 var(--gutter);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .nf__desk :global(.desk) {
+    height: 100%;
+  }
+
+  .nf :global(.nf__band) {
+    margin-block-start: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+  }
+
+  @media (width >= 64rem) {
+    /* The digits take the left of the band and never grow taller than the screen; the
+       line and the link stand at their foot on the right. */
+    .nf__grid {
+      grid-template-columns: minmax(0, min(66%, 100svh)) minmax(0, 1fr);
+      align-items: end;
+    }
+
+    .nf__text {
+      padding-block-end: 0.4rem;
+    }
+
+    .nf__desk {
+      display: block;
+    }
+
+    .nf :global(.nf__band) {
+      display: none;
+    }
+  }
+</style>

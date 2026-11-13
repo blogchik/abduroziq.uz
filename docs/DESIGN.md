@@ -181,7 +181,10 @@ Order, top to bottom:
 
    `◉` marks a **capsule**: an inline rounded image, height 0.78em, width about 1.5em,
    vertically centred on the x-height, 1px ink border.
-   - Capsule 1: his portrait.
+   - Capsule 1: a drawn stand-in for him: two eyes on an accent pill. They follow the
+     pointer, look around on their own when it rests (and on touch screens), blink, and wink
+     when clicked. Without JavaScript they glance at the name beside them. (His photo
+     appears once, on the desk polaroid.)
    - Capsule 2: a tiny looping illustration of a selection frame turning into `</>`
      (design becoming code), drawn in SVG, accent on paper.
    - Capsule 3: Tashkent now. A flat sky that is paper-light by day and ink-dark by night
@@ -315,6 +318,8 @@ A classic, calm reading page.
 
 - **404**: an ink band. Giant `404` in `name` style, the line
   `This page was dragged somewhere else.`, a link home, and three desk objects to throw.
+  It is built once per language (`/404.html` and `/uz/404.html`), so a missing Uzbek path
+  gets a page that is Uzbek from header to footer.
 - **Tag page** `/blog/tag/<tag>`: same as the blog index with the tag as the title.
 
 ## 7. Motion

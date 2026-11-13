@@ -1,12 +1,12 @@
 ---
-import { Image } from 'astro:assets';
 import Capsule from '@/components/ui/Capsule.astro';
-import { portrait } from './portrait';
 
 /**
  * One of the three capsules of the hero sentence (styles live in Sentence.astro):
  *
- *  - portrait: the photo, cropped to the pill around the face.
+ *  - portrait: a drawn stand-in for the author, two eyes on an accent pill. They follow the
+ *    pointer, look around on their own, blink and wink when clicked (eyes.ts); without
+ *    JavaScript they glance at the name beside them.
  *  - craft: a selection frame that turns into `</>` and back (CSS only).
  *  - tashkent: the sky over Tashkent right now. Its state lives on the hero root
  *    (`data-sky`, `--sky-x`, `--sky-y`, set by the inline script in Hero.astro), not on the
@@ -20,16 +20,15 @@ const { id } = Astro.props;
 ---
 
 {id === 'portrait' && (
-  <Capsule tone="ink" class="capsule-portrait">
-    <Image
-      src={portrait}
-      alt=""
-      width={384}
-      height={384}
-      quality={76}
-      loading="eager"
-      decoding="async"
-    />
+  <Capsule tone="accent" class="capsule-eyes">
+    <span class="eyes" data-eyes data-cursor="link">
+      <span class="eye" data-eye>
+        <span class="eye__pupil" />
+      </span>
+      <span class="eye" data-eye>
+        <span class="eye__pupil" />
+      </span>
+    </span>
   </Capsule>
 )}
 {id === 'craft' && (
