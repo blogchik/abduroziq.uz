@@ -1,0 +1,224 @@
+---
+import { profile } from '@abduroziq/content';
+import GiantName from '@/components/ui/GiantName.astro';
+import { t, type Locale } from '@/i18n';
+import { buildField, fieldToPaths, starPath } from './field';
+
+/**
+ * The meeting (DESIGN 4.2): the name, thin and calm, edge to edge; in front of it one large
+ * dotted graphic, a pointing-hand cursor and an arrow cursor about to touch, each with a
+ * multiplayer name tag (the person and the agent, building together).
+ *
+ * Layers of the stage, back to front: the name; the picture; the two tags. The picture is
+ * a canvas driven by `meeting.ts`. Without JavaScript a static SVG of the same composition
+ * (the same dot field, built here with a coarser grid) stands in for it. With JavaScript the
+ * stand-in is held back until the canvas has drawn its first frame, with the usual failsafe
+ * if the script never arrives.
+ *
+ * The stage reserves its height in CSS (26% of its width, never less than 10rem), so neither
+ * the canvas nor the name can move the page. To assistive technology the whole thing is one
+ * image with a sentence for a name.
+ */
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+
+// The stand-in: the field on a nominal stage of the same proportions.
+const STATIC = { width: 1200, height: 312 };
+const field = buildField(STATIC.width, STATIC.height, { pitch: STATIC.width / 112 });
+const paths = fieldToPaths(field);
+
+// Where the tags sit without `meeting.ts` (which places them in px): their distance from the
+// middle of the stage in units of the stand-in, which CSS scales as it scales the picture.
+const tagStyle = (tag: { x: number; y: number }): string =>
+  `--ox:${(tag.x - STATIC.width / 2).toFixed(1)};--oy:${(tag.y - STATIC.height / 2).toFixed(1)}`;
+---
+
+<div class="meeting" data-meeting role="img" aria-label={t(locale, 'home.hero.meeting')}>
+  <div class="meeting__stage" data-meeting-stage>
+    <GiantName decorative thin class="meeting__name" reveal="chars" revealDelay={0.1} />
+    <svg
+      class="meeting__static"
+      viewBox={`0 0 ${STATIC.width} ${STATIC.height}`}
+      preserveAspectRatio="xMidYMid slice"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path class="meeting__body" stroke-width={paths.body.width} d={paths.body.d}></path>
+      <g class="meeting__dots">
+        {paths.dots.map((path) => (
+          <path stroke-width={path.width} d={path.d} />
+        ))}
+      </g>
+      <path
+        class="meeting__star"
+        transform={`translate(${field.meet.x.toFixed(1)} ${field.meet.y.toFixed(1)})`}
+        d={starPath(field.star)}
+      ></path>
+    </svg>
+    <canvas class="meeting__canvas" aria-hidden="true"></canvas>
+    <span
+      class="meeting__tag meeting__tag--hand type-label"
+      data-meeting-tag="hand"
+      style={tagStyle(field.tags.hand)}
+    >
+      {profile.name}
+    </span>
+    <span
+      class="meeting__tag meeting__tag--agent type-label"
+      data-meeting-tag="arrow"
+      style={tagStyle(field.tags.arrow)}
+    >
+      {profile.agentTag}
+    </span>
+  </div>
+</div>
+
+<script>
+  import './meeting';
+</script>
+
+<style>
+  .meeting {
+    container-type: inline-size;
+  }
+
+  .meeting__stage {
+    /* One unit of the stand-in (drawn 1200 x 312, filling the stage) in px. */
+    --unit: max(100cqi / 1200, 10rem / 312);
+    position: relative;
+    height: max(26cqi, 10rem);
+    /* A finger may scroll the page over the stage; sideways it stirs the dots. */
+    touch-action: pan-y;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* The name behind: ink at reduced strength (3.2:1 on paper in the light theme, 3.4:1 in the
+     dark one, where the same mix would be brighter), its capitals centred on the stage (the
+     line box has room for the Q's tail). */
+  .meeting :global(.meeting__name) {
+    position: absolute;
+    inset-inline: 0;
+    top: 50%;
+    translate: 0 calc(-50% + 0.95cqi);
+    color: color-mix(in srgb, var(--ink) 48%, var(--paper));
+  }
+
+  @supports (color: light-dark(#000, #fff)) {
+    .meeting :global(.meeting__name) {
+      color: light-dark(
+        color-mix(in srgb, var(--ink) 48%, var(--paper)),
+        color-mix(in srgb, var(--ink) 40%, var(--paper))
+      );
+    }
+  }
+
+  .meeting__static,
+  .meeting__canvas {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    pointer-events: none;
+  }
+
+  .meeting__static {
+    top: 0;
+    height: 100%;
+    overflow: visible;
+  }
+
+  /* The canvas reaches 36px beyond the stage (BLEED in meeting.ts): pushed dots stay whole. */
+  .meeting__canvas {
+    top: -36px;
+    height: calc(100% + 72px);
+  }
+
+  .meeting__body,
+  .meeting__dots {
+    fill: none;
+    stroke: var(--ink);
+    stroke-linecap: round;
+  }
+
+  /* The cursors are solid: their bodies are painted in the colour of the page. */
+  .meeting__body {
+    stroke: var(--paper);
+  }
+
+  .meeting__star {
+    fill: var(--accent);
+    stroke: var(--accent);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+  }
+
+  .meeting[data-meeting-ready] .meeting__static {
+    display: none;
+  }
+
+  /* Name tags as in a design tool: the corner towards the cursor's tip is square. */
+  .meeting__tag {
+    position: absolute;
+    left: calc(50% + var(--ox) * var(--unit));
+    top: calc(50% + var(--oy) * var(--unit));
+    padding: 0.5em 0.85em 0.45em;
+    border-radius: var(--radius-pill);
+    text-transform: none;
+    white-space: nowrap;
+    pointer-events: none;
+    transition: opacity var(--dur-2) var(--ease-out);
+  }
+
+  .meeting__tag--hand {
+    translate: -100% -100%;
+    border-end-end-radius: 0;
+    background-color: var(--ink);
+    color: var(--paper);
+  }
+
+  .meeting__tag--agent {
+    border-start-start-radius: 0;
+    background-color: var(--accent);
+    color: var(--on-accent);
+  }
+
+  @media (width < 30rem) {
+    .meeting__tag {
+      font-size: var(--fs-micro);
+      font-weight: 500;
+    }
+  }
+
+  /* With JavaScript the stand-in and the tags wait for `meeting.ts`, in both motion modes:
+     the canvas takes over within the first moments, and a coarse picture that turns into a
+     fine one (or dots that are there and then fly in) would be worse than a short wait. If
+     the script never arrives they show after 2.5s. */
+  :global(html.js) .meeting:not([data-meeting-ready]) .meeting__static,
+  :global(html.js) .meeting:not([data-meeting-tags]) .meeting__tag {
+    opacity: 0;
+    animation: m-failsafe 0.01s linear 2.5s forwards;
+  }
+
+  @media (forced-colors: active) {
+    .meeting__dots {
+      stroke: CanvasText;
+    }
+
+    .meeting__body {
+      stroke: Canvas;
+    }
+
+    .meeting__star {
+      fill: Highlight;
+      stroke: Highlight;
+    }
+
+    .meeting__tag {
+      border: 1px solid CanvasText;
+    }
+  }
+</style>

@@ -3,7 +3,7 @@
 Shared motion for abduroziq.uz. Markup opts in through data attributes; the kit initialises
 on every `astro:page-load` and releases everything it created for a page on
 `astro:before-swap`. The contract is docs/ARCHITECTURE.md section 7; the look and timing
-come from docs/DESIGN.md (2.4, 3.2, 3.4, 4.2, 4.4, 4.5, 5.3, 7, 8).
+come from docs/DESIGN.md (2.4, 3.2, 3.4, 4.3, 4.4, 4.5, 5.3, 7, 8).
 
 Test pages (dev only): `/lab/motion/` and `/lab/motion-2/` (`src/dev-pages/lab/`), with a
 switch for `localStorage.motion`.
@@ -54,7 +54,7 @@ tech reads the text as written while it is split.
 - `rise`: opacity and 16px rise. `fade`: opacity only.
 
 ```html
-<h1 data-reveal="lines">One large serif sentence.</h1>
+<h2 data-reveal="lines">A heading below the fold.</h2>
 <p data-reveal="rise" data-reveal-delay="0.3">Supporting line.</p>
 ```
 

@@ -11,10 +11,10 @@ import { getPosts } from '@/lib/posts';
 import { personSchema, profilePageSchema, websiteSchema } from '@/lib/seo/schema';
 
 /**
- * The home page (DESIGN section 4): `00 — Hello` with the desk, `01 — About`, the tape,
- * `02 — Building`, `03 — Writing`. `04 — Contact` is the footer in BaseLayout.
- * Headings: the hero sentence is the `h1`; each numbered section label is an `h2`;
- * post titles are `h3`. Projects are a table (row headers), not headings.
+ * The home page (DESIGN section 4): `00 — Hello` (the statement and the meeting), `01 —
+ * About` with its collage, the tape, `02 — Building`, `03 — Writing`. `04 — Contact` is the
+ * footer in BaseLayout. Headings: the hero statement is the `h1`; each numbered section label
+ * is an `h2`; post titles are `h3`. Projects are a table (row headers), not headings.
  */
 export const getStaticPaths = (() =>
   locales.map((locale) => ({ params: { locale: localeParam(locale) } }))) satisfies GetStaticPaths;

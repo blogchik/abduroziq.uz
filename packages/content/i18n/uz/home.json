@@ -1,15 +1,16 @@
 {
   "hero": {
     "label": "Salom",
-    "meta": "Yangi loyihalar uchun ochiqman. Toshkent vaqti: UTC+5."
+    "actions": {
+      "contact": "Salom yo'llang",
+      "building": "Nimalar quryapman"
+    },
+    "meta": "Yangi loyihalar uchun ochiqman. Toshkent vaqti: UTC+5.",
+    "meeting": "Bir-biriga tegay deb turgan ikki kursor: Abduroziqning qo'li va AI agentning strelkasi."
   },
   "desk": {
     "cups": "Bugungi piyolalar",
-    "refill": "Quyish",
-    "notes": {
-      "ticket": "handoff shart emas",
-      "flag": "tunda ham ishlaydi"
-    }
+    "refill": "Quyish"
   },
   "about": {
     "title": "Men haqimda"

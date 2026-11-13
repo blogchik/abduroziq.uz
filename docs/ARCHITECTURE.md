@@ -35,7 +35,7 @@ abduroziq.uz/
 │        ├─ components/
 │        │  ├─ ui/               design-system primitives
 │        │  ├─ chrome/           Header, Footer, ThemeToggle, LangSwitch, SkipLink
-│        │  ├─ home/             hero, desk, about, tape, building, writing
+│        │  ├─ home/             hero (statement, meeting), about, desk, building, writing
 │        │  ├─ blog/             index and article pieces, MDX components
 │        │  └─ seo/              Seo.astro, JsonLd.astro
 │        ├─ motion/              client motion kit (cursor, reveal, marquee, desk, scroll, transitions)
@@ -188,10 +188,11 @@ translation in the requested locale.
 export type Locale = 'en' | 'uz';
 export type Localized<T = string> = Record<Locale, T>;
 
+// One piece of the hero statement. Joined in order, the `value`s read as the plain sentence.
 export type SentencePart =
-  | { kind: 'text' | 'em'; value: string }
-  | { kind: 'capsule'; id: 'portrait' | 'craft' | 'tashkent' }
-  | { kind: 'break' };
+  | { kind: 'text'; value: string; ring?: boolean }      // words; `ring` circles them by hand
+  | { kind: 'chip'; id: 'eyes' | 'design' | 'build' }    // a living drawing set on the line
+  | { kind: 'star'; value: string };                     // a letter drawn as the starburst
 
 export interface Profile {
   name: string;                 // "Abduroziq"
@@ -204,8 +205,8 @@ export interface Profile {
   support: Localized;
   about: Localized<{ text: string; strong?: boolean }[][]>;   // paragraphs of spans
   facts: { id: string; label: Localized; value: Localized }[];
-  labelStrip: { instructions: string; role: string; madeIn: string };  // decorative, English
-  desk: { stickyNote: string; polaroidCaption: string; ticket: string; keycap: string; pialaNote: Localized; cursorFlag: string };
+  agentTag: string;             // "AI agent": the name tag of the second cursor in the hero
+  desk: { stickyNote: string; polaroidCaption: string; pialaNote: Localized };
   socials: { id: 'github' | 'telegram' | 'linkedin' | 'instagram'; label: string; handle: string; href: string }[];
 }
 
@@ -221,6 +222,12 @@ export interface Project {
 
 `@abduroziq/content` exports `profile`, `projects` and the types. Only information that
 is already public may go in here.
+
+The statement is written as parts so that the page can set living things inside it and
+still output a plain sentence as the text of its `h1`. Spaces live in the text parts: a
+chip stays on one line with whatever touches it without a space (`'designs'`, chip,
+`' interfaces'` keeps the chip with the verb; `'engineerman: '`, chip, `'interfeys'` keeps
+it with the noun). `apps/web/src/components/home/Statement.astro` renders the parts.
 
 ## 6. Layout and SEO contracts
 
@@ -241,8 +248,10 @@ interface Props {
 It renders `<html lang>`, the head (font preloads, Seo, the root-state script,
 `<ClientRouter />`), the skip link, Header, `<main id="main">`, Footer and the motion entry
 script. Fonts are declared in `styles/fonts.css`: Bricolage Grotesque and Geist Mono from
-their Fontsource packages, Newsreader and Caveat as static cuts in `src/assets/fonts/`
-(built by `scripts/build-fonts.py`).
+their Fontsource packages; Newsreader, Caveat and Geist Pixel as static cuts in
+`src/assets/fonts/` (built by `scripts/build-fonts.py`; Geist Pixel comes from the `geist`
+package). Preloaded: Bricolage and the mono labels everywhere, the pixel face on the home
+page only, the serif on post pages only.
 
 The language switch in the Header keeps the current path, unless `seo.alternates` is given
 (translated posts live at different paths); a locale without an equivalent page links to
@@ -335,6 +344,14 @@ export { gsap, ScrollTrigger };
 ```
 
 Page code imports from `@/motion` only, never from the kit's internal modules.
+
+The home hero follows the same contract with two page scripts of its own:
+`components/home/hero.ts` (live data, the entrance around the statement) and
+`components/home/meeting/meeting.ts` (the canvas of the meeting). Both register through
+`onPageEnter`, wait for the transition gate, clean up on leave, and read reduced motion from
+the page context. The dot field itself (`meeting/field.ts`) is pure geometry without DOM:
+the browser builds the canvas dots from it and `Meeting.astro` builds the static SVG that
+stands in without JavaScript, at build time.
 
 ```ts
 // packages/content also exposes its assets:

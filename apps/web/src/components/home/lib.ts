@@ -1,13 +1,13 @@
 /**
  * Build-time helpers shared by the home components: a seeded random source, the QR-like
- * block, text with drawn arrows, and contrast-safe ticket colours.
+ * block and contrast-safe ticket colours.
  */
 
 /** Tashkent has no daylight saving time: UTC+5 all year. */
 export const TASHKENT_UTC_OFFSET = 5;
 
 /** FNV-1a hash of the seed, then mulberry32 (the same generator as `Barcode`). */
-export function seededRandom(seed: string): () => number {
+function seededRandom(seed: string): () => number {
   let h = 0x811c9dc5;
   for (let i = 0; i < seed.length; i++) {
     h ^= seed.charCodeAt(i);
@@ -68,19 +68,6 @@ export function qrPath(seed: string, size = 21): string {
     }
   }
   return d;
-}
-
-export type ArrowText = { kind: 'text'; value: string } | { kind: 'arrow' };
-
-/** Splits copy on the arrow character: the fonts have no arrow glyphs, so it is drawn. */
-export function withArrows(text: string): ArrowText[] {
-  const out: ArrowText[] = [];
-  text.split('→').forEach((piece, index) => {
-    if (index > 0) out.push({ kind: 'arrow' });
-    const value = piece.trim();
-    if (value) out.push({ kind: 'text', value });
-  });
-  return out;
 }
 
 type Rgb = [number, number, number];

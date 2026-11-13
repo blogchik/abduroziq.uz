@@ -1,15 +1,16 @@
 {
   "hero": {
     "label": "Hello",
-    "meta": "Available for new projects. Local time in Tashkent is UTC+5."
+    "actions": {
+      "contact": "Say hello",
+      "building": "What I'm building"
+    },
+    "meta": "Available for new projects. Local time in Tashkent is UTC+5.",
+    "meeting": "Two cursors about to touch: Abduroziq's pointing hand and an AI agent's arrow."
   },
   "desk": {
     "cups": "Cups today",
-    "refill": "Refill",
-    "notes": {
-      "ticket": "no handoff needed",
-      "flag": "works nights too"
-    }
+    "refill": "Refill"
   },
   "about": {
     "title": "About"

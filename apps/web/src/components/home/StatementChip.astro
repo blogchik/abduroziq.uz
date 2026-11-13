@@ -1,0 +1,539 @@
+---
+import { profile, type SentencePart } from '@abduroziq/content';
+import Capsule from '@/components/ui/Capsule.astro';
+
+/**
+ * One of the three living chips of the hero statement (DESIGN 4.1). Each one is as tall as
+ * a capital letter and stands on the baseline, so it never changes the height of a line; all
+ * measures are in em of the statement, so the chips scale with it.
+ *
+ *  - eyes: a drawn stand-in for the author, two eyes on an accent pill. They follow the
+ *    pointer, look around on their own, blink and wink when clicked (`eyes.ts`); without
+ *    JavaScript they glance at the name beside them.
+ *  - design: a tiny interface frame. A selected block is being resized by a multiplayer
+ *    cursor whose name tag hangs out of the frame, as in a design tool.
+ *  - build: a tiny terminal. `git push` is typed, the answer is a tick and `live`.
+ *
+ * The chips are decoration: hidden from assistive technology, and the words on them are
+ * generated content (`attr()`), so the text of the heading stays the plain sentence. The
+ * loops are CSS only (transform, opacity, clip-path), stop under reduced motion in a state
+ * that shows the whole drawing, and pause while the hero is off screen.
+ */
+interface Props {
+  id: Extract<SentencePart, { kind: 'chip' }>['id'];
+  /** A word stands right before / right after the chip: it keeps a word space to it. */
+  before?: boolean;
+  after?: boolean;
+}
+
+const { id, before = false, after = false } = Astro.props;
+const spacing = { 'data-before': before ? '' : undefined, 'data-after': after ? '' : undefined };
+---
+
+{id === 'eyes' && (
+  <span class="schip schip--eyes" data-chip="eyes" {...spacing}>
+    <Capsule tone="accent" class="capsule-eyes">
+      <span class="eyes" data-eyes data-cursor="link">
+        <span class="eye" data-eye>
+          <span class="eye__pupil" />
+        </span>
+        <span class="eye" data-eye>
+          <span class="eye__pupil" />
+        </span>
+      </span>
+    </Capsule>
+  </span>
+)}
+{id === 'design' && (
+  <span class="schip schip--design" data-chip="design" aria-hidden="true" {...spacing}>
+    <span class="mock">
+      <span class="mock__bar" />
+      <span class="mock__line" />
+      <span class="mock__line mock__line--short" />
+      <span class="mock__card" />
+      <span class="mock__sel">
+        <i />
+        <i />
+        <i />
+        <i />
+      </span>
+    </span>
+    <span class="mock__cursor">
+      <svg viewBox="0 0 20 22" focusable="false">
+        <path d="M2 1.5 8.3 20l2.6-7.9L18.5 9.3z" />
+      </svg>
+      <span class="mock__tag" data-label={profile.name} />
+    </span>
+  </span>
+)}
+{id === 'build' && (
+  <span class="schip schip--build" data-chip="build" aria-hidden="true" {...spacing}>
+    <span class="term">
+      <span class="term__line">
+        <span class="term__cmd" data-text="git push" />
+        <span class="term__caret" />
+      </span>
+      <span class="term__line term__ok" data-text="live">
+        <svg viewBox="0 0 12 12" focusable="false">
+          <path d="M2 6.6 4.8 9.4 10.2 3.2" />
+        </svg>
+      </span>
+    </span>
+  </span>
+)}
+
+<style is:global>
+  .schip {
+    position: relative;
+    display: inline-block;
+    width: 1.5em;
+    /* From just under the baseline to just over the capitals (cap height 0.66em). */
+    height: 0.74em;
+    vertical-align: -0.04em;
+    /* The entrance (hero.ts) pops the chips from their centre. */
+    transform-origin: 50% 60%;
+  }
+
+  /* The word space between a chip and the word it belongs to (a space is about 0.2em). */
+  .schip[data-before] {
+    margin-inline-start: 0.2em;
+  }
+
+  .schip[data-after] {
+    margin-inline-end: 0.2em;
+  }
+
+  /* -------------------------------------------------------------------- eyes */
+
+  .schip--eyes {
+    width: 1.42em;
+  }
+
+  /* The capsule primitive fills the chip instead of setting its own size on the line. */
+  .schip--eyes .capsule.capsule-eyes {
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    /* Physical tones: the whites stay light and the pupils dark in both themes. */
+    --eye-white: var(--paper-raised);
+    --eye-ink: var(--ink);
+  }
+
+  @supports (color: light-dark(#000, #fff)) {
+    .schip--eyes .capsule.capsule-eyes {
+      --eye-white: light-dark(var(--paper-raised), var(--inv-paper-raised));
+      --eye-ink: light-dark(var(--ink), var(--inv-ink));
+    }
+  }
+
+  /* The capsule lays its child out as a block; the eyes need a centred row. */
+  .capsule.capsule-eyes > .eyes {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.06em;
+    transition: scale var(--dur-2) var(--ease-out);
+  }
+
+  .capsule-eyes:hover .eyes {
+    scale: 1.1;
+  }
+
+  .eye {
+    /* How far a pupil travels from the centre of its eye. */
+    --travel: 0.125em;
+    position: relative;
+    display: block;
+    flex: none;
+    width: 0.47em;
+    height: 0.47em;
+    border-radius: 50%;
+    background-color: var(--eye-white);
+  }
+
+  /* Without JavaScript (and under reduced motion) the eyes glance at the name beside them;
+     eyes.ts moves `--look-x` / `--look-y` between -1 and 1. */
+  .eye__pupil {
+    position: absolute;
+    inset: 0;
+    width: 0.21em;
+    height: 0.21em;
+    margin: auto;
+    border-radius: 50%;
+    background-color: var(--eye-ink);
+    translate: calc(var(--look-x, -0.6) * var(--travel)) calc(var(--look-y, 0.15) * var(--travel));
+    transition: translate var(--dur-1) var(--ease-out);
+  }
+
+  /* Wandering on their own, the eyes move slowly. */
+  .eyes[data-idle] .eye__pupil {
+    transition-duration: var(--dur-3);
+  }
+
+  @keyframes eye-blink {
+    0%,
+    93%,
+    100% {
+      scale: 1 1;
+    }
+
+    96.5% {
+      scale: 1 0.06;
+    }
+  }
+
+  html[data-motion='full'] .eye {
+    animation: eye-blink 5.4s ease-in-out 1.6s infinite;
+  }
+
+  /* A click winks the right eye. */
+  html[data-motion='full'] .eyes[data-wink] .eye:last-child {
+    animation: none;
+    scale: 1 0.06;
+  }
+
+  /* ------------------------------------------------------------------ design */
+
+  .mock,
+  .term {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: min(var(--radius-card), 0.13em);
+  }
+
+  .mock {
+    --wire: color-mix(in srgb, var(--ink-soft) 34%, var(--paper-raised));
+    border: var(--hairline) solid var(--ink);
+    background-color: var(--paper-raised);
+  }
+
+  .mock > *,
+  .mock__sel > i {
+    position: absolute;
+    display: block;
+  }
+
+  /* The wireframe: a title, two lines of text, and the block that is selected. */
+  .mock__bar,
+  .mock__line {
+    height: 0.045em;
+    background-color: var(--wire);
+  }
+
+  .mock__bar {
+    top: 0.1em;
+    left: 0.12em;
+    width: 0.3em;
+    background-color: var(--ink);
+  }
+
+  .mock__line {
+    top: 0.25em;
+    left: 0.78em;
+    width: 0.56em;
+  }
+
+  .mock__line--short {
+    top: 0.36em;
+    width: 0.36em;
+  }
+
+  .mock__card,
+  .mock__sel {
+    top: 0.22em;
+    left: 0.12em;
+    width: 0.5em;
+    height: 0.34em;
+    transform-origin: 0 0;
+  }
+
+  .mock__card {
+    background-color: var(--wire);
+  }
+
+  .mock__sel {
+    outline: max(1px, 0.02em) solid var(--accent);
+  }
+
+  .mock__sel > i {
+    width: 0.075em;
+    height: 0.075em;
+    border: max(1px, 0.016em) solid var(--accent);
+    background-color: var(--paper-raised);
+  }
+
+  .mock__sel > i:nth-child(1) {
+    top: -0.04em;
+    left: -0.04em;
+  }
+
+  .mock__sel > i:nth-child(2) {
+    top: -0.04em;
+    right: -0.04em;
+  }
+
+  .mock__sel > i:nth-child(3) {
+    bottom: -0.04em;
+    left: -0.04em;
+  }
+
+  .mock__sel > i:nth-child(4) {
+    right: -0.04em;
+    bottom: -0.04em;
+  }
+
+  /* The cursor holds the block's lower right corner; its tip is the arrow's top left. */
+  .mock__cursor {
+    position: absolute;
+    top: 0.535em;
+    left: 0.6em;
+    display: block;
+  }
+
+  .mock__cursor svg {
+    display: block;
+    width: 0.2em;
+    height: 0.22em;
+    overflow: visible;
+    fill: var(--accent);
+    stroke: var(--on-accent);
+    stroke-width: 1.4;
+    stroke-linejoin: round;
+  }
+
+  /* The name tag: shown where the statement is large enough to read it. */
+  .mock__tag {
+    display: none;
+    position: absolute;
+    top: 0.55em;
+    left: 1.05em;
+    padding: 0.36em 0.72em 0.32em 0.62em;
+    border-radius: 0 var(--radius-pill) var(--radius-pill) var(--radius-pill);
+    background-color: var(--accent);
+    color: var(--on-accent);
+    font-family: var(--font-mono);
+    font-size: 0.15em;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .mock__tag::after {
+    content: attr(data-label);
+  }
+
+  @media (width >= 48rem) {
+    .mock__tag {
+      display: block;
+    }
+
+    /* Room for the tag that hangs out of the frame. */
+    .schip--design[data-after] {
+      margin-inline-end: 0.48em;
+    }
+  }
+
+  @keyframes mock-resize {
+    0%,
+    16%,
+    96%,
+    100% {
+      transform: scale(0.78);
+    }
+
+    36%,
+    76% {
+      transform: none;
+    }
+  }
+
+  /* The corner the cursor holds moves by 22% of the block (0.5em x 0.34em). */
+  @keyframes mock-drag {
+    0%,
+    16%,
+    96%,
+    100% {
+      transform: translate(-0.11em, -0.075em);
+    }
+
+    36%,
+    76% {
+      transform: none;
+    }
+  }
+
+  /* ------------------------------------------------------------------- build */
+
+  .term {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-inline: 0.75em;
+    background-color: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-mono);
+    font-size: 0.19em;
+    font-weight: 500;
+    line-height: 1.34;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+
+  .term__line {
+    display: flex;
+    align-items: center;
+    height: 1.34em;
+  }
+
+  .term__line::before {
+    content: '$';
+    width: 2ch;
+    color: color-mix(in srgb, var(--paper) 65%, var(--ink));
+  }
+
+  .term__cmd::before {
+    content: attr(data-text);
+    display: block;
+  }
+
+  /* Hidden when nothing moves: the command has been run. */
+  .term__caret {
+    width: 0.55ch;
+    height: 1.05em;
+    margin-inline-start: 0.15ch;
+    background-color: var(--accent);
+    opacity: 0;
+  }
+
+  .term__ok::before {
+    content: none;
+  }
+
+  .term__ok::after {
+    content: attr(data-text);
+  }
+
+  .term__ok svg {
+    flex: none;
+    width: 1.1ch;
+    height: 1.1ch;
+    margin-inline-end: 0.9ch;
+    overflow: visible;
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Eight letters, one per step. */
+  @keyframes term-type {
+    0%,
+    12% {
+      clip-path: inset(0 100% 0 0);
+      opacity: 1;
+    }
+
+    34%,
+    90% {
+      clip-path: inset(0 0 0 0);
+      opacity: 1;
+    }
+
+    94%,
+    100% {
+      clip-path: inset(0 0 0 0);
+      opacity: 0;
+    }
+  }
+
+  @keyframes term-caret {
+    0%,
+    12% {
+      transform: translateX(-8ch);
+    }
+
+    34%,
+    90% {
+      transform: none;
+    }
+
+    94%,
+    100% {
+      transform: translateX(-8ch);
+    }
+  }
+
+  @keyframes term-blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes term-answer {
+    0%,
+    44% {
+      opacity: 0;
+      transform: translateY(0.35em);
+    }
+
+    50%,
+    90% {
+      opacity: 1;
+      transform: none;
+    }
+
+    94%,
+    100% {
+      opacity: 0;
+      transform: none;
+    }
+  }
+
+  /* The loops: full motion only (also not before the root state is known). */
+  html[data-motion='full'] :is(.mock__card, .mock__sel) {
+    animation: mock-resize 5.6s var(--ease-in-out) infinite;
+  }
+
+  html[data-motion='full'] .mock__cursor {
+    animation: mock-drag 5.6s var(--ease-in-out) infinite;
+  }
+
+  html[data-motion='full'] .term__cmd::before {
+    animation: term-type 6.4s steps(8, end) 2s infinite backwards;
+  }
+
+  html[data-motion='full'] .term__caret {
+    animation:
+      term-caret 6.4s steps(8, end) 2s infinite backwards,
+      term-blink 0.9s steps(2, jump-none) infinite;
+  }
+
+  html[data-motion='full'] .term__ok {
+    animation: term-answer 6.4s var(--ease-out) 2s infinite backwards;
+  }
+
+  /* Nothing in the hero animates while it is off screen (hero.ts sets the attribute). */
+  [data-hero][data-offscreen] :is(.eye, .mock__card, .mock__sel, .mock__cursor, .term *),
+  [data-hero][data-offscreen] .term__cmd::before {
+    animation-play-state: paused !important;
+  }
+
+  @media (forced-colors: active) {
+    .term {
+      border: 1px solid CanvasText;
+    }
+
+    .mock__tag {
+      border: 1px solid CanvasText;
+    }
+  }
+</style>

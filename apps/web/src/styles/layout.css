@@ -44,7 +44,7 @@
   margin-inline: calc(50% - 50vw);
 }
 
-/* Accent fill: label strip, tape, footer. Text is always dark ink; nested tokens follow, so
+/* Accent fill: tape, footer. Text is always dark ink; nested tokens follow, so
    labels, hairlines and focus rings inside are drawn in on-accent automatically. */
 @utility surface-accent {
   background-color: var(--accent);

@@ -1,0 +1,222 @@
+---
+import { profile } from '@abduroziq/content';
+import Capsule from '@/components/ui/Capsule.astro';
+import StatusDot from '@/components/ui/StatusDot.astro';
+import { t, type Locale } from '@/i18n';
+import { TASHKENT_UTC_OFFSET } from './lib';
+
+/**
+ * The hero's meta (DESIGN 4.1): a short row of small chips of different shapes, set in the
+ * pixel face. A pill with the availability mark and the current month, a box with the sky
+ * over Tashkent and its live time, a rounded chip with the coordinates.
+ *
+ * The month, the clock and the sky are filled by the hero's inline script before first paint
+ * and kept current by `hero.ts`. Without JavaScript the month is that of the build, the clock
+ * shows only the time zone and the sky is a plain day. The chips are label shorthand, so
+ * assistive technology gets one plain sentence instead.
+ */
+interface Props {
+  locale: Locale;
+  class?: string;
+}
+
+const { locale, class: className } = Astro.props;
+
+const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+const now = new Date(Date.now() + TASHKENT_UTC_OFFSET * 3_600_000);
+const month = `${MONTHS[now.getUTCMonth()]}.${now.getUTCFullYear()}`;
+const { lat, lon } = profile.location;
+const zone = `UTC${TASHKENT_UTC_OFFSET >= 0 ? '+' : ''}${TASHKENT_UTC_OFFSET}`;
+---
+
+<div class:list={['hmeta', className]} data-reveal="fade" data-reveal-delay="0.3">
+  <p class="sr-only">{t(locale, 'home.hero.meta')}</p>
+  <p class="hmeta__row type-pixel" aria-hidden="true">
+    <span class="hmeta__chip hmeta__chip--pill">
+      <StatusDot status="live" pulse="always" label="" hideLabel class="hmeta__dot" />
+      <span>
+        AVLB <span data-hero-month>{month}</span>
+      </span>
+    </span>
+    <span class="hmeta__chip hmeta__chip--box">
+      <Capsule class="hmeta__sky">
+        <span class="sky">
+          <span class="sky__stars"></span>
+          <span class="sky__dot"></span>
+          <svg
+            class="sky__city"
+            viewBox="0 0 96 50"
+            preserveAspectRatio="xMidYMax slice"
+            focusable="false"
+          >
+            <path d="M0 43h18v-5h7v5h9v-8h5v8h30l4-17 4 17h19M73 26V9M70.5 22h5"></path>
+          </svg>
+        </span>
+      </Capsule>
+      <span class="hmeta__clock" data-hero-clock>
+        --:--:--
+      </span>
+      <span>{zone}</span>
+    </span>
+    <span class="hmeta__chip hmeta__chip--round">
+      {lat.toFixed(4)}° N {lon.toFixed(4)}° E
+    </span>
+  </p>
+</div>
+
+<style is:global>
+  .hmeta__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+    margin: 0;
+  }
+
+  .hmeta__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55em;
+    height: 1.625rem;
+    padding-inline: 0.7em;
+    border: var(--hairline) solid var(--ink);
+    white-space: nowrap;
+  }
+
+  /* Three shapes, three tones: an outlined pill, a raised box, an ink chip. */
+  .hmeta__chip--pill {
+    border-radius: var(--radius-pill);
+  }
+
+  .hmeta__chip--box {
+    padding-inline-start: 0.3em;
+    border-color: var(--rule);
+    background-color: var(--paper-raised);
+  }
+
+  .hmeta__chip--round {
+    border-radius: calc(var(--radius-card) * 0.6);
+    background-color: var(--ink);
+    color: var(--paper);
+  }
+
+  /* The dot of the availability mark needs no label next to it. */
+  .hmeta__chip .hmeta__dot {
+    gap: 0;
+  }
+
+  /* The pixel face is not monospaced: the clock keeps a box wide enough for any time, so
+     the zone after it never moves. */
+  .hmeta__clock {
+    display: inline-block;
+    min-width: 4.25em;
+  }
+
+  /* The sky over Tashkent, in the capsule primitive at a size of its own. Paper-light by
+     day, ink-dark by night, accent for the half hour around sunrise and sunset; light and
+     dark here are the physical tones (the same in both themes). Its state lives on the hero
+     root (`data-sky`, `--sky-x`, `--sky-y`, set by the inline script in Hero.astro). Without
+     JavaScript it is a plain day sky with the sun at noon. */
+  .hmeta__chip .capsule.hmeta__sky {
+    flex: none;
+    margin-inline: 0;
+    font-size: 1.375rem;
+  }
+
+  .sky {
+    --sky-bg: var(--desk-paper, var(--paper-raised));
+    --sky-line: var(--desk-ink, var(--ink));
+    --sky-body: var(--accent);
+    position: relative;
+    background-color: var(--sky-bg);
+  }
+
+  [data-sky='night'] .sky {
+    --sky-bg: var(--desk-ink, var(--ink));
+    --sky-line: var(--desk-paper, var(--paper-raised));
+    --sky-body: var(--desk-paper, var(--paper-raised));
+  }
+
+  [data-sky='dusk'] .sky {
+    --sky-bg: var(--accent);
+    --sky-line: var(--on-accent);
+    --sky-body: var(--on-accent);
+  }
+
+  .sky__dot {
+    position: absolute;
+    top: calc(var(--sky-y, 24) * 1%);
+    left: calc(var(--sky-x, 50) * 1%);
+    width: 0.17em;
+    height: 0.17em;
+    border-radius: var(--radius-pill);
+    background-color: var(--sky-body);
+    translate: -50% -50%;
+  }
+
+  /* The moon: the same dot with a bite taken out of it. */
+  [data-sky='night'] .sky__dot::after {
+    content: '';
+    position: absolute;
+    inset: -18% -34% 18% 34%;
+    border-radius: inherit;
+    background-color: var(--sky-bg);
+  }
+
+  .sky__stars,
+  .sky__stars::before,
+  .sky__stars::after {
+    position: absolute;
+    width: max(1.5px, 0.022em);
+    height: max(1.5px, 0.022em);
+    border-radius: var(--radius-pill);
+    background-color: var(--sky-line);
+  }
+
+  .sky__stars {
+    top: 26%;
+    left: 22%;
+    display: none;
+  }
+
+  .sky__stars::before,
+  .sky__stars::after {
+    content: '';
+  }
+
+  .sky__stars::before {
+    top: 0.14em;
+    left: 0.42em;
+  }
+
+  .sky__stars::after {
+    top: -0.06em;
+    left: 0.9em;
+  }
+
+  [data-sky='night'] .sky__stars {
+    display: block;
+  }
+
+  .sky__city {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: var(--sky-line);
+    stroke-width: 1px;
+    stroke-linejoin: round;
+  }
+
+  .sky__city path {
+    vector-effect: non-scaling-stroke;
+  }
+
+  @media (forced-colors: active) {
+    .hmeta__chip--round {
+      background-color: Canvas;
+      color: CanvasText;
+    }
+  }
+</style>

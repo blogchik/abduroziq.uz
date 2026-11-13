@@ -3,11 +3,17 @@ import { profile } from '@abduroziq/content';
 import Container from '@/components/ui/Container.astro';
 import SectionLabel from '@/components/ui/SectionLabel.astro';
 import { t, type Locale } from '@/i18n';
+import Desk from './desk/Desk.astro';
 
 /**
  * `01 — About` (DESIGN 4.3): the label in the left columns, one paragraph in `lead` (key
  * phrases in ink, connecting words in ink-soft) and the facts as a hairline list of mono
  * labels and body values.
+ *
+ * Next to the paragraph lies the collage: the polaroid, the sticky note and the piala,
+ * tilted and overlapping, to pick up and throw (the motion kit's desk). On wide screens it
+ * fills the column under the label; on smaller ones it is a band under the paragraph. Both
+ * are in the markup and CSS shows one.
  */
 interface Props {
   locale: Locale;
@@ -33,6 +39,8 @@ const { locale } = Astro.props;
       </p>
     ))}
 
+    <Desk locale={locale} variant="about-band" entrance={0.2} class="about__band" />
+
     <dl class="about__facts" data-reveal-group>
       {profile.facts.map((fact) => (
         <div class="about__fact" data-reveal-item>
@@ -41,6 +49,10 @@ const { locale } = Astro.props;
         </div>
       ))}
     </dl>
+  </div>
+
+  <div class="about__collage">
+    <Desk locale={locale} variant="about" entrance={0.2} />
   </div>
 </Container>
 
@@ -72,6 +84,14 @@ const { locale } = Astro.props;
   .about__text strong {
     color: var(--ink);
     font-weight: inherit;
+  }
+
+  .about :global(.about__band) {
+    margin-block-start: clamp(1.75rem, 1.4rem + 1.6vw, 2.75rem);
+  }
+
+  .about__collage {
+    display: none;
   }
 
   .about__facts {
@@ -117,14 +137,32 @@ const { locale } = Astro.props;
   }
 
   @media (width >= 64rem) {
+    /* The label's row is as high as the label; the collage takes the rest of the column. */
+    .about {
+      grid-template-rows: auto 1fr;
+    }
+
     /* The label stands on the baseline of the paragraph's first line. */
     .about :global(.about__label) {
       grid-column: 1 / span 3;
+      grid-row: 1;
       padding-block-start: calc(var(--fs-lead) * 0.941 - var(--fs-label) * 0.917);
     }
 
     .about__body {
       grid-column: 4 / span 8;
+      grid-row: 1 / span 2;
+    }
+
+    .about__collage {
+      display: block;
+      grid-column: 1 / span 3;
+      grid-row: 2;
+      min-width: 0;
+    }
+
+    .about :global(.about__band) {
+      display: none;
     }
   }
 </style>

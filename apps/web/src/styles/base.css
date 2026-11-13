@@ -82,12 +82,6 @@
   [hidden]:not([hidden='until-found']) {
     display: none !important;
   }
-
-  /* Emphasis inside the hero sentence: italic, ink-soft. */
-  .type-sentence :where(em, i) {
-    font-style: italic;
-    color: var(--ink-soft);
-  }
 }
 
 /* Selection on an accent fill would be invisible: invert it there. */

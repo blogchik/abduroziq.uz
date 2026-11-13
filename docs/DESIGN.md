@@ -3,30 +3,34 @@
 The single source of truth for how abduroziq.uz looks, reads and moves. Implementation
 details (files, APIs, contracts) live in [ARCHITECTURE.md](ARCHITECTURE.md).
 
-## 1. Concept: "Label & Desk"
+## 1. Concept: "Statement & Meeting"
 
 Abduroziq is a product engineer: he designs products and builds them, from Figma to
-production. The site is a quiet, type-first page (ink on paper, hairlines, one accent)
-with exactly three loud ideas:
+production, and he works with AI agents every day. The site is a quiet, type-first page (ink
+on paper, hairlines, one accent) with exactly three loud ideas:
 
-1. **The label.** His name runs edge to edge like the print on a shipping label, with an
-   orange label strip, barcode ticks and live micro data underneath.
-2. **The sentence.** The introduction is one large serif sentence with small living
-   image capsules set between the words.
-3. **The desk.** A handful of physical objects that are about him lie around the hero and
-   can be picked up and thrown.
+1. **The statement.** The introduction is one large sentence in the brand sans with living
+   things inside it: small chips set on the line, a letter that is a turning starburst, a
+   word circled by hand.
+2. **The meeting.** Under it his name runs edge to edge, thin and calm, and in front of the
+   name stands one large dotted graphic: a hand cursor and an arrow cursor about to touch.
+   The person and the agent.
+3. **The desk.** A few physical objects that are about him lie next to the About text (and
+   on the 404 page) and can be picked up and thrown.
 
 Everything else is disciplined: mono section labels, hairline tables, generous space.
 A custom cursor guides the visitor through it.
 
 Principles, in priority order:
 
-- **Minimal is not empty.** Few elements, each one finished. If a thing is not the label,
-  the sentence, the desk, a table row or body text, question whether it should exist.
+- **Minimal is not empty.** Few elements, each one finished. If a thing is not the
+  statement, the meeting, the desk, a table row or body text, question whether it should
+  exist.
 - **One accent.** Orange `#E28413` is the only colour. No second accent, no gradients, no
   glass, no glow, no drop shadows except the lifted desk objects.
 - **Motion has weight.** Things rise, settle, get thrown and land. Nothing floats
-  aimlessly, nothing loops for attention except the tape and the live clock.
+  aimlessly. The few loops are small and slow (the chips of the statement, the starbursts,
+  the breathing cursors, the tape, the clock) and all of them stop with the motion switch.
 - **Content first.** Every word is in the HTML and readable with JavaScript off. Motion is
   an enhancement and never delays the first paint of text.
 - **Two languages, one design.** English (`/`) and Uzbek (`/uz/`) share every layout. Uzbek
@@ -43,7 +47,7 @@ Principles, in priority order:
 | `ink` | `#141310` | `#EFECE6` | text, rules at full strength, inverted bands |
 | `ink-soft` | `#5C574E` | `#9C968A` | secondary text |
 | `rule` | `#D2CEC6` | `#2C2A26` | hairlines |
-| `accent` | `#E28413` | `#E28413` | fills: label strip, tape, footer, cursor burst |
+| `accent` | `#E28413` | `#E28413` | fills: tape, footer, name tags, starbursts, the eyes chip, cursor burst |
 | `accent-text` | `#9C5200` | `#E28413` | accent-coloured text and icons on `paper` |
 | `on-accent` | `#141310` | `#141310` | text on an accent fill (always dark ink) |
 
@@ -60,9 +64,10 @@ Rules:
 
 | Role | Family | Notes |
 |---|---|---|
-| Display / UI | **Bricolage Grotesque** (variable: `opsz`, `wght`, `wdth`) | the brand face |
-| Text serif | **Newsreader** (variable, roman + italic, `opsz`) | hero sentence, article titles and body |
+| Display / UI | **Bricolage Grotesque** (variable: `opsz`, `wght`, `wdth`) | the brand face: body, titles, the hero statement, the name |
+| Text serif | **Newsreader** (static cuts, roman + italic, two optical sizes) | article titles and body, pull quotes |
 | Mono | **Geist Mono** 400/500 | labels, meta, table data, micro copy |
+| Pixel | **Geist Pixel** Square (Basic Latin subset) | the meta chips of the hero only |
 | Hand | **Caveat** 500 (Latin subset) | desk annotations only, never for UI |
 
 All fonts are self-hosted and subset. Uzbek Latin needs `ʻ` (U+02BB) and `ʼ` (U+02BC) in
@@ -74,7 +79,8 @@ Scale (fluid with `clamp()`; values are min at 360px and max at 1440px):
 | Style | Family | Size | Line | Tracking | Weight |
 |---|---|---|---|---|---|
 | `name` | Bricolage, `wdth` 100 | fit to container width (about 17.5vw) | 0.8 | -0.045em | 500, uppercase |
-| `sentence` | Newsreader | 36 → 92px | 1.04 | -0.02em | 300; emphasised words italic in `ink-soft` |
+| `name`, thin cut | Bricolage, `wdth` 100 | fit to container width (about 21vw) | 0.8 | -0.02em | 250, uppercase (behind the meeting in the hero) |
+| `statement` | Bricolage | 38 → 76px | 1.02 | -0.035em | 500 |
 | `display` | Bricolage, `wdth` 75 | 56 → 168px | 0.86 | -0.02em | 400, uppercase (page titles such as WRITING) |
 | `numeral` | Bricolage, `wdth` 75 | 44 → 72px | 0.9 | 0 | 300 (date day numbers) |
 | `title` | Bricolage | 24 → 40px | 1.08 | -0.02em | 500 |
@@ -83,7 +89,8 @@ Scale (fluid with `clamp()`; values are min at 360px and max at 1440px):
 | `article-title` | Newsreader | 34 → 64px | 1.06 | -0.015em | 400 |
 | `article-body` | Newsreader, `opsz` auto | 19 → 21px | 1.6 | 0 | 400 |
 | `label` | Geist Mono | 11 → 12px | 1.3 | 0.08em | 500, uppercase |
-| `micro` | Geist Mono | 9 → 10px | 1.25 | 0.04em | 400, uppercase (label strip only) |
+| `micro` | Geist Mono | 9 → 10px | 1.25 | 0.04em | 400, uppercase (the print on a project ticket) |
+| `pixel` | Geist Pixel | 12 → 13px | 1 | 0.02em | 400, uppercase (the hero's meta chips only) |
 | `hand` | Caveat | 20 → 26px | 1.1 | 0 | 500 |
 
 ### 2.3 Space, grid, shape
@@ -93,8 +100,9 @@ Scale (fluid with `clamp()`; values are min at 360px and max at 1440px):
 - Section rhythm: 96px (mobile) → 176px (desktop) between sections. Space is the main
   layout tool; do not fill it.
 - Hairlines are 1px `rule`. Tables and rows are separated by hairlines only, never boxes.
-- Radius: `0` for strips, tape, bands and table rows; `999px` for capsules, chips and the
-  cursor; `10px` for desk cards and code blocks. Nothing else.
+- Radius: `0` for tape, bands, table rows and box chips; `999px` for capsules, pills, name
+  tags and the cursor; `10px` for desk cards and code blocks (small drawn frames, such as
+  the chips of the statement, use 10px or less in proportion to their size). Nothing else.
 - Shadows: only desk objects (`0 1px 0 rgb(0 0 0 / .06), 0 10px 24px -12px rgb(0 0 0 / .35)`,
   stronger while dragged).
 
@@ -104,11 +112,11 @@ Scale (fluid with `clamp()`; values are min at 360px and max at 1440px):
 |---|---|---|
 | `dur-1` | 160ms | hover colour, cursor state |
 | `dur-2` | 320ms | row shifts, chips, toggles |
-| `dur-3` | 700ms | text reveals, strip wipe |
+| `dur-3` | 700ms | text reveals, the drawn ring |
 | `dur-4` | 1100ms | giant name, page transition |
 | `ease-out` | `cubic-bezier(0.16, 1, 0.3, 1)` | default for entrances |
 | `ease-in-out` | `cubic-bezier(0.65, 0, 0.35, 1)` | wipes, page transition |
-| `spring` | GSAP `elastic.out(1, 0.6)` / `back.out(1.6)` | capsules, object drop-in |
+| `spring` | GSAP `elastic.out(1, 0.6)` / `back.out(1.6)` | chips, starburst, object drop-in |
 
 ## 3. Global chrome
 
@@ -154,8 +162,9 @@ A full-bleed **accent** block, text in `on-accent`:
 - Tagline `Think beyond limits.` in `hand` style, slightly rotated.
 - Bottom: the giant **name** again, clipped by the bottom edge, letters rising on scroll.
 - A `BACK TO TOP ↑` label link, and next to it a `MOTION: ON / OFF` switch that stops every
-  looping or decorative motion on the site (the tape, capsule loop, pulsing dots, cursor,
-  smooth scrolling, reveals) and remembers the choice.
+  looping or decorative motion on the site (the tape, the loops in the statement's chips,
+  the starbursts, the dots of the meeting, pulsing dots, cursor, smooth scrolling, reveals)
+  and remembers the choice.
 
 ### 3.4 Page transition
 
@@ -170,68 +179,131 @@ cross-fade or none.
 Section labels follow one pattern: `NN — NAME` in `label` style with a 24px hairline
 between the number and the name, the number in `accent-text`.
 
-### 4.1 `00 — Hello` (hero)
+### 4.1 `00 — Hello` (hero): the statement
+
+The hero has two zones with one idea each: the statement, then the meeting (4.2). Nothing
+else lives there.
 
 Order, top to bottom:
 
-1. Section label `00 — HELLO`.
-2. **The sentence**, three lines on desktop, left aligned, spanning about 9 of 12 columns:
+1. Section label `00 — HELLO`. From tablets up the **meta chips** (below) sit in the same
+   row, right aligned; on phones they close the hero, under the meeting.
+2. **The statement**, the page's `h1`: style `statement`, left aligned, at most 13.6em wide.
+   That is four lines in both languages and about 9 of the 12 columns on a desktop; phones
+   take more lines.
 
-   > I'm *Abduroziq* ◉, a Product ◉ *Engineer* based in Tashkent ◉
+   > I'm Abduroziq ◉, a product engineer who designs ▢ interfaces, builds ▢ systems and
+   > ships products.
+   >
+   > Men Abduroziq ◉, product engineerman: ▢ interfeys chizaman, ▢ tizim quraman va
+   > mahsulot chiqaraman.
 
-   `◉` marks a **capsule**: an inline rounded image, height 0.78em, width about 1.5em,
-   vertically centred on the x-height, 1px ink border.
-   - Capsule 1: a drawn stand-in for him: two eyes on an accent pill. They follow the
-     pointer, look around on their own when it rests (and on touch screens), blink, and wink
-     when clicked. Without JavaScript they glance at the name beside them. (His photo
-     appears once, on the desk polaroid.)
-   - Capsule 2: a tiny looping illustration of a selection frame turning into `</>`
-     (design becoming code), drawn in SVG, accent on paper.
-   - Capsule 3: Tashkent now. A flat sky that is paper-light by day and ink-dark by night
-     according to the real local time (UTC+5), with a small sun or moon dot.
-   Emphasised words (`Abduroziq`, `Engineer`) are italic and `ink-soft`; the rest is roman ink.
-3. One supporting line in `body`, max 46ch: `I design and build products, from Figma to production.`
-4. **The name**: `ABDUROZIQ`, style `name`, exactly as wide as the content box.
-5. **The label strip** directly under the name: a full-width accent bar, about 96px high
-   (64px mobile), containing from left to right: a paper-coloured box with barcode-like
-   micro text; a block of `micro` copy written like handling instructions (playful, see
-   content); the role `PRODUCT ENGINEER` in `label` size; `ABDUROZIQ©2026` and
-   `MADE IN TASHKENT` right aligned.
-6. **The meta bar** under the strip, centred, `label` style, between two runs of barcode
-   ticks: `[ ● AVLB : NOV.2026 ]`, the live Tashkent time `20:47:13 UTC+5`, and the
-   coordinates `41.2995° N 69.2401° E`. The dot pulses slowly. The month updates itself.
+   All of it is ink: no emphasis, no second text colour. The life is inside the sentence:
 
-### 4.2 The desk
+   - **Chips** (`◉`, `▢`): small drawings set on the line, as tall as a capital letter
+     (0.74em, standing just under the baseline) and 1.4 to 1.5em wide. They never change the
+     height of a line and never part from the word they touch.
+     - Eyes (`◉`): a drawn stand-in for him, two eyes on an accent pill with a 1px ink
+       border. They follow the pointer, look around on their own when it rests (and on touch
+       screens), blink, and wink when clicked. Without JavaScript they glance at the name
+       beside them. (His photo appears once, on the polaroid in About.)
+     - Design (first `▢`): a tiny interface frame (`paper-raised`, 1px ink border) with a
+       title, two lines of text and a block inside an accent selection box with handles. A
+       multiplayer cursor holds the block's corner and resizes it in a slow loop. The
+       cursor's accent name tag reads `Abduroziq` and hangs out of the frame; below 768px
+       the tag is left out, because it could not be read.
+     - Build (second `▢`): a tiny terminal (ink fill, paper text, mono). `$ git push` is
+       typed letter by letter, the answer is an accent tick and `live`, then it starts over.
+   - **The star letter**: one `o` (in `products`, in `mahsulot`) is drawn as a twelve-point
+     accent starburst that turns slowly. The letter itself stays in the markup, unseen, for
+     search engines and screen readers.
+   - **The ring**: one word (`ships`, `chiqaraman`) is circled by a hand-drawn accent
+     ellipse that overshoots its own start, as a pen would.
 
-Six small objects scattered in the free space of the hero (mostly right of the sentence
-and around the supporting line), each slightly rotated, each draggable with inertia
-inside the hero bounds. They never cover the sentence in their resting positions.
+   The text of the heading is the plain sentence: chips, star and ring are decoration.
+3. One supporting line in `body`, `ink-soft`: `From Figma to production, in Tashkent.`
+4. Two text actions, each a mono label with a down arrow: `SAY HELLO` (to the contact
+   section) and `WHAT I'M BUILDING` (to the Building section).
 
-| Object | Look | Detail |
+**Meta chips**: a short row of three small chips of different shapes and tones, 26px high,
+in the `pixel` style:
+
+| Chip | Shape | Content |
 |---|---|---|
-| Sticky note | `paper-raised` square, 2° rotation | `Think beyond limits.` in `hand` |
-| Polaroid | white frame, portrait photo | caption `Tashkent, UZ` in `hand` |
-| Ticket | accent card with a perforated edge and a QR-like block | `ADMIT ONE · FIGMA → PRODUCTION`, mono |
-| Keycap | a single dark key, soft bevel | legend `⌘K` |
-| Piala | a flat illustration of an Uzbek tea bowl seen from above | hand note with arrow: `click to refill`; clicking fills it and releases a little steam; a mono counter `CUPS TODAY: 3` |
-| Cursor flag | a multiplayer-style cursor arrow with a name tag | tag reads `AI agent`, accent |
+| Availability | outlined pill | a pulsing accent dot and `AVLB NOV.2026`; the month updates itself |
+| Tashkent now | square `paper-raised` box | the sky capsule and the live time, `20:47:13 UTC+5` |
+| Place | rounded ink chip | `41.2995° N 69.2401° E` |
 
-Two or three objects carry a hand-drawn arrow and a short `hand` note (as in the piala).
-While dragged an object lifts (stronger shadow, +3% scale), tilts with its velocity and
-comes to rest with a small settle. Double-click resets the desk to its start layout.
+The sky capsule is a flat sky that is paper-light by day and ink-dark by night according to
+the real local time (UTC+5), accent for the half hour around sunrise and sunset, with a small
+sun or moon dot placed along its arc and the outline of a skyline. The chips are label
+shorthand: assistive technology gets one plain sentence instead.
 
-Mobile: the desk becomes its own band under the meta bar, 280px high, with four objects
-(sticky note, polaroid, piala, cursor flag), still draggable by touch.
+### 4.2 The meeting
 
-The desk is decoration: hidden from assistive technology, and nothing essential is
-reachable only through it.
+Across the lower part of the first screen, full content width, on a stage that is 26% as
+high as it is wide (never lower than 160px):
+
+- **Behind: the name.** `ABDUROZIQ` in the thin cut of the `name` style, exactly as wide as
+  the content box, vertically centred on the stage, in ink at reduced strength (a 48% mix
+  with paper in the light theme, 40% in the dark one: a little over 3:1 in both).
+- **In front: one dotted graphic**, drawn on a canvas: two cursors about to touch, the way
+  two hands almost touch in the famous fresco. From the left a pointing-hand cursor with its
+  index finger stretched out to the right; from the right an arrow cursor with its tip
+  pointing left and a little down. The tips almost meet a little right of the centre, over
+  the name. Both are our own shapes.
+  They are not flat icons. Each shape is given a rounded relief (as if inflated), lit from
+  the top left, and the resulting tone is reduced to a grid of dots (about 6px apart on a
+  desktop, 3.4px on a phone, 1,300 dots at most): an ordered dither thins out the light
+  areas and darker tones get larger dots, so the cursors read as sculpture, knuckles
+  included. They are solid: every cell also carries a disc in the colour of the page, so the
+  name does not show through them. In the dark theme the dots are the light and it still
+  comes from the top left.
+- A small accent **starburst** (the twelve points of the star letter) sits at the meeting
+  point.
+- Two **name tags**, as in a design tool (mono, a pill whose corner towards the tip is
+  square): `Abduroziq` in ink above the finger, `AI agent` in accent under the arrow's tip.
+  This is the point of the picture: the person and the agent, building together.
+
+Behaviour:
+
+- On load the dots fly in from scattered places and assemble, outer parts first, the two
+  tips last; then the starburst pops and the tags appear.
+- Idle, the two cursors breathe by a pixel or two, and every 6.5 seconds they drift
+  together until the tips touch and the starburst flashes (it swells and throws eight short
+  rays).
+- Under the pointer the dots are pushed away and spring back; a press sends a ripple through
+  all of them. A finger works like the pointer, and a vertical swipe still scrolls the page.
+- Reduced motion: the picture is still.
+
+Without JavaScript a static inline SVG of the same composition (the same dot field on a
+coarser grid) stands in for the canvas. To assistive technology the whole stage is one image
+named by a sentence.
 
 ### 4.3 `01 — About`
 
-- Label in the left two columns; content in columns 4–11.
+- Label in the left three columns; content in columns 4–11.
 - One paragraph in `lead`: key phrases in ink, connecting words in `ink-soft`.
 - Under it a small facts table, hairline rows, mono labels left and `body` values right:
   `ROLE`, `BASED IN`, `FOCUS`, `STACK`, `NOW`.
+- **The collage** (the desk): next to the paragraph, in the column under the label, three
+  physical objects lie tilted and overlapping, each draggable with inertia inside the
+  collage's box. They never cover the text in their resting positions.
+
+| Object | Look | Detail |
+|---|---|---|
+| Polaroid | light frame, portrait photo, -6° | caption `Tashkent, UZ` in `hand` |
+| Sticky note | `paper-raised` square, 5°, over the polaroid's corner | `Think beyond limits.` in `hand` |
+| Piala | a flat illustration of an Uzbek tea bowl seen from above | hand note with a drawn arrow: `click to refill` (localised); clicking fills it and releases a little steam; a mono counter `CUPS TODAY: 3` |
+
+While dragged an object lifts (stronger shadow, +3% scale), tilts with its velocity and
+comes to rest with a small settle. Double-click resets the collage to its start layout.
+
+Below 1024px the collage is a band of its own under the paragraph (310px high, at most
+23rem wide), still draggable by touch.
+
+The desk is decoration: hidden from assistive technology, and nothing essential is
+reachable only through it.
 
 ### 4.4 The tape
 
@@ -317,7 +389,8 @@ A classic, calm reading page.
 ## 6. Other pages
 
 - **404**: an ink band. Giant `404` in `name` style, the line
-  `This page was dragged somewhere else.`, a link home, and three desk objects to throw.
+  `This page was dragged somewhere else.`, a link home, and three desk objects to throw
+  (a sticky note, the piala, and a single dark keycap with the legend `ESC`).
   It is built once per language (`/404.html` and `/uz/404.html`), so a missing Uzbek path
   gets a page that is Uzbek from header to footer.
 - **Tag page** `/blog/tag/<tag>`: same as the blog index with the tag as the title.
@@ -326,14 +399,21 @@ A classic, calm reading page.
 
 ### 7.1 Entrance sequence (home, first load)
 
-Total about 1.9s, starting immediately. The sentence is the page's largest paint: it is
-simply there from the first frame and is never hidden or moved. Nothing waits for fonts.
+Total about 1.8s, starting immediately. The statement is the page's largest paint: it, the
+supporting line and the actions are simply there from the first frame and are never hidden
+or moved. Nothing waits for fonts. The entrance is spent on what surrounds them:
 
-1. 0ms: capsules pop in with the spring, 120ms stagger; the support line rises.
-2. 300ms: the name's letters rise from the baseline, 35ms stagger, `dur-4`.
-3. 700ms: the label strip's print and the meta bar fade in.
-4. 750ms: desk objects drop in one after another (80ms stagger), land with a small
-   rotation settle.
+1. 100ms: the three chips of the statement pop with the spring, 110ms apart. The name's
+   letters rise from the baseline (35ms stagger, `dur-4`). The dots of the meeting fly in
+   from scattered places and assemble (about 1.2s).
+2. 300ms: the meta chips fade in.
+3. 550ms: the ring draws itself around its word (`dur-3`).
+4. 950ms: the starburst pops into its letter. At about 1.05s the starburst of the meeting
+   pops and flashes, and the two name tags appear.
+
+After a client-side navigation the same sequence waits for the page-transition panel. Where
+frames do not come (a hidden tab, a view that is not painting) everything is put in its
+final state instead, and the first frame of the canvas is always drawn at once.
 
 ### 7.2 On scroll
 
@@ -344,7 +424,8 @@ simply there from the first frame and is never hidden or moved. Nothing waits fo
 
 ### 7.3 Rules
 
-- Animate only `transform`, `opacity`, `clip-path`. No layout-triggering animation.
+- Animate only `transform`, `opacity`, `clip-path` (and the dash offset of the drawn ring).
+  No layout-triggering animation. The meeting is a canvas: it repaints only itself.
 - Everything respects `prefers-reduced-motion: reduce`: no entrance choreography (content
   simply present), no smooth scrolling, no cursor replacement, no tape motion, no
   parallax. Dragging desk objects still works but without inertia.
@@ -352,9 +433,9 @@ simply there from the first frame and is never hidden or moved. Nothing waits fo
 - Largest-paint candidates (a page's main heading, its first image, the first rows of a
   list) never carry a reveal. Content that is prepared for a reveal is shown by a CSS
   failsafe after 1s if the motion kit has not taken over.
-- Budget: home page JavaScript at most about 110KB gzip in total; fonts about 215KB on
-  the home page (Bricolage Grotesque keeps all its axes; the serif is shipped as small
-  static cuts); Lighthouse performance 95+ on mobile.
+- Budget: home page JavaScript at most about 110KB gzip in total; fonts about 180KB on
+  the home page (Bricolage Grotesque keeps all its axes; the serif is not loaded there; the
+  pixel face is an 11KB subset); Lighthouse performance 95+ on mobile.
 
 ## 8. Accessibility
 
@@ -379,15 +460,20 @@ simply there from the first frame and is never hidden or moved. Nothing waits fo
 
 ## 10. References
 
-Chosen by Abduroziq from the Pinterest research on 2026-11-12. Study them for spirit
-and specific mechanisms, do not copy layouts or assets.
+Chosen by Abduroziq from the Pinterest research on 2026-11-12 (the hero set on 2026-11-13).
+Study them for spirit and specific mechanisms, do not copy layouts or assets.
 
 | Tag | What we take | Pin |
 |---|---|---|
-| A1 | edge-to-edge name, orange label strip, barcode micro data, diagonal tape, accent footer with the name repeated | https://www.pinterest.com/pin/422142165088564609/ |
+| G5 | the hero statement: a strong sans sentence with small interface mock-ups set between the words, each with a multiplayer cursor tag; one supporting line, two actions | https://www.pinterest.com/pin/1145532855388689066/ |
+| G4 | words in chips of different shapes, set in a pixel face (the hero's meta chips) | https://www.pinterest.com/pin/418905202857811443/ |
+| J5 | a letter `o` replaced by a turning starburst, a word circled by a hand-drawn ellipse | https://www.pinterest.com/pin/311452130503713124/ |
+| K2 | a calm statement, small meta top right, and one large graphic of two hands almost touching, drawn entirely in halftone dots (the meeting) | https://www.pinterest.com/pin/873135446555194011/ |
+| K5 | one large thin uppercase word with an object in front of its letters (the thin name behind the cursors) | https://www.pinterest.com/pin/914019686862529481/ |
+| M4 | a tilted polaroid with scribbles and handwriting, used with restraint (the ring; the collage in About) | https://www.pinterest.com/pin/806988827623913186/ |
+| A1 | diagonal tape, accent footer with the name repeated edge to edge | https://www.pinterest.com/pin/422142165088564609/ |
 | B4 | `00 — HELLO` section labels, quiet text-first tone, projects as a hairline table | https://www.pinterest.com/pin/267682771592216706/ |
-| C7 | serif sentence with inline image capsules, italic muted emphasis | https://www.pinterest.com/pin/1098878377857370181/ |
-| D4 | scattered draggable objects with hand-written notes and arrows, one clickable gag | https://www.pinterest.com/pin/358106607885884186/ |
+| D4 | draggable objects with hand-written notes and arrows, one clickable gag (the collage, the 404 page) | https://www.pinterest.com/pin/358106607885884186/ |
 | D8 | cursor states: dot, ring, burst | https://www.pinterest.com/pin/324399979416928177/ |
 | E4 | date-numbered rows grouped under month tabs, chips, arrows | https://www.pinterest.com/pin/884746289440045350/ |
 | E8 | centred serif article header, drop cap, numbered subheads, hanging quotes, vertical side label, prev/next strip | https://www.pinterest.com/pin/815644182552169678/ |

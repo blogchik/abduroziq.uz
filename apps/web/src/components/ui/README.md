@@ -17,7 +17,7 @@ Tokens and utilities live in `src/styles/` (see the header of each file).
 | `MonthTab`     | `date`, `locale`, `as?` (`h2` default, `h3`, `div`), `id?`                                                                                                                                                                                | `<MonthTab date={group[0].date} locale={locale} />`                                       |
 | `PostRow`      | `post` (`PostSummary`), `locale` (page locale), `headingLevel?` (3), `as?` (`article` default, `li`, `div`), `transitionName?` (`postTransitionName(post)`, `false` to disable), any other HTML attribute on the root (`data-*`, `id`, …) | `<ul>{posts.map((post) => <PostRow post={post} locale={locale} as="li" />)}</ul>`         |
 | `Tape`         | `text`, `angle?` (−4), `repeat?` (10), `speed?`, `scroll?` (true)                                                                                                                                                                         | `<Tape text={t(locale, 'home.tape')} />`                                                  |
-| `GiantName`    | `text?` (profile name), `as?` (`p` default, `h1`, `h2`, `div`), `reveal?` (→ `data-reveal`), `revealDelay?`, `decorative?` (aria-hidden), any HTML attribute on the root                                                                  | `<GiantName as="h1" reveal="chars" />`                                                    |
+| `GiantName`    | `text?` (profile name), `as?` (`p` default, `h1`, `h2`, `div`), `reveal?` (→ `data-reveal`), `revealDelay?`, `decorative?` (aria-hidden), `thin?` (the hairline cut: weight 250, looser tracking), any HTML attribute on the root         | `<GiantName as="h1" reveal="chars" />`                                                    |
 
 `Barcode` draws one `<path>` per barcode (not one element per bar). `Tape` marks its strip
 `data-surface="accent"` and lets it take the pointer, so the marquee pauses on hover.
@@ -31,9 +31,10 @@ and corrects its year on the client.
 
 ## Notes for page builders
 
-- **Type**: use the `type-*` utilities (`type-sentence`, `type-display`, `type-numeral`,
+- **Type**: use the `type-*` utilities (`type-statement`, `type-display`, `type-numeral`,
   `type-title`, `type-lead`, `type-body`, `type-article-title`, `type-article-body`,
-  `type-label`, `type-micro`, `type-hand`, `type-name`). Never set font sizes by hand.
+  `type-label`, `type-micro`, `type-pixel`, `type-hand`, `type-name`). Never set font sizes
+  by hand.
 - **Layout**: `shell` (or `Container`) for the page box, `grid-12` for columns, `pt-section` /
   `section-y` between sections, `hairline` / `hairline-b` / `hairline-ink` for rules,
   `full-bleed` to break out to the viewport. Spacing tokens: `px-gutter`, `gap-col-gap`.
@@ -58,7 +59,8 @@ and corrects its year on the client.
 - **Tape**: place it in a centred container or directly in `main`; it breaks out with
   `calc(50% - 50vw)`, which assumes a centred parent.
 - **GiantName**: the word fills the width of its parent exactly; the parent decides the
-  width. The `Q` tail adds `0.09em` padding under the line box. Motion hooks:
+  width. It fits by a table of letter widths per cut (medium, and `thin` for the home hero);
+  a new weight needs its own table (see the component). The `Q` tail adds `0.09em` padding under the line box. Motion hooks:
   `[data-giant]` › `[data-giant-word]` (gets `data-reveal`) › `[data-giant-mask]` ›
   `[data-giant-letter]`.
 - **Cursor**: external links get `data-cursor="open"` (ArrowLink does it), post rows
