@@ -15,6 +15,7 @@
   "building": {
     "title": "Loyihalar",
     "table": "Loyihalar ro'yxati",
+    "all": "Barcha loyihalar",
     "columns": {
       "year": "Yil",
       "project": "Loyiha",

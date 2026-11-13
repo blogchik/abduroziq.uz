@@ -25,9 +25,12 @@ page strings in `packages/content/i18n/<locale>/seo.json`.
 | Blog index | website | Blog, BreadcrumbList | `/og/<locale>/blog.png` |
 | Tag page | website | CollectionPage, BreadcrumbList | blog image |
 | Post | article | BlogPosting, BreadcrumbList | `/og/<locale>/post/<slug>.png` |
+| Projects list `/projects/`, `/uz/projects/` | website | CollectionPage (with an ItemList of the projects), BreadcrumbList | `/og/<locale>/projects.png` |
+| Project `/projects/<slug>/` | website | CreativeWork, BreadcrumbList | `/og/<locale>/project/<slug>.png` |
 | 404 | website | none | home image, `noindex` |
 
-Entities have stable `@id`s (`/#person`, `/#website`, `<url>#article`, `<url>#blog`), so
+Entities have stable `@id`s (`/#person`, `/#website`, `<url>#article`, `<url>#blog`,
+`<url>#collection`, `<url>#project`), so
 pages reference one Person instead of redefining it. Person data comes from `profile` in
 `@abduroziq/content`. Articles add `article:published_time`, `modified_time`, `author`, `tag`.
 
@@ -35,7 +38,10 @@ Sitemap (`sitemap-index.xml`, `sitemap-0.xml`): canonical indexable URLs only (n
 dev-only routes). Posts carry `lastmod = updated ?? date`. Translated posts are paired with
 hreflang through `translationKey` even when the slugs differ (`lib/seo/sitemap.ts` parses the
 frontmatter with the `yaml` package, so comments and block-style lists are fine; `pnpm test`
-covers it). `robots.txt` is disallow-all unless indexing is on.
+covers it). Project pages and the projects list exist under the same path in every language, so
+the integration pairs them with hreflang by path; they carry no `lastmod`, because nothing in a
+project's data dates a change (`year` is the build year, and CI checks out one commit, so git
+dates would all read as the latest commit). `robots.txt` is disallow-all unless indexing is on.
 
 Thin pages are kept out until they have something to show (`noindex, follow` and no sitemap
 entry): a blog index of a language with no posts at all, and a tag page with fewer than
@@ -44,7 +50,9 @@ entry): a blog index of a language with no posts at all, and a tag page with few
 Structured data names the author "Abduroziq Jabborov" (as the byline reads) with
 `alternateName` "Jabborov Abduroziq"; the Person has the portrait as `image`, the ProfilePage a
 `dateModified` (the build time) and a post with a cover lists it after the generated card in
-`BlogPosting.image`.
+`BlogPosting.image`. A project's `CreativeWork` has `creator` (the Person), `keywords` from its
+stack, the generated card plus the cover (when there is one) as `image`, and the live site and
+the repository as `sameAs`; its `url` is the project page.
 
 Markdown is rendered with smart punctuation off (`satteri({ features: { smartPunctuation: false } })`
 in `astro.config.ts`): a straight `'` stays `'` in post bodies, matching titles, descriptions and
@@ -71,6 +79,15 @@ yourself if you want them.
   your other posts, write descriptive link text, add `alt` to every image.
 - Use a plain `'` in Uzbek copy (`o'zbek`, `g'oya`): Bricolage Grotesque has no `ʻ` (U+02BB),
   and one spelling is easier to search for.
+
+## Adding a project that ranks
+
+Same rules as a post, in `packages/content/projects/<slug>/project.yaml` (see the README there):
+`description` is 70 to 160 characters in each language (enforced) and is the snippet; `summary`
+is the sentence under the title, so the two should not repeat each other word for word. The page
+title is the project name plus the site suffix. The slug is the URL in both languages: never
+rename a published one. Give every image `alt` in both languages; images must carry no
+metadata (`pnpm check` fails otherwise).
 
 ## Launch checklist (owner)
 

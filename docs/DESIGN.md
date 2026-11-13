@@ -304,14 +304,15 @@ does not scroll horizontally because of it.
 A table, one project per row, hairlines between rows:
 
 `YEAR` (mono, `ink-soft`) | `PROJECT` (name in `title`, one line of `body` under it) |
-`ROLE` (mono) | `STATUS` (dot + mono text: `● LIVE`, `◐ IN DESIGN`, `○ PLANNED`) | `↗`.
+`ROLE` (mono) | `STATUS` (dot + mono text: `● LIVE`, `◐ IN DESIGN`, `○ PLANNED`) | `→`.
 
 - Column headers in `label` style above the first hairline.
 - Hover / focus on a row: background `paper-raised`, the project name shifts 12px right,
-  the arrow rotates 45°, and a **ticket preview** (240×300 card in the project's two
+  the arrow nudges 4px right, and a **ticket preview** (240×300 card in the project's two
   colours with its glyph, name, year and a QR-like block) follows the cursor with a soft
   lag and tilts with movement. The `LIVE` dot pulses.
-- Rows with a URL are links to it; others are not links and show no arrow.
+- Every row is one link to the project's own page (`/projects/<slug>/`, same tab).
+- Under the table, right-aligned: `ALL PROJECTS →` to `/projects/`.
 - Mobile: each row stacks (year and status on one mono line, then name and description);
   no preview card.
 

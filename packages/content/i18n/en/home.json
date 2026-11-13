@@ -15,6 +15,7 @@
   "building": {
     "title": "Building",
     "table": "Projects",
+    "all": "All projects",
     "columns": {
       "year": "Year",
       "project": "Project",

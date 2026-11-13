@@ -119,3 +119,21 @@ test('an empty blog index is left out until the language has a post', () => {
   assert.equal(setup.filter('https://example.com/blog/'), true);
   assert.equal(setup.filter('https://example.com/uz/blog/'), true);
 });
+
+test('project pages keep their hreflang pair and carry no invented lastmod', () => {
+  assert.equal(setup.filter('https://example.com/projects/'), true);
+  assert.equal(setup.filter('https://example.com/uz/projects/payzone/'), true);
+  const item = setup.serialize({
+    url: 'https://example.com/uz/projects/payzone/',
+    links: [
+      { url: 'https://example.com/projects/payzone/', lang: 'en' },
+      { url: 'https://example.com/uz/projects/payzone/', lang: 'uz' },
+    ],
+  });
+  assert.equal(item.lastmod, undefined);
+  assert.deepEqual(item.links, [
+    { url: 'https://example.com/projects/payzone/', lang: 'en' },
+    { url: 'https://example.com/uz/projects/payzone/', lang: 'uz' },
+    { url: 'https://example.com/projects/payzone/', lang: 'x-default' },
+  ]);
+});

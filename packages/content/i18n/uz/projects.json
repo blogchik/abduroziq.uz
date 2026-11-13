@@ -1,0 +1,19 @@
+{
+  "title": "Loyihalar",
+  "intro": "Loyihalayotgan, qurayotgan va yuritayotgan mahsulotlarim",
+  "all": "Barcha loyihalar",
+  "facts": {
+    "label": "Ma'lumotlar",
+    "year": "Yil",
+    "role": "Rol",
+    "status": "Holat"
+  },
+  "visit": "Saytni ochish",
+  "source": "Manba kodi",
+  "stack": "Texnologiyalar",
+  "gallery": "Galereya",
+  "video": "Videoni yuklab olish",
+  "more": "Boshqa loyihalar",
+  "prev": "Oldingi loyiha",
+  "next": "Keyingi loyiha"
+}

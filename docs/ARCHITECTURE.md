@@ -41,16 +41,18 @@ abduroziq.uz/
 │        ├─ motion/              client motion kit (cursor, reveal, marquee, desk, scroll, transitions)
 │        ├─ styles/              global.css (tokens), fonts, prose.css
 │        ├─ i18n/                locale config, t(), path helpers
-│        ├─ lib/                 posts.ts, dates.ts, seo/, markdown/
+│        ├─ lib/                 posts.ts, projects.ts, dates.ts, seo/, markdown/
 │        └─ content.config.ts    content collections
 ├─ packages/
 │  ├─ content/                   @abduroziq/content: everything that is words or data
 │  │  ├─ posts/en/*.mdx          English posts
 │  │  ├─ posts/uz/*.mdx          Uzbek posts
+│  │  ├─ projects/<slug>/        project.yaml, optional en.mdx / uz.mdx, optional media/
 │  │  ├─ assets/                 portrait and post images
 │  │  ├─ i18n/<locale>/*.json    UI strings by namespace
-│  │  └─ src/                    types.ts, site.ts (profile), projects.ts, index.ts
+│  │  └─ src/                    types.ts, site.ts (profile), locales.ts, index.ts
 │  └─ config/                    @abduroziq/config: shared tsconfig, ESLint, Prettier
+├─ apps/web/scripts/             icons, fonts, check-media.mjs (metadata guard, part of `pnpm check`)
 ├─ docs/                         DESIGN.md, ARCHITECTURE.md, STACK-NOTES.md
 ├─ .github/workflows/            ci.yml, deploy.yml
 ├─ turbo.json, pnpm-workspace.yaml, package.json
@@ -93,6 +95,7 @@ Deploy credentials exist only as GitHub Actions secrets (`CLOUDFLARE_API_TOKEN`,
 - Each route is a single page file that renders both locales through an optional rest
   parameter: `src/pages/[...locale]/index.astro`, `[...locale]/blog/index.astro`,
   `[...locale]/blog/[slug].astro`, `[...locale]/blog/tag/[tag].astro`,
+  `[...locale]/projects/index.astro`, `[...locale]/projects/[slug].astro`,
   `[...locale]/rss.xml.ts`. `getStaticPaths` returns `locale: undefined` for `en` (no
   prefix) and `locale: 'uz'`; use `localeParam(locale)` and `resolveLocale(Astro.params.locale)`.
   This works with Astro's `i18n` config (verified). `404.astro` and `robots.txt.ts` sit
@@ -104,6 +107,8 @@ Deploy credentials exist only as GitHub Actions secrets (`CLOUDFLARE_API_TOKEN`,
 | `/blog/` | `/uz/blog/` | blog index |
 | `/blog/tag/<tag>/` | `/uz/blog/tag/<tag>/` | tag page |
 | `/blog/<slug>/` | `/uz/blog/<slug>/` | post (only in the language it is written in) |
+| `/projects/` | `/uz/projects/` | projects list |
+| `/projects/<slug>/` | `/uz/projects/<slug>/` | project page (every project, in every language) |
 | `/rss.xml` | `/uz/rss.xml` | feed |
 | `/og/...png` | | generated Open Graph images |
 | `/robots.txt`, `/sitemap-index.xml`, `/404` | | |
@@ -140,7 +145,7 @@ Extra helpers in the same module: `locales`, `localeParam(locale)` (route parame
 `namespace.dot.path`, for example `t(locale, 'common.nav.writing')`. A missing key throws
 in development and falls back to English in production.
 
-Namespaces: `common` (header, footer, accessibility labels), `home`, `blog`, `seo`.
+Namespaces: `common` (header, footer, accessibility labels), `home`, `blog`, `projects`, `seo`.
 
 ## 5. Content
 
@@ -182,7 +187,70 @@ excluded in production), `toPostSummary(entry)`, `parsePostId(id)`,
 `readingMinutes(body)`. `includeOtherLocale` adds posts of the other locale that have no
 translation in the requested locale.
 
-### 5.2 Site data (`packages/content/src`)
+### 5.2 Projects (`packages/content/projects/<slug>/`)
+
+One folder per project; the folder name is the slug, the same in every language.
+`project.yaml` holds every fact, with localized strings as `{ en, uz }` maps (the shape is built
+from the locale list in `packages/content/src/locales.ts`); `en.mdx` / `uz.mdx` are the optional
+long text of the page (body only, no frontmatter); `media/` holds images and short videos.
+Fields, validated in `content.config.ts` (collection `projects`, glob `*/project.yaml`, id = slug):
+
+```yaml
+name: Payzone
+order: 1                       # ascending position in every list, unique
+year: '2026'                   # the current build year, not a launch date
+status: live                   # live | design | planned
+url: https://payzone.uz        # optional, live address
+repo: https://github.com/...   # optional, public repository
+role: { en, uz }
+summary: { en, uz }            # one sentence, lists and under the title
+description: { en, uz }        # meta description, 70 to 160 characters
+stack: [Next.js]               # display order, may be empty
+colors: ['#18181B', '#E28413'] # ticket background, foreground
+glyph: Pz                      # one or two characters
+cover: ./media/cover.png       # optional image(), relative to the yaml
+coverAlt: { en, uz }           # required with a cover
+gallery:                       # optional
+  - { image: ./media/x.png, alt: { en, uz }, caption?: { en, uz } }
+  - { video: ./media/x.mp4, poster?: ./media/x.jpg, alt: { en, uz }, caption?: { en, uz } }
+```
+
+The bodies are a second collection, `projectBodies` (glob `*/*.mdx`, id `<slug>/<locale>`).
+Videos cannot go through `image()`: `lib/projects.ts` resolves them with
+`import.meta.glob('…/projects/*/**/*.{mp4,webm}', { query: '?url&no-inline' })`, so each is a
+hashed file in `dist/_astro/` (`no-inline` keeps a tiny clip from becoming a `data:` URL), and a
+path that matches no file fails the build. How to add one: `packages/content/projects/README.md`.
+
+### Projects contract (`apps/web/src/lib/projects.ts`)
+
+```ts
+export type ProjectStatus = 'live' | 'design' | 'planned';
+export interface ProjectCover { src: ImageMetadata; alt: string }
+export interface ProjectSummary {
+  slug: string; name: string; year: string; status: ProjectStatus;
+  role: string; summary: string; description: string;   // picked for the locale
+  url?: string; repo?: string; stack: string[];
+  colors: [background: string, foreground: string]; glyph: string;
+  cover?: ProjectCover;
+  href: string;                                            // '/uz/projects/payzone/'
+}
+export type ProjectMedia =
+  | { kind: 'image'; src: ImageMetadata; alt: string; caption?: string }
+  | { kind: 'video'; src: string; poster?: ImageMetadata; alt: string; caption?: string };
+export type ProjectBodyEntry = CollectionEntry<'projectBodies'>;
+export interface ProjectDetail extends ProjectSummary { gallery: ProjectMedia[]; body?: ProjectBodyEntry }
+
+export function getProjects(locale: Locale): Promise<ProjectSummary[]>;            // ascending order
+export function getProject(locale: Locale, slug: string): Promise<ProjectDetail | undefined>;
+export function getAdjacentProjects(locale: Locale, slug: string): Promise<{ prev?: ProjectSummary; next?: ProjectSummary }>;
+```
+
+Pages render a body with `const { Content } = await render(project.body)`. The pure helpers
+(slug and body id parsing, ordering, neighbours, media paths) live in `lib/project-data.ts`
+with `project-data.test.ts`. The home page's Building table, the projects list, the project
+pages and their Open Graph cards all read from this module.
+
+### 5.3 Site data (`packages/content/src`)
 
 ```ts
 export type Locale = 'en' | 'uz';
@@ -208,18 +276,9 @@ export interface Profile {
   desk: { stickyNote: string; polaroidCaption: string; pialaNote: Localized };
   socials: { id: 'github' | 'telegram' | 'linkedin' | 'instagram'; label: string; handle: string; href: string }[];
 }
-
-export interface Project {
-  id: string; name: string; year: string;
-  description: Localized; role: Localized;
-  status: 'live' | 'design' | 'planned';
-  url?: string;
-  colors: [background: string, foreground: string];
-  glyph: string;                // one or two characters drawn on the ticket preview
-}
 ```
 
-`@abduroziq/content` exports `profile`, `projects` and the types. Only information that
+`@abduroziq/content` exports `profile`, the locale list, the UI dictionaries and the types. Only information that
 is already public may go in here.
 
 The statement is written as parts so that the page can set the capsule inside it, give the
@@ -280,13 +339,13 @@ links, optional verification metas and JSON-LD through `JsonLd.astro` (`@context
 output escaped). `Analytics.astro` renders the Cloudflare beacon in production builds only.
 Schema helpers live in `apps/web/src/lib/seo/`: `personSchema`, `websiteSchema`,
 `profilePageSchema`, `blogSchema`, `collectionPageSchema`, `blogPostingSchema`,
-`breadcrumbSchema`, `countWords`, plus `ogImageUrl` (`og.ts`) and the title helpers
+`projectsPageSchema`, `projectSchema`, `breadcrumbSchema`, `countWords`, plus `ogImageUrl` (`og.ts`) and the title helpers
 (`meta.ts`). Open Graph PNGs are rendered by `pages/og/[...slug].png.ts`; the sitemap setup
 (`serialize` and `filter`) is `lib/seo/sitemap.ts`. See [SEO.md](SEO.md).
 
 SEO requirements: one `h1` per page; unique title and description per URL; canonical
-always absolute; `lastmod` in the sitemap from `updated ?? date`; every post has a
-generated 1200×630 OG image; development and non-production builds are `noindex`.
+always absolute; `lastmod` in the sitemap from `updated ?? date`; every post, project
+and the projects list have a generated 1200×630 OG image; development and non-production builds are `noindex`.
 
 ## 7. Motion contract
 
@@ -374,6 +433,7 @@ orchestrator.
 | Home | `components/home/`, `pages/[...locale]/index.astro`, `i18n/*/home.json` |
 | Blog | `components/blog/`, `pages/[...locale]/blog/`, `pages/[...locale]/rss.xml.ts`, `lib/posts.ts`, `lib/markdown/`, `content.config.ts`, `styles/prose.css`, `i18n/*/blog.json`, `packages/content/posts/` |
 | SEO | `components/seo/`, `lib/seo/`, `pages/og/`, `pages/robots.txt.ts`, `public/` icons and manifest, `i18n/*/seo.json` |
+| Projects | `pages/[...locale]/projects/`, `lib/projects.ts`, `lib/project-data.ts`, `i18n/*/projects.json`, `packages/content/projects/` |
 | Content | `packages/content/src/`, `packages/content/assets/` |
 | CI and deploy | `.github/`, `wrangler.*`, `lighthouserc.*`, `apps/web/public/_headers` |
 

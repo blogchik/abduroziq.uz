@@ -25,9 +25,9 @@ const { locale, path, switchHrefs } = Astro.props;
 const links = [
   {
     id: 'building',
-    href: `${localePath(locale, '/')}#building`,
+    href: localePath(locale, '/projects/'),
     label: t(locale, 'common.nav.building'),
-    current: false,
+    current: path.startsWith('/projects'),
   },
   {
     id: 'writing',

@@ -1,6 +1,7 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
+import { locales, type Locale } from '@abduroziq/content';
 
 /**
  * Posts live in `packages/content/posts/<locale>/<slug>.mdx`.
@@ -27,4 +28,74 @@ const posts = defineCollection({
     }),
 });
 
-export const collections = { posts };
+/** `{ en, uz }`: one value per site language, built from the one locale list. */
+const localized = <T extends z.ZodType>(schema: T) =>
+  z.strictObject(
+    Object.fromEntries(locales.map((locale) => [locale, schema])) as Record<Locale, T>,
+  );
+
+const text = z.string().trim().min(1);
+const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/, { error: 'Colours are #RRGGBB' });
+
+/**
+ * Projects: one folder per project, `packages/content/projects/<slug>/project.yaml`, holding
+ * every fact in both languages. The entry id is the folder name (the slug). Relative paths
+ * (cover, gallery images, posters) resolve from the yaml file. Videos are plain paths here,
+ * because `image()` handles images only; `src/lib/projects.ts` resolves them to built URLs.
+ * See packages/content/projects/README.md.
+ */
+const projects = defineCollection({
+  loader: glob({
+    base: '../../packages/content/projects',
+    pattern: '*/project.yaml',
+    generateId: ({ entry }) => entry.split('/')[0] ?? entry,
+  }),
+  schema: ({ image }) => {
+    const caption = localized(text).optional();
+    const media = z.union([
+      z.strictObject({ image: image(), alt: localized(text), caption }),
+      z.strictObject({
+        video: z.string().min(1),
+        poster: image().optional(),
+        alt: localized(text),
+        caption,
+      }),
+    ]);
+    return z
+      .strictObject({
+        name: text,
+        order: z.number().int(),
+        year: z.string().regex(/^\d{4}$/, { error: 'year is a four-digit string, e.g. "2026"' }),
+        status: z.enum(['live', 'design', 'planned']),
+        url: z.url().optional(),
+        repo: z.url().optional(),
+        role: localized(text),
+        summary: localized(text),
+        description: localized(z.string().trim().min(70).max(160)),
+        stack: z.array(text).default([]),
+        colors: z.tuple([hex, hex]),
+        glyph: z.string().min(1).max(2),
+        cover: image().optional(),
+        coverAlt: localized(text).optional(),
+        gallery: z.array(media).default([]),
+      })
+      .refine((data) => !data.cover || data.coverAlt, {
+        error: 'coverAlt ({ en, uz }) is required when there is a cover',
+        path: ['coverAlt'],
+      });
+  },
+});
+
+/**
+ * The long text of a project page, per language: `projects/<slug>/<locale>.mdx`, body only.
+ * The entry id is `<slug>/<locale>`. Optional: a page without one is still complete.
+ */
+const projectBodies = defineCollection({
+  loader: glob({
+    base: '../../packages/content/projects',
+    pattern: '*/*.mdx',
+    generateId: ({ entry }) => entry.replace(/\.mdx$/, ''),
+  }),
+});
+
+export const collections = { posts, projects, projectBodies };

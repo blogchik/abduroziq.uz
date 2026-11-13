@@ -20,7 +20,8 @@ monorepo. Public repository, MIT.
 | `pnpm build` | production build into `apps/web/dist` |
 | `pnpm preview` | serve the production build |
 | `pnpm lint` / `pnpm typecheck` / `pnpm format` | quality tools |
-| `pnpm check` | lint, typecheck and build; must pass before merging |
+| `pnpm check` | format check, image metadata check, lint, typecheck, tests and build; must pass before merging |
+| `pnpm check:media` | fail on images under `packages/content` that carry EXIF (GPS), XMP or IPTC |
 
 ## Branches
 
@@ -47,3 +48,11 @@ monorepo. Public repository, MIT.
 Create `packages/content/posts/<en|uz>/<slug>.mdx` with the frontmatter described in
 ARCHITECTURE.md section 5.1. `draft: true` keeps it out of production. Merge `dev` into
 `main` to publish.
+
+## Adding a project
+
+Create `packages/content/projects/<slug>/project.yaml` (fields in
+`packages/content/projects/README.md` and ARCHITECTURE.md section 5.2), optionally `en.mdx` /
+`uz.mdx` for the page text and `media/` for images and videos. The page exists at
+`/projects/<slug>/` in both languages; pages and components read projects only through
+`apps/web/src/lib/projects.ts`.

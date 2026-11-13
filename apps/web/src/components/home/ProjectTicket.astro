@@ -1,7 +1,7 @@
 ---
 import type { HTMLAttributes } from 'astro/types';
-import type { Project } from '@abduroziq/content';
 import Barcode from '@/components/ui/Barcode.astro';
+import type { ProjectSummary } from '@/lib/projects';
 import QrBlock from './desk/QrBlock.astro';
 import { ticketColors } from './lib';
 
@@ -15,7 +15,7 @@ import { ticketColors } from './lib';
  * from assistive technology.
  */
 interface Props extends HTMLAttributes<'div'> {
-  project: Project;
+  project: ProjectSummary;
   /** Position in the list, printed as the ticket number. */
   index: number;
   status: string;
@@ -44,10 +44,10 @@ const number = String(index + 1).padStart(2, '0');
       <p class="type-micro">Admit one</p>
       <p class="pticket__year type-label">{project.year}</p>
       <div class="pticket__bars">
-        <Barcode seed={project.id} bars={22} height="12px" fill />
+        <Barcode seed={project.slug} bars={22} height="12px" fill />
       </div>
     </div>
-    <QrBlock seed={project.id} class="pticket__qr" />
+    <QrBlock seed={project.slug} class="pticket__qr" />
   </div>
 </div>
 

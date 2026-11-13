@@ -15,7 +15,8 @@
     "typecheck": "turbo run typecheck",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "pnpm format:check && turbo run lint typecheck test build --concurrency=1",
+    "check": "pnpm format:check && pnpm check:media && turbo run lint typecheck test build --concurrency=1",
+    "check:media": "node apps/web/scripts/check-media.mjs",
     "test": "turbo run test"
   },
   "devDependencies": {

@@ -1,0 +1,16 @@
+name: TAVRYN
+order: 3
+year: '2026'
+status: design
+role:
+  en: Design and iOS
+  uz: Dizayn va iOS
+summary:
+  en: A calm, premium planner for tasks, projects and your schedule. iOS first.
+  uz: Vazifa, loyiha va jadval uchun sokin, premium rejalashtirgich. Avval iOS.
+description:
+  en: TAVRYN, a calm, premium planner for tasks, projects and your schedule, iOS first. In design and iOS work by Abduroziq Jabborov.
+  uz: 'TAVRYN: vazifa, loyiha va jadval uchun sokin, premium rejalashtirgich, avval iOS uchun. Dizayn va iOS: Jabborov Abduroziq.'
+stack: []
+colors: ['#ECE8E7', '#DC6008']
+glyph: Tv

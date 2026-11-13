@@ -186,6 +186,79 @@ export function blogPostingSchema(
   };
 }
 
+interface ProjectForSchema {
+  slug: string;
+  name: string;
+  description: string;
+  href: string;
+  url?: string | undefined;
+  repo?: string | undefined;
+  stack: string[];
+}
+
+/** The projects list of a locale: a CollectionPage whose main entity lists every project. */
+export function projectsPageSchema(
+  locale: Locale,
+  projects: readonly Pick<ProjectForSchema, 'name' | 'href'>[],
+): JsonLdNode {
+  const url = absoluteUrl(localePath(locale, '/projects/'));
+  return {
+    '@type': 'CollectionPage',
+    '@id': entityId.onPage(url, 'collection'),
+    url,
+    name: t(locale, 'seo.projects.title'),
+    description: t(locale, 'seo.projects.description'),
+    inLanguage: locale,
+    isPartOf: reference(entityId.website()),
+    author: reference(entityId.person()),
+    mainEntity: {
+      '@type': 'ItemList',
+      numberOfItems: projects.length,
+      itemListElement: projects.map((project, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: plainText(project.name),
+        url: absoluteUrl(project.href),
+      })),
+    },
+  };
+}
+
+/**
+ * A project page: a CreativeWork made by the Person. The live site and the repository are
+ * other addresses of the same work (`sameAs`); `url` is the page itself.
+ */
+export function projectSchema(
+  project: ProjectForSchema,
+  opts: {
+    locale: Locale;
+    /** Absolute URL of the project's cover, listed after the generated card. */
+    coverImage?: string | undefined;
+  },
+): JsonLdNode {
+  const url = absoluteUrl(project.href);
+  const sameAs = [project.url, project.repo].filter((href): href is string => Boolean(href));
+  return {
+    '@type': 'CreativeWork',
+    '@id': entityId.onPage(url, 'project'),
+    name: plainText(project.name),
+    description: plainText(project.description),
+    url,
+    image: [
+      ogImageUrl(opts.locale, { kind: 'project', slug: project.slug }),
+      ...(opts.coverImage ? [opts.coverImage] : []),
+    ],
+    creator: authorRef(),
+    inLanguage: opts.locale,
+    ...(project.stack.length > 0 ? { keywords: project.stack.join(', ') } : {}),
+    ...(sameAs.length > 0 ? { sameAs } : {}),
+    mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    isPartOf: reference(
+      entityId.onPage(absoluteUrl(localePath(opts.locale, '/projects/')), 'collection'),
+    ),
+  };
+}
+
 export interface Crumb {
   name: string;
   /** Locale-agnostic path ('/blog/') or an absolute URL. */

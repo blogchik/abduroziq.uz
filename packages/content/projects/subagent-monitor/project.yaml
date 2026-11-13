@@ -1,0 +1,17 @@
+name: subagent-monitor
+order: 5
+year: '2026'
+status: live
+repo: https://github.com/blogchik/subagent-monitor
+role:
+  en: Open source
+  uz: Ochiq kod
+summary:
+  en: 'A Claude Code mod: a live side panel for running subagents. Open source.'
+  uz: 'Claude Code mod: ishlayotgan subagentlar uchun jonli yon panel. Ochiq kod.'
+description:
+  en: 'subagent-monitor, an open-source Claude Code mod by Abduroziq Jabborov: a live side panel for the subagents that are running.'
+  uz: 'subagent-monitor: Jabborov Abduroziqning ochiq kodli Claude Code modi, ishlayotgan subagentlar uchun jonli yon panel.'
+stack: []
+colors: ['#141417', '#C4B5FD']
+glyph: sm

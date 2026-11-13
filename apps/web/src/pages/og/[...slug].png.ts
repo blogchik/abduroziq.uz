@@ -3,6 +3,7 @@ import { profile } from '@abduroziq/content';
 import { locales, t } from '@/i18n';
 import { formatDate } from '@/lib/dates';
 import { getPostEntries, parsePostId, toPostSummary } from '@/lib/posts';
+import { getProjects } from '@/lib/projects';
 import { renderOgImage, type OgCard } from '@/lib/seo/og-image';
 
 /**
@@ -10,6 +11,8 @@ import { renderOgImage, type OgCard } from '@/lib/seo/og-image';
  *   /og/<locale>/home.png          home page
  *   /og/<locale>/blog.png          blog index (also used by tag pages)
  *   /og/<locale>/post/<slug>.png   one per post, in the post's own language
+ *   /og/<locale>/projects.png      projects list
+ *   /og/<locale>/project/<slug>.png  one per project, in every language
  * URLs come from `ogImageUrl()` in `lib/seo/og.ts`.
  */
 type Props = { card: OgCard };
@@ -40,6 +43,30 @@ export const getStaticPaths = (async () => {
         },
       },
     });
+    paths.push({
+      params: { slug: `${locale}/projects` },
+      props: {
+        card: {
+          locale,
+          title: t(locale, 'projects.title'),
+          labels: [t(locale, 'common.nav.building')],
+          subtitle: t(locale, 'projects.intro'),
+        },
+      },
+    });
+    for (const project of await getProjects(locale)) {
+      paths.push({
+        params: { slug: `${locale}/project/${project.slug}` },
+        props: {
+          card: {
+            locale,
+            title: project.name,
+            labels: [t(locale, 'common.nav.building'), project.year],
+            subtitle: project.summary,
+          },
+        },
+      });
+    }
   }
 
   for (const entry of await getPostEntries()) {

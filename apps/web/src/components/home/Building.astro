@@ -1,18 +1,19 @@
 ---
-import { projects } from '@abduroziq/content';
 import Arrow from '@/components/ui/Arrow.astro';
+import ArrowLink from '@/components/ui/ArrowLink.astro';
 import Container from '@/components/ui/Container.astro';
 import SectionLabel from '@/components/ui/SectionLabel.astro';
 import StatusDot from '@/components/ui/StatusDot.astro';
-import { t, type Locale } from '@/i18n';
+import { localePath, t, type Locale } from '@/i18n';
+import { getProjects } from '@/lib/projects';
 import ProjectTicket from './ProjectTicket.astro';
 
 /**
- * `02 — Building` (DESIGN 4.5): the projects as a hairline table.
+ * `02 — Building` (DESIGN 4.5): the projects as a hairline table, then a link to all of them.
  *
- * A row with a URL must be one link, which a `<tr>` cannot be, so the table is built from
- * ARIA table roles on a grid: assistive technology gets rows, column headers and a row
- * header (the project), and the link inside the project cell is stretched over its row
+ * A row is one link to the project's own page, which a `<tr>` cannot be, so the table is
+ * built from ARIA table roles on a grid: assistive technology gets rows, column headers and a
+ * row header (the project), and the link inside the project cell is stretched over its row
  * (the arrow at the end of a row is only its visual sign).
  * Hovering or focusing a row shows the project's ticket next to the pointer (the motion
  * kit's follower); on small screens the rows stack and there is no preview.
@@ -23,6 +24,7 @@ interface Props {
 
 const { locale } = Astro.props;
 const column = (key: string) => t(locale, `home.building.columns.${key}`);
+const projects = await getProjects(locale);
 ---
 
 <Container as="section" class="building" id="building" aria-labelledby="building-title">
@@ -53,38 +55,26 @@ const column = (key: string) => t(locale, `home.building.columns.${key}`);
               class="prow"
               role="row"
               data-reveal-item
-              data-follower-item={project.id}
+              data-follower-item={project.slug}
               data-pulse-scope
             >
               <span class="prow__year type-label" role="cell">
                 {project.year}
               </span>
               <div class="prow__project" role="rowheader">
-                {project.url ? (
-                  <a
-                    class="prow__name type-title"
-                    href={project.url}
-                    target="_blank"
-                    rel="noopener"
-                  >
-                    <span class="prow__label">{project.name}</span>
-                    <span class="sr-only">{` ${t(locale, 'common.a11y.newTab')}`}</span>
-                  </a>
-                ) : (
-                  <span class="prow__name type-title">
-                    <span class="prow__label">{project.name}</span>
-                  </span>
-                )}
-                <p class="prow__desc type-body">{project.description[locale]}</p>
+                <a class="prow__name type-title" href={project.href}>
+                  <span class="prow__label">{project.name}</span>
+                </a>
+                <p class="prow__desc type-body">{project.summary}</p>
               </div>
               <span class="prow__role type-label" role="cell">
-                {project.role[locale]}
+                {project.role}
               </span>
               <span class="prow__status" role="cell">
                 <StatusDot status={project.status} label={status} />
               </span>
               <span class="prow__arrow" aria-hidden="true">
-                {project.url && <Arrow direction="up-right" />}
+                <Arrow />
               </span>
             </div>
           );
@@ -98,11 +88,15 @@ const column = (key: string) => t(locale, `home.building.columns.${key}`);
           project={project}
           index={index}
           status={t(locale, `home.building.status.${project.status}`)}
-          data-follower-for={project.id}
+          data-follower-for={project.slug}
         />
       ))}
     </div>
   </div>
+
+  <p class="building__more" data-reveal="fade">
+    <ArrowLink href={localePath(locale, '/projects/')} label={t(locale, 'home.building.all')} />
+  </p>
 </Container>
 
 <style>
@@ -233,7 +227,7 @@ const column = (key: string) => t(locale, `home.building.columns.${key}`);
   .prow__arrow :global(.arrow) {
     width: 0.62em;
     height: 0.62em;
-    transition: rotate var(--dur-2) var(--ease-out);
+    transition: translate var(--dur-2) var(--ease-out);
   }
 
   .prow:is(:hover, :focus-within)::before {
@@ -245,7 +239,13 @@ const column = (key: string) => t(locale, `home.building.columns.${key}`);
   }
 
   .prow:is(:hover, :focus-within) .prow__arrow :global(.arrow) {
-    rotate: 45deg;
+    translate: 4px 0;
+  }
+
+  .building__more {
+    display: flex;
+    justify-content: flex-end;
+    margin: clamp(1.25rem, 1rem + 1vw, 1.75rem) 0 0;
   }
 
   .ptable__preview {

@@ -1,0 +1,150 @@
+---
+import { Image } from 'astro:assets';
+import type { GetStaticPaths } from 'astro';
+import BlogHeader from '@/components/blog/BlogHeader.astro';
+import StatusDot from '@/components/ui/StatusDot.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { localeParam, locales, resolveLocale, t } from '@/i18n';
+import { getProjects } from '@/lib/projects';
+import { breadcrumbSchema, projectsPageSchema } from '@/lib/seo/schema';
+
+/**
+ * The projects list: `/projects/` and `/uz/projects/`. One `h1`, then every project in
+ * order with its facts; each name links to the project's own page (an `h2`). Plain on
+ * purpose: the look is decided in docs/DESIGN.md.
+ */
+export const getStaticPaths = (() =>
+  locales.map((locale) => ({ params: { locale: localeParam(locale) } }))) satisfies GetStaticPaths;
+
+const locale = resolveLocale(Astro.params.locale);
+const projects = await getProjects(locale);
+const fact = (key: string) => t(locale, `projects.facts.${key}`);
+---
+
+<BaseLayout
+  locale={locale}
+  path="/projects/"
+  title={t(locale, 'projects.title')}
+  description={t(locale, 'seo.projects.description')}
+  seo={{
+    jsonLd: [
+      projectsPageSchema(locale, projects),
+      breadcrumbSchema(locale, [
+        { name: t(locale, 'common.nav.home'), path: '/' },
+        { name: t(locale, 'projects.title'), path: '/projects/' },
+      ]),
+    ],
+  }}
+>
+  <BlogHeader title={t(locale, 'projects.title')} subtitle={t(locale, 'projects.intro')} />
+
+  <ol class="projects shell">
+    {projects.map((project) => (
+      <li class="project">
+        <article aria-labelledby={`project-${project.slug}`}>
+          <h2 class="type-title project__name" id={`project-${project.slug}`}>
+            <a href={project.href}>{project.name}</a>
+          </h2>
+          <p class="type-body project__summary">{project.summary}</p>
+          <dl class="type-label project__facts">
+            <div>
+              <dt>{fact('year')}</dt>
+              <dd>{project.year}</dd>
+            </div>
+            <div>
+              <dt>{fact('role')}</dt>
+              <dd>{project.role}</dd>
+            </div>
+            <div>
+              <dt>{fact('status')}</dt>
+              <dd>
+                <StatusDot
+                  status={project.status}
+                  label={t(locale, `home.building.status.${project.status}`)}
+                />
+              </dd>
+            </div>
+          </dl>
+          {project.stack.length > 0 && (
+            <ul class="type-label project__stack" aria-label={t(locale, 'projects.stack')}>
+              {project.stack.map((name) => (
+                <li>{name}</li>
+              ))}
+            </ul>
+          )}
+          {project.cover && (
+            <Image
+              class="project__cover"
+              src={project.cover.src}
+              alt={project.cover.alt}
+              widths={[480, 960, 1440]}
+              sizes="(min-width: 960px) 920px, calc(100vw - 2rem)"
+            />
+          )}
+        </article>
+      </li>
+    ))}
+  </ol>
+</BaseLayout>
+
+<style>
+  .projects {
+    margin-block: clamp(2rem, 1.5rem + 2vw, 3.5rem) 0;
+    padding-inline-start: 0;
+    list-style: none;
+  }
+
+  .project {
+    padding-block: 1.5rem;
+    border-block-start: var(--hairline) solid var(--rule);
+  }
+
+  .project:last-child {
+    border-block-end: var(--hairline) solid var(--rule);
+  }
+
+  .project__name {
+    margin: 0;
+  }
+
+  .project__name a {
+    color: var(--ink);
+  }
+
+  .project__summary {
+    max-width: 36em;
+    margin: 0.5rem 0 0;
+    color: var(--ink-soft);
+  }
+
+  .project__facts,
+  .project__stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .project__facts div {
+    display: flex;
+    gap: 0.6em;
+  }
+
+  .project__facts dt {
+    color: var(--ink-soft);
+  }
+
+  .project__facts dd {
+    margin: 0;
+  }
+
+  .project__cover {
+    display: block;
+    width: 100%;
+    max-width: 920px;
+    height: auto;
+    margin-block-start: 1.25rem;
+  }
+</style>

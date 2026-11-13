@@ -1,0 +1,17 @@
+name: Karimov Academy Ecosystem
+order: 2
+year: '2026'
+status: live
+url: https://karimovacademy.uz
+role:
+  en: Engineering
+  uz: Muhandislik
+summary:
+  en: Website, lead API and an in-house cabinet for a trading academy.
+  uz: Treyding akademiyasi uchun sayt, lead API va ichki kabinet.
+description:
+  en: 'Karimov Academy Ecosystem: the website, lead API and in-house cabinet of a trading academy, engineered by Abduroziq Jabborov.'
+  uz: 'Karimov Academy Ecosystem: treyding akademiyasi uchun sayt, lead API va ichki kabinet. Muhandislik ishlari: Jabborov Abduroziq.'
+stack: []
+colors: ['#0B0B0B', '#D5AF6F']
+glyph: KA

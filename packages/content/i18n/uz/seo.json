@@ -12,6 +12,10 @@
     "title": "Mahsulot, dizayn va muhandislik haqida yozuvlar",
     "description": "Toshkentdagi mahsulot muhandisi Jabborov Abduroziqning raqamli mahsulotlar yaratish, dizayn va muhandislik haqidagi qaydlari."
   },
+  "projects": {
+    "title": "Loyihalar",
+    "description": "Toshkentdagi mahsulot muhandisi Jabborov Abduroziq loyihalayotgan, qurayotgan va yuritayotgan mahsulotlar: har biri nima, undagi roli va holati."
+  },
   "tag": {
     "title": "“{tag}” tegli yozuvlar",
     "description": "Abduroziqning “{tag}” tegi bilan belgilangan yozuvlari: raqamli mahsulotlar yaratish, dizayn va muhandislik haqida qaydlar."

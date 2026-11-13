@@ -1,0 +1,16 @@
+name: EzDonation
+order: 4
+year: '2026'
+status: planned
+role:
+  en: Product planning
+  uz: Mahsulotni rejalash
+summary:
+  en: Donations and real-time stream alerts for streamers in Uzbekistan.
+  uz: "O'zbekistondagi striymerlar uchun donatlar va jonli efir bildirishnomalari."
+description:
+  en: EzDonation, a planned service for donations and real-time stream alerts for streamers in Uzbekistan, by Abduroziq Jabborov.
+  uz: "EzDonation: O'zbekistondagi striymerlar uchun donatlar va jonli efir bildirishnomalari. Rejada, muallifi Jabborov Abduroziq."
+stack: []
+colors: ['#E28413', '#18181B']
+glyph: Ez

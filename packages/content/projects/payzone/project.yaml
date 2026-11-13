@@ -1,0 +1,17 @@
+name: Payzone
+order: 1
+year: '2026'
+status: live
+url: https://payzone.uz
+role:
+  en: Building and running
+  uz: Qurish va yuritish
+summary:
+  en: Marketplace for game top-ups and in-game currency in Uzbekistan and the CIS.
+  uz: "O'zbekiston va MDH uchun o'yin valyutalari va hisob to'ldirish platformasi."
+description:
+  en: Payzone, a marketplace for game top-ups and in-game currency in Uzbekistan and the CIS, built and run by Abduroziq Jabborov.
+  uz: "Payzone: O'zbekiston va MDH uchun o'yin valyutalari va hisob to'ldirish platformasi. Jabborov Abduroziq quradi va yuritadi."
+stack: []
+colors: ['#18181B', '#E28413']
+glyph: Pz

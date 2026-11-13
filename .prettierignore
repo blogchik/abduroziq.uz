@@ -11,3 +11,4 @@ apps/web/public
 docs
 CLAUDE.md
 LICENSE
+packages/content/projects/**/*.mdx

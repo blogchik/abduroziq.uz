@@ -38,15 +38,3 @@ export interface Profile {
     href: string;
   }[];
 }
-
-export interface Project {
-  id: string;
-  name: string;
-  year: string;
-  description: Localized;
-  role: Localized;
-  status: 'live' | 'design' | 'planned';
-  url?: string;
-  colors: [background: string, foreground: string];
-  glyph: string; // one or two characters drawn on the ticket preview
-}
