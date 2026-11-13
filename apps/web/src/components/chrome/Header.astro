@@ -1,0 +1,453 @@
+---
+import { profile } from '@abduroziq/content';
+import LangSwitch from '@/components/chrome/LangSwitch.astro';
+import ThemeToggle from '@/components/chrome/ThemeToggle.astro';
+import { localePath, t, type Locale } from '@/i18n';
+
+/**
+ * Site header (DESIGN 3.1). One row: accent dot + ABDUROZIQ.UZ left; BUILDING, WRITING,
+ * EN / UZ and the theme toggle right. Below 768px a MENU button opens a full-screen sheet.
+ *
+ * Scroll behaviour is pure CSS on root state kept by the motion kit: sticky, slides away
+ * while `html[data-scrolled][data-scroll-dir="down"]`, returns on `up`. Without JavaScript
+ * it is a plain static row.
+ */
+interface Props {
+  locale: Locale;
+  /** Locale-agnostic path of the page, e.g. '/blog/'. */
+  path: string;
+  /** Where the language switch points, per locale (site-relative paths). */
+  switchHrefs: Record<Locale, string>;
+}
+
+const { locale, path, switchHrefs } = Astro.props;
+
+const links = [
+  {
+    id: 'building',
+    href: `${localePath(locale, '/')}#building`,
+    label: t(locale, 'common.nav.building'),
+    current: false,
+  },
+  {
+    id: 'writing',
+    href: localePath(locale, '/blog/'),
+    label: t(locale, 'common.nav.writing'),
+    current: path.startsWith('/blog'),
+  },
+];
+---
+
+<header class="site-header" data-site-header>
+  <div class="site-header__bar shell">
+    <a
+      class="brand type-label target-24"
+      href={localePath(locale, '/')}
+      aria-label={t(locale, 'common.nav.homeLabel')}
+    >
+      <span class="brand__dot" aria-hidden="true"></span>
+      <span>abduroziq.uz</span>
+    </a>
+
+    <nav class="site-nav" aria-label={t(locale, 'common.nav.label')}>
+      <ul class="site-nav__list">
+        {links.map((link) => (
+          <li>
+            <a
+              class="site-nav__link type-label target-24"
+              href={link.href}
+              aria-current={link.current ? 'page' : undefined}
+            >
+              {link.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+      <LangSwitch locale={locale} hrefs={switchHrefs} />
+      <ThemeToggle locale={locale} />
+    </nav>
+
+    <!-- One fixed label: the state is `aria-expanded`; the plus turns into a cross. -->
+    <button
+      type="button"
+      class="menu-button type-label"
+      aria-expanded="false"
+      aria-controls="site-menu"
+      data-menu-toggle
+    >
+      <span>{t(locale, 'common.nav.menu')}</span>
+      <span class="menu-button__icon" aria-hidden="true"></span>
+    </button>
+  </div>
+
+  <div class="menu-sheet" id="site-menu" data-menu data-lenis-prevent>
+    <nav class="menu-sheet__nav shell" aria-label={t(locale, 'common.nav.menuLabel')}>
+      <ol class="menu-sheet__list">
+        {links.map((link, index) => (
+          <li class="menu-sheet__item" style={{ '--i': index }}>
+            <a
+              class="menu-sheet__link"
+              href={link.href}
+              aria-current={link.current ? 'page' : undefined}
+              data-menu-link
+            >
+              <span class="menu-sheet__num type-label" aria-hidden="true">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <span class="menu-sheet__text type-display">{link.label}</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
+    <div class="menu-sheet__bottom shell">
+      <div class="menu-sheet__foot">
+        <a class="menu-sheet__mail type-label" href={`mailto:${profile.email}`}>
+          {profile.email}
+        </a>
+        <div class="menu-sheet__controls">
+          <LangSwitch locale={locale} hrefs={switchHrefs} />
+          <ThemeToggle locale={locale} />
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<script>
+  /*
+   * Mobile menu. This module runs once per session, so everything is delegated and keyed
+   * off the current DOM; it works after client-side navigation without re-initialising.
+   * Open: the rest of the page is inert (focus stays in the header), the page does not
+   * scroll (html[data-menu-open]) and `site:menu` tells the motion kit to pause smooth
+   * scrolling. Escape, the button, a menu link or growing past 768px close it.
+   */
+  const DESKTOP = window.matchMedia('(min-width: 48rem)');
+  let inerted: Element[] = [];
+
+  const toggleButton = () => document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+  const sheet = () => document.querySelector<HTMLElement>('[data-menu]');
+  const isOpen = () => document.documentElement.hasAttribute('data-menu-open');
+
+  function setOpen(open: boolean, restoreFocus = true): void {
+    const button = toggleButton();
+    const menu = sheet();
+    if (!button || !menu || open === isOpen()) return;
+    const root = document.documentElement;
+    const header = button.closest('[data-site-header]');
+
+    button.setAttribute('aria-expanded', String(open));
+    menu.toggleAttribute('data-open', open);
+    root.toggleAttribute('data-menu-open', open);
+
+    if (open) {
+      inerted = [...document.body.children].filter(
+        (el) => el !== header && !el.hasAttribute('inert') && el.tagName !== 'SCRIPT',
+      );
+      inerted.forEach((el) => el.setAttribute('inert', ''));
+      menu.querySelector<HTMLElement>('[data-menu-link]')?.focus({ preventScroll: true });
+    } else {
+      inerted.forEach((el) => el.removeAttribute('inert'));
+      inerted = [];
+      if (restoreFocus) button.focus({ preventScroll: true });
+    }
+    document.dispatchEvent(new CustomEvent('site:menu', { detail: { open } }));
+  }
+
+  document.addEventListener('click', (event) => {
+    const target = event.target as Element | null;
+    if (target?.closest('[data-menu-toggle]')) setOpen(!isOpen());
+    else if (target?.closest('[data-menu-link]')) setOpen(false, false);
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && isOpen()) {
+      event.preventDefault();
+      setOpen(false);
+    }
+  });
+
+  DESKTOP.addEventListener('change', (event) => {
+    if (event.matches) setOpen(false, false);
+  });
+
+  // A navigation replaces the page (and the <html> attributes); only the side effects need
+  // undoing here.
+  document.addEventListener('astro:before-swap', () => {
+    if (!isOpen()) return;
+    inerted = [];
+    document.dispatchEvent(new CustomEvent('site:menu', { detail: { open: false } }));
+  });
+</script>
+
+<style>
+  .site-header {
+    position: relative;
+    z-index: var(--z-header);
+    background-color: var(--paper);
+    border-block-end: var(--hairline) solid transparent;
+    transition:
+      translate var(--dur-2) var(--ease-out),
+      border-color var(--dur-1) var(--ease-out);
+  }
+
+  /* Sticky only with JavaScript: the kit keeps the scroll state that hides it again. */
+  :global(html.js) .site-header {
+    position: sticky;
+    inset-block-start: 0;
+  }
+
+  :global(html[data-scrolled]) .site-header {
+    border-block-end-color: var(--rule);
+  }
+
+  :global(html[data-scrolled][data-scroll-dir='down']:not([data-menu-open])) .site-header {
+    translate: 0 -100%;
+  }
+
+  /* Keyboard focus inside a hidden header brings it back. */
+  :global(html[data-scrolled][data-scroll-dir='down']) .site-header:focus-within {
+    translate: none;
+  }
+
+  .site-header__bar {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    height: var(--header-h);
+    background-color: var(--paper);
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75em;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .brand__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-pill);
+    background-color: var(--accent);
+    transition: scale var(--dur-2) var(--ease-out);
+  }
+
+  .brand:hover .brand__dot {
+    scale: 1.5;
+  }
+
+  .site-nav {
+    display: none;
+    align-items: center;
+    gap: 2.5rem;
+  }
+
+  .site-nav__list {
+    display: flex;
+    gap: 2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .site-nav__link {
+    position: relative;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  /* Hover rule draws from the left; the current page keeps it. A border, not a background,
+     so it survives forced colours. The hit area is 24px tall (target-24), the rule stays
+     0.35em under the text. */
+  .site-nav__link::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: calc(var(--target-pad) - 0.35em);
+    border-block-start: var(--hairline) solid currentColor;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform var(--dur-2) var(--ease-out);
+  }
+
+  .site-nav__link:hover::after,
+  .site-nav__link[aria-current='page']::after {
+    transform: scaleX(1);
+  }
+
+  .menu-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75em;
+    margin: -0.75rem;
+    padding: 0.75rem;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  /* A drawn plus (two hairlines) that turns into a cross while the sheet is open. */
+  .menu-button__icon {
+    position: relative;
+    width: 0.75em;
+    height: 0.75em;
+    transition: rotate var(--dur-2) var(--ease-out);
+  }
+
+  .menu-button__icon::before,
+  .menu-button__icon::after {
+    content: '';
+    position: absolute;
+    inset: 50% 0 auto;
+    border-block-start: var(--hairline) solid currentColor;
+    translate: 0 -50%;
+  }
+
+  .menu-button__icon::after {
+    rotate: 90deg;
+  }
+
+  .menu-button[aria-expanded='true'] .menu-button__icon {
+    rotate: 45deg;
+  }
+
+  @media (width >= 48rem) {
+    .site-nav {
+      display: flex;
+    }
+
+    .menu-button,
+    .menu-sheet {
+      display: none;
+    }
+  }
+
+  /* Without JavaScript the menu cannot open: show the links inline and let the row wrap. */
+  :global(html:not(.js)) .site-header__bar {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: var(--header-h);
+    padding-block: 1rem;
+  }
+
+  :global(html:not(.js)) .site-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+  }
+
+  :global(html:not(.js)) .menu-button,
+  :global(html:not(.js)) .menu-sheet {
+    display: none;
+  }
+
+  /* The sheet: full screen paper under the bar, wiping down from the top. */
+  .menu-sheet {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    padding-block: calc(var(--header-h) + 12vh) 1.5rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background-color: var(--paper);
+    visibility: hidden;
+    clip-path: inset(0 0 100% 0);
+    transition:
+      clip-path var(--dur-3) var(--ease-in-out),
+      visibility 0s linear var(--dur-3);
+  }
+
+  .menu-sheet[data-open] {
+    visibility: visible;
+    clip-path: inset(0);
+    transition:
+      clip-path var(--dur-3) var(--ease-in-out),
+      visibility 0s linear 0s;
+  }
+
+  :global(html[data-menu-open]) {
+    overflow: hidden;
+  }
+
+  .menu-sheet__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .menu-sheet__item {
+    overflow: hidden;
+    border-block-start: var(--hairline) solid var(--rule);
+  }
+
+  .menu-sheet__item:last-child {
+    border-block-end: var(--hairline) solid var(--rule);
+  }
+
+  .menu-sheet__link {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding-block: 1.1rem 0.9rem;
+    color: var(--ink);
+    text-decoration: none;
+    translate: 0 105%;
+    transition: translate var(--dur-3) var(--ease-out);
+    transition-delay: 0ms;
+  }
+
+  .menu-sheet[data-open] .menu-sheet__link {
+    translate: none;
+    transition-delay: calc(160ms + var(--i) * 70ms);
+  }
+
+  .menu-sheet__link:focus-visible {
+    outline-offset: -2px;
+  }
+
+  /* Cap tops aligned: the display line puts its caps 0.10em below the top of its box,
+     the mono label 0.295em below the top of its own. */
+  .menu-sheet__num {
+    min-width: 2.5em;
+    margin-block-start: calc(0.1 * var(--fs-display) - 0.295 * var(--fs-label));
+    color: var(--accent-text);
+  }
+
+  .menu-sheet__link[aria-current='page'] .menu-sheet__text {
+    color: var(--ink-soft);
+  }
+
+  .menu-sheet__bottom {
+    margin-block-start: auto;
+    padding-block-start: 3rem;
+  }
+
+  .menu-sheet__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 1.5rem;
+    padding-block-start: 1.25rem;
+    border-block-start: var(--hairline) solid var(--rule);
+  }
+
+  .menu-sheet__mail {
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .menu-sheet__controls {
+    display: flex;
+    align-items: center;
+    gap: 1.75rem;
+  }
+</style>

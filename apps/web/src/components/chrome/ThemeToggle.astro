@@ -1,0 +1,97 @@
+---
+import { t, type Locale } from '@/i18n';
+
+/**
+ * Theme toggle drawn as a half-filled circle; it turns half a revolution when the theme
+ * changes. A toggle button (`aria-pressed` = dark theme on). Writes `localStorage.theme`
+ * (and `window.__siteTheme`, which BaseLayout's root script reads when storage is
+ * unavailable), `data-theme` on <html> and the `theme-color` metas. Needs JavaScript, so it
+ * is hidden without it.
+ */
+interface Props {
+  locale: Locale;
+  class?: string;
+}
+
+const { locale, class: className } = Astro.props;
+---
+
+<button
+  type="button"
+  class:list={['theme-toggle', className]}
+  data-theme-toggle
+  aria-pressed="false"
+  aria-label={t(locale, 'common.theme.toggle')}
+>
+  <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+    <circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
+    <path d="M8 1.75a6.25 6.25 0 0 0 0 12.5Z" fill="currentColor"></path>
+  </svg>
+</button>
+
+<script>
+  type ThemeWindow = Window & {
+    __siteTheme?: string;
+    __siteThemeColor?: (theme: string) => void;
+  };
+
+  function current(): 'light' | 'dark' {
+    return document.documentElement.dataset['theme'] === 'dark' ? 'dark' : 'light';
+  }
+
+  function sync(): void {
+    const pressed = String(current() === 'dark');
+    document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
+      button.setAttribute('aria-pressed', pressed);
+    });
+  }
+
+  // One delegated listener for every toggle on every page (this module runs once).
+  document.addEventListener('click', (event) => {
+    const target = event.target as Element | null;
+    if (!target?.closest('[data-theme-toggle]')) return;
+    const next = current() === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset['theme'] = next;
+    const win = window as ThemeWindow;
+    win.__siteTheme = next;
+    try {
+      localStorage.setItem('theme', next);
+    } catch {
+      // Storage can be unavailable (private mode); the in-memory choice lasts for the session.
+    }
+    win.__siteThemeColor?.(next);
+    sync();
+  });
+
+  document.addEventListener('astro:page-load', sync);
+</script>
+
+<style>
+  .theme-toggle {
+    display: inline-grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    margin: -0.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: none;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  :global(html:not(.js)) .theme-toggle {
+    display: none;
+  }
+
+  .theme-toggle svg {
+    width: 0.875rem;
+    height: 0.875rem;
+    transition: rotate var(--dur-2) var(--ease-out);
+  }
+
+  :global([data-theme='dark']) .theme-toggle svg {
+    rotate: 180deg;
+  }
+</style>

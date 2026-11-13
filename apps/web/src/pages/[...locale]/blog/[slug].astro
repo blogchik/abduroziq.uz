@@ -1,0 +1,128 @@
+---
+import { Image, getImage } from 'astro:assets';
+import { render } from 'astro:content';
+import type { GetStaticPaths } from 'astro';
+import ArticleEnd from '@/components/blog/ArticleEnd.astro';
+import ArticleHeader from '@/components/blog/ArticleHeader.astro';
+import ProgressRail from '@/components/blog/ProgressRail.astro';
+import { mdxComponents } from '@/components/blog/mdx';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { localeParam, resolveLocale, t } from '@/i18n';
+import {
+  getAdjacentPosts,
+  getPostEntries,
+  getTranslations,
+  parsePostId,
+  toPostSummary,
+} from '@/lib/posts';
+import { blogPostingSchema, breadcrumbSchema, countWords } from '@/lib/seo/schema';
+import { absoluteUrl } from '@/lib/seo/site';
+import '@/styles/prose.css';
+
+// A post exists at one URL, in its own language: /blog/<slug>/ or /uz/blog/<slug>/.
+export const getStaticPaths = (async () =>
+  (await getPostEntries()).map((entry) => {
+    const { locale, slug } = parsePostId(entry.id);
+    return { params: { locale: localeParam(locale), slug }, props: { entry } };
+  })) satisfies GetStaticPaths;
+
+const { entry } = Astro.props;
+const locale = resolveLocale(Astro.params.locale);
+const post = toPostSummary(entry);
+const { Content } = await render(entry);
+const { cover, coverAlt, tags, draft } = entry.data;
+
+// The cover joins the generated card in the structured data, as an absolute URL.
+const coverImage = cover
+  ? absoluteUrl((await getImage({ src: cover, width: 1200 })).src)
+  : undefined;
+
+const translations = await getTranslations(post);
+const { prev, next } = await getAdjacentPosts(post);
+const alternates = [
+  { locale: post.locale, href: post.url },
+  ...translations.map((translation) => ({ locale: translation.locale, href: translation.url })),
+];
+---
+
+<BaseLayout
+  locale={locale}
+  path={`/blog/${post.slug}/`}
+  title={post.title}
+  description={post.description}
+  seo={{
+    type: 'article',
+    article: {
+      publishedTime: post.date,
+      ...(post.updated ? { modifiedTime: post.updated } : {}),
+      tags,
+    },
+    alternates,
+    jsonLd: [
+      blogPostingSchema(post, {
+        locale,
+        slug: post.slug,
+        wordCount: countWords(entry.body),
+        coverImage,
+      }),
+      breadcrumbSchema(locale, [
+        { name: t(locale, 'common.nav.home'), path: '/' },
+        { name: t(locale, 'blog.title'), path: '/blog/' },
+        { name: post.title, path: post.url },
+      ]),
+    ],
+  }}
+>
+  <article class="post">
+    <ArticleHeader post={post} locale={locale} draft={draft} translation={translations[0]} />
+
+    {cover && (
+      <figure class="post-cover shell">
+        <Image
+          src={cover}
+          alt={coverAlt}
+          widths={[480, 960, 1440, 1840]}
+          sizes="(min-width: 960px) 920px, calc(100vw - 2rem)"
+          loading="eager"
+          fetchpriority="high"
+        />
+      </figure>
+    )}
+
+    <div class="post-body">
+      <ProgressRail title={post.title} target="#post-body" />
+      <div class="post-body__inner shell">
+        <div class="prose type-article-body" id="post-body">
+          <Content components={mdxComponents} />
+        </div>
+      </div>
+    </div>
+
+    <ArticleEnd locale={locale} tags={tags} url={absoluteUrl(post.url)} prev={prev} next={next} />
+  </article>
+</BaseLayout>
+
+<style>
+  .post {
+    display: block;
+  }
+
+  .post-cover {
+    max-width: min(920px, 100%);
+    margin-block: 0 clamp(2.25rem, 1.4rem + 3.4vw, 4.5rem);
+  }
+
+  .post-cover :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    object-position: 50% 35%;
+    background-color: var(--paper-raised);
+  }
+
+  .post-body {
+    position: relative;
+  }
+</style>

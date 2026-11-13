@@ -1,0 +1,93 @@
+/*
+ * Layout utilities, docs/DESIGN.md 2.3: the page shell, the 12-column grid, hairlines,
+ * full-bleed breakouts and the two coloured surfaces (accent, ink band).
+ */
+
+/* Content container: max 1440px, side padding 16 / 24 / 40px. */
+@utility shell {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* 12 columns, gap 16 / 24px. Children use `col-span-*` / `col-start-*`. */
+@utility grid-12 {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--col-gap);
+}
+
+/* Space between sections, 96 -> 176px. Also available as `pt-section`, `mt-section`, ... */
+@utility section-y {
+  padding-block-start: var(--section);
+}
+
+/* Hairlines: 1px `rule`, never boxes. */
+@utility hairline {
+  border-block-start: var(--hairline) solid var(--rule);
+}
+
+@utility hairline-b {
+  border-block-end: var(--hairline) solid var(--rule);
+}
+
+/* Full rule strength (ink), for table heads and month groups. */
+@utility hairline-ink {
+  border-block-start: var(--hairline) solid var(--ink);
+}
+
+/* Breaks out of the shell to the full viewport width. The page clips horizontal overflow
+   (base.css), so this never causes a horizontal scrollbar. */
+@utility full-bleed {
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+}
+
+/* Accent fill: label strip, tape, footer. Text is always dark ink; nested tokens follow, so
+   labels, hairlines and focus rings inside are drawn in on-accent automatically. */
+@utility surface-accent {
+  background-color: var(--accent);
+  color: var(--on-accent);
+  --ink: var(--on-accent);
+  --ink-soft: color-mix(in srgb, var(--on-accent) 80%, var(--accent));
+  --rule: color-mix(in srgb, var(--on-accent) 30%, var(--accent));
+  --accent-text: var(--on-accent);
+  --focus-color: var(--on-accent);
+}
+
+/* The ink band: the opposite theme with ink as the background. One per page at most. */
+@utility surface-ink {
+  --paper: var(--inv-paper);
+  --paper-raised: var(--inv-paper-raised);
+  --ink: var(--inv-ink);
+  --ink-soft: var(--inv-ink-soft);
+  --rule: var(--inv-rule);
+  --accent-text: var(--inv-accent-text);
+  --focus-color: var(--inv-ink);
+  background-color: var(--paper);
+  color: var(--ink);
+}
+
+/* Underlined text link (e-mail, inline links): thin underline that thickens on hover. */
+@utility link-underline {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.16em;
+  text-decoration-skip-ink: auto;
+  transition: text-decoration-thickness var(--dur-1) var(--ease-out);
+
+  &:hover {
+    text-decoration-thickness: max(2px, 0.07em);
+  }
+}
+
+/* Target size (WCAG 2.5.8): small mono links get a hit area at least 24px tall without
+   moving. The padding is given back by a negative margin, so the layout is unchanged; it
+   works on inline, inline-flex and flex-item links. `--target-pad` is exposed for
+   decorations positioned from the padding box (an underline under the text). */
+@utility target-24 {
+  --target-pad: 0.3125rem;
+  padding-block: var(--target-pad);
+  margin-block: calc(-1 * var(--target-pad));
+}

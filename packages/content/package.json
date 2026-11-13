@@ -1,0 +1,20 @@
+{
+  "name": "@abduroziq/content",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Site data, UI strings and posts. Content is (c) Jabborov Abduroziq, all rights reserved.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./assets/*": "./assets/*"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@abduroziq/config": "workspace:*",
+    "eslint": "10.14.0",
+    "typescript": "~6.0.3"
+  }
+}

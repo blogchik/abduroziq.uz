@@ -1,0 +1,143 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import bricolageUrl from '@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-standard-normal.woff2?url';
+import serifDisplay300 from '@/assets/fonts/newsreader-display-300.woff2?url';
+import serifDisplay300Italic from '@/assets/fonts/newsreader-display-300-italic.woff2?url';
+import serifDisplay400 from '@/assets/fonts/newsreader-display-400.woff2?url';
+import serifText400 from '@/assets/fonts/newsreader-text-400.woff2?url';
+import geistMonoUrl from '@fontsource/geist-mono/files/geist-mono-latin-500-normal.woff2?url';
+import Footer from '@/components/chrome/Footer.astro';
+import Header from '@/components/chrome/Header.astro';
+import SkipLink from '@/components/chrome/SkipLink.astro';
+import Analytics from '@/components/seo/Analytics.astro';
+import Seo from '@/components/seo/Seo.astro';
+import type { SeoProps } from '@/components/seo/types';
+import { locales, localePath, t, type Locale } from '@/i18n';
+import { palette } from '@/lib/seo/brand';
+import '@/styles/global.css';
+import '@/motion/motion.css';
+
+interface Props {
+  locale: Locale;
+  /** Locale-agnostic path, for example '/blog/'. */
+  path: string;
+  title: string;
+  description: string;
+  seo?: Partial<SeoProps>;
+  mainClass?: string;
+  /**
+   * The footer follows without the section gap. Not needed for a page whose <main> ends
+   * with a `surface-ink` band (detected in CSS); use it for other full-bleed endings.
+   */
+  flush?: boolean;
+}
+
+const { locale, path, title, description, seo, mainClass, flush = false } = Astro.props;
+
+// Default cursor labels for the motion kit, in the page's language (`data-cursor-label`
+// on an element still wins).
+const cursorLabels = JSON.stringify({
+  open: t(locale, 'common.cursor.open'),
+  read: t(locale, 'common.cursor.read'),
+  drag: t(locale, 'common.cursor.drag'),
+  drop: t(locale, 'common.cursor.drop'),
+});
+// Paper of each theme, for <meta name="theme-color"> once the theme is known.
+const themeColors = { light: palette.paper, dark: palette.paperDark };
+
+// The language switch follows `seo.alternates` when a page has one (translated posts live at
+// different paths), otherwise it keeps the current path. A locale without an equivalent page
+// falls back to that locale's home page.
+const switchHrefs = Object.fromEntries(
+  locales.map((target) => [
+    target,
+    seo?.alternates
+      ? (seo.alternates.find((alt) => alt.locale === target)?.href ?? localePath(target, '/'))
+      : localePath(target, path),
+  ]),
+) as Record<Locale, string>;
+
+// Above-the-fold fonts: Bricolage (body, names, titles) and the mono labels on every page;
+// the serif only where it opens the page (the home sentence, a post's title).
+const isHome = path === '/';
+const isPost = /^\/blog\/(?!tag\/)[^/]+\/$/.test(path);
+const serifPreloads = isHome
+  ? [serifDisplay300, serifDisplay300Italic]
+  : isPost
+    ? [serifDisplay400, serifText400]
+    : [];
+const preloads = [bricolageUrl, geistMonoUrl, ...serifPreloads];
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {preloads.map((href) => (
+      <link rel="preload" as="font" type="font/woff2" href={href} crossorigin="anonymous" />
+    ))}
+    <Seo {...seo} locale={locale} path={path} title={title} description={description} />
+    <script is:inline define:vars={{ themeColors }}>
+      // Root state, set before first paint and again after every client-side swap (Astro
+      // replaces the <html> attributes on navigation):
+      //   data-theme  = light | dark    (localStorage `theme`, else the system preference)
+      //   data-motion = full | reduced  (localStorage `motion`: the footer's motion switch,
+      //                                  else prefers-reduced-motion)
+      //   class `js`                    (lets CSS prepare elements for the motion kit)
+      // The theme toggle and the motion switch also keep their choice on `window`
+      // (`__siteTheme`, `__siteMotion`), read here when storage is unavailable, so a choice
+      // survives client-side navigation in private mode. `<meta name="theme-color">` follows
+      // the active theme (the toggle calls `__siteThemeColor` too).
+      (() => {
+        const read = (key, memory) => {
+          try {
+            const value = localStorage.getItem(key);
+            if (value !== null) return value;
+          } catch {
+            // Storage unavailable: fall back to the in-memory choice.
+          }
+          return window[memory] ?? null;
+        };
+        const themeColor = (theme) => {
+          const color = themeColors[theme];
+          if (!color) return;
+          document
+            .querySelectorAll('meta[name="theme-color"]')
+            .forEach((meta) => meta.setAttribute('content', color));
+        };
+        window.__siteThemeColor = themeColor;
+        const applyRootState = () => {
+          const root = document.documentElement;
+          let theme = read('theme', '__siteTheme');
+          if (theme !== 'light' && theme !== 'dark') {
+            theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          let motion = read('motion', '__siteMotion');
+          if (motion !== 'full' && motion !== 'reduced') {
+            motion = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'reduced' : 'full';
+          }
+          root.setAttribute('data-theme', theme);
+          root.setAttribute('data-motion', motion);
+          root.classList.add('js');
+          themeColor(theme);
+        };
+        applyRootState();
+        document.addEventListener('astro:after-swap', applyRootState);
+      })();
+    </script>
+    <ClientRouter />
+  </head>
+  <body id="top" data-cursor-labels={cursorLabels}>
+    <SkipLink locale={locale} />
+    <Header locale={locale} path={path} switchHrefs={switchHrefs} />
+    <main id="main" tabindex="-1" class={mainClass}>
+      <slot />
+    </main>
+    <Footer locale={locale} flush={flush} />
+    <Analytics />
+    <script>
+      import '@/motion';
+    </script>
+  </body>
+</html>

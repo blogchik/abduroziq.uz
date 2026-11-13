@@ -1,0 +1,123 @@
+---
+/**
+ * The tape (DESIGN 4.4): an accent strip crossing the whole viewport at an angle, with the
+ * text repeated in Bricolage 700 uppercase, outlined in ink (transparent fill), separated
+ * by `+`. Breaks out of any container to the full viewport width and reserves the vertical
+ * room its rotation needs, so neighbours never overlap it and the page never scrolls
+ * sideways.
+ *
+ * Static markup already looks finished (enough repeats to cover 2560px). Motion is the
+ * kit's: `data-marquee` on the strip, `data-marquee-track` on the row, optional
+ * `data-marquee-speed` and `data-marquee-scroll` (follow scroll velocity).
+ * Decorative: hidden from assistive tech (give the section its own heading). The strip
+ * itself takes the pointer (the zone around it does not), so the marquee pauses while it
+ * is hovered; it is marked `data-surface="accent"` for the cursor colour.
+ */
+interface Props {
+  text: string;
+  /** Rotation in degrees. */
+  angle?: number;
+  /** How many times the text repeats in the static track. */
+  repeat?: number;
+  /** Passed to `data-marquee-speed`. */
+  speed?: number;
+  /** Follow scroll velocity (`data-marquee-scroll`). */
+  scroll?: boolean;
+  class?: string;
+}
+
+const { text, angle = -4, repeat = 10, speed, scroll = true, class: className } = Astro.props;
+const items = Array.from({ length: repeat }, (_, i) => i);
+---
+
+<div
+  class:list={['tape-zone', className]}
+  aria-hidden="true"
+  style={{
+    '--tape-angle': `${angle}deg`,
+    '--tape-tan': Math.abs(Math.tan((angle * Math.PI) / 180)).toFixed(4),
+  }}
+>
+  <div
+    class="tape"
+    data-surface="accent"
+    data-marquee
+    data-marquee-speed={speed}
+    data-marquee-scroll={scroll ? '' : undefined}
+  >
+    <div class="tape__track" data-marquee-track>
+      {items.map(() => (
+        <>
+          <span class="tape__text">{text}</span>
+          <span class="tape__sep">+</span>
+        </>
+      ))}
+    </div>
+  </div>
+</div>
+
+<style>
+  .tape-zone {
+    --tape-size: clamp(2rem, 1.3333rem + 2.963vw, 4rem); /* 32 -> 64px text */
+    position: relative;
+    width: 100vw;
+    margin-inline: calc(50% - 50vw);
+    /* Half the rise of the strip across the viewport, above and below. */
+    padding-block: calc(50vw * var(--tape-tan));
+    overflow-x: clip;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .tape {
+    position: relative;
+    left: -10vw;
+    width: 120vw;
+    overflow: hidden;
+    background-color: var(--accent);
+    color: var(--on-accent);
+    rotate: var(--tape-angle);
+    transform-origin: 50% 50%;
+    pointer-events: auto;
+  }
+
+  .tape__track {
+    display: flex;
+    align-items: center;
+    width: max-content;
+    padding-block: 0.16em 0.1em;
+    font-family: var(--font-display);
+    font-size: var(--tape-size);
+    font-weight: 700;
+    font-stretch: 100%;
+    font-optical-sizing: auto;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    will-change: transform;
+  }
+
+  /* Outlined text. Variable fonts have overlapping contours, which a plain stroke would draw
+     inside the letters; so the stroke is twice the visible 1.5px and painted under a fill
+     in the tape's own colour, which hides the inner half and every overlap. */
+  .tape__text,
+  .tape__sep {
+    color: var(--accent);
+    -webkit-text-stroke: 3px var(--on-accent);
+    paint-order: stroke fill;
+  }
+
+  .tape__sep {
+    padding-inline: 0.45em;
+    font-weight: 400;
+  }
+
+  /* Without stroke support, solid ink text still reads on the accent. */
+  @supports not (-webkit-text-stroke: 1px black) {
+    .tape__text,
+    .tape__sep {
+      color: var(--on-accent);
+    }
+  }
+</style>

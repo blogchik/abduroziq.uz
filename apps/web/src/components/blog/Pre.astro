@@ -1,0 +1,35 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import { localeFromPath, t } from '@/i18n';
+
+/**
+ * Code block: Shiki's `<pre>` inside a `paper-raised` frame with a mono language tag at the
+ * top right. The `<pre>` scrolls horizontally, is reachable by keyboard and tells Lenis to
+ * leave its wheel events alone. Colours come from the dual Shiki themes (`prose.css`).
+ */
+interface Props extends HTMLAttributes<'pre'> {
+  'data-language'?: string;
+}
+
+const { 'data-language': language, class: className, tabindex: _tabindex, ...rest } = Astro.props;
+const lang = language && language !== 'plaintext' ? language : undefined;
+const locale = localeFromPath(Astro.url.pathname);
+const label = lang
+  ? t(locale, 'blog.post.codeLabel', { language: lang })
+  : t(locale, 'blog.post.codePlain');
+---
+
+<div class="code-block">
+  <div class="code-block__head type-label" aria-hidden="true">
+    {lang && <span class="code-block__lang">{lang}</span>}
+  </div>
+  <pre
+    {...rest}
+    class={className}
+    data-language={language}
+    tabindex="0"
+    role="group"
+    aria-label={label}
+    data-lenis-prevent
+  ><slot /></pre>
+</div>

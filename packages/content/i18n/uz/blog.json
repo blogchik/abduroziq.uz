@@ -1,0 +1,50 @@
+{
+  "title": "Yozuvlar",
+  "intro": "Mahsulot yaratish, dizayn va kod haqidagi qaydlar",
+  "empty": "Birinchi yozuv yozilmoqda.",
+  "emptyText": "Yangi yozuvlar shu yerda, ingliz va o'zbek tillarida paydo bo'ladi.",
+  "emptyBadge": "Tez orada",
+  "rss": "RSS tasma",
+  "readingTime": "{minutes} daqiqalik o'qish",
+  "draft": "Qoralama",
+  "published": "E'lon qilingan: {date}",
+  "updated": "Yangilangan: {date}",
+  "tags": "Teglar",
+  "filter": {
+    "label": "Teg bo'yicha saralash",
+    "all": "Hammasi"
+  },
+  "tag": {
+    "title": "“{tag}” tegi bo'yicha",
+    "all": "Barcha yozuvlar",
+    "count": {
+      "one": "{count} ta yozuv",
+      "other": "{count} ta yozuv"
+    }
+  },
+  "post": {
+    "prev": "Oldingi yozuv",
+    "next": "Keyingi yozuv",
+    "more": "Yana yozuvlar",
+    "previousShort": "Oldingi",
+    "nextShort": "Keyingi",
+    "copyLink": "Havolani nusxalash",
+    "copied": "Havola nusxalandi",
+    "copyFailed": "Nusxalab bo'lmadi",
+    "alsoIn": {
+      "en": "Inglizcha o'qish",
+      "uz": "O'zbekcha o'qish"
+    },
+    "by": "Muallif:",
+    "tableLabel": "{n}-jadval, aylantiriladi",
+    "codeLabel": "{language} kodi, aylantiriladi",
+    "codePlain": "Kod, aylantiriladi",
+    "footnotes": "Izohlar",
+    "footnoteBack": "Matnga qaytish",
+    "note": "Eslatma"
+  },
+  "language": {
+    "en": "Inglizcha",
+    "uz": "O'zbekcha"
+  }
+}

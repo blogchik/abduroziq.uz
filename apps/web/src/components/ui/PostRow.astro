@@ -1,0 +1,266 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import Arrow from '@/components/ui/Arrow.astro';
+import Tag from '@/components/ui/Tag.astro';
+import { monthShort, year } from '@/components/ui/date-parts';
+import { t, type Locale } from '@/i18n';
+import { formatDate, formatDay, formatWeekdayShort, isoDate } from '@/lib/dates';
+import { postTransitionName, type PostSummary } from '@/lib/posts';
+
+/**
+ * One post in a list (DESIGN 5.1): date block, title + description + tags, arrow. The whole
+ * row is one link with the `read` cursor. A post written in the other language carries a
+ * mono badge and `lang` on its text.
+ *
+ * The link is named by the title and described by the date and the description (not the
+ * whole row run together); the date reads as one phrase (`Thu, 12 November 2026`).
+ * Below 30rem the date block becomes one mono line above a full-width title
+ * (`THU · 12 NOV 2026`).
+ *
+ * Render rows inside a list with `as="li"` (or as `article`s in a plain container): every
+ * row draws the hairline above itself, the last one also the hairline below. Any other
+ * attribute (`data-*`, `id`, `style`, …) goes on the root element.
+ */
+type RootAttributes = Omit<HTMLAttributes<'article'>, 'class' | 'class:list'>;
+
+interface Props extends RootAttributes {
+  post: PostSummary;
+  /** Locale of the page (dates and labels); the post may be in the other one. */
+  locale: Locale;
+  headingLevel?: 2 | 3 | 4;
+  as?: 'article' | 'li' | 'div';
+  /**
+   * `view-transition-name` of the title, so it can morph into the article title.
+   * Default `post-<locale>-<slug>`; give the article title the same name. `false` disables.
+   */
+  transitionName?: string | false;
+  class?: string;
+}
+
+const {
+  post,
+  locale,
+  headingLevel = 3,
+  as: Root = 'article',
+  transitionName = postTransitionName(post),
+  class: className,
+  ...rest
+} = Astro.props;
+
+const Heading = `h${headingLevel}` as 'h2' | 'h3' | 'h4';
+const foreign = post.locale !== locale;
+const weekday = formatWeekdayShort(post.date, locale);
+const day = formatDay(post.date, locale);
+const month = `${monthShort(post.date, locale)} ${year(post.date, locale)}`;
+// Ids for the link's name and description; unique per page (a post appears once per list,
+// and the page locale tells the styleguide's two lists apart).
+const id = `post-row-${locale}-${postTransitionName(post)}`;
+---
+
+<Root class:list={['post-row', className]} {...rest}>
+  <a
+    class="post-row__link"
+    href={post.url}
+    hreflang={post.locale}
+    data-cursor="read"
+    aria-labelledby={`${id}-title`}
+    aria-describedby={`${id}-date ${id}-desc`}
+  >
+    <time class="post-row__date" datetime={isoDate(post.date)} id={`${id}-date`}>
+      <span class="sr-only">{`${weekday}, ${formatDate(post.date, locale)}`}</span>
+      <span class="type-label post-row__weekday" aria-hidden="true">
+        {weekday}
+      </span>
+      <span class="type-numeral post-row__day" aria-hidden="true">
+        {day}
+      </span>
+      <span class="type-label post-row__month" aria-hidden="true">
+        {month}
+      </span>
+    </time>
+
+    <div class="post-row__body" lang={foreign ? post.locale : undefined}>
+      {transitionName ? (
+        <Heading
+          class="type-title post-row__title"
+          id={`${id}-title`}
+          transition:name={transitionName}
+        >
+          {post.title}
+        </Heading>
+      ) : (
+        <Heading class="type-title post-row__title" id={`${id}-title`}>
+          {post.title}
+        </Heading>
+      )}
+      <p class="type-body post-row__desc" id={`${id}-desc`}>
+        {post.description}
+      </p>
+      {(post.tags.length > 0 || foreign) && (
+        <div class="post-row__meta">
+          {foreign && (
+            <span class="post-row__lang type-label">
+              <span aria-hidden="true">{t(locale, `common.lang.${post.locale}`)}</span>
+              <span class="sr-only">{t(locale, `common.lang.writtenIn.${post.locale}`)}</span>
+            </span>
+          )}
+          {post.tags.map((tag) => (
+            <Tag label={tag} />
+          ))}
+        </div>
+      )}
+    </div>
+
+    <span class="post-row__arrow" aria-hidden="true">
+      <Arrow direction="up-right" />
+    </span>
+  </a>
+</Root>
+
+<style>
+  .post-row {
+    list-style: none;
+    border-block-start: var(--hairline) solid var(--rule);
+  }
+
+  .post-row:last-child {
+    border-block-end: var(--hairline) solid var(--rule);
+  }
+
+  .post-row__link {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr) auto;
+    align-items: start;
+    column-gap: var(--col-gap);
+    padding-block: clamp(1.5rem, 1.1rem + 1.2vw, 2.25rem);
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  @media (width >= 40rem) {
+    .post-row__link {
+      grid-template-columns: 6rem minmax(0, 1fr) auto;
+    }
+  }
+
+  .post-row__date {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.45rem;
+  }
+
+  .post-row__weekday,
+  .post-row__month {
+    color: var(--ink-soft);
+  }
+
+  .post-row__day {
+    transition: color var(--dur-1) var(--ease-out);
+  }
+
+  .post-row__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    min-width: 0;
+  }
+
+  /* Title and arrow start level with the day numeral, under the weekday label. */
+  .post-row__title {
+    margin: calc(var(--fs-label) * 1.3 + 0.45rem) 0 0;
+    transition: translate var(--dur-2) var(--ease-out);
+  }
+
+  .post-row__desc {
+    margin: 0;
+    max-width: 36em; /* em, not ch: ch changes when the font swaps */
+    color: var(--ink-soft);
+  }
+
+  .post-row__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-block-start: 0.4rem;
+  }
+
+  /* Language badge: square-cornered, unlike the pill tags. */
+  .post-row__lang {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.25em;
+    padding: 0.38em 0.6em 0.34em;
+    border: var(--hairline) solid var(--ink);
+  }
+
+  /* The arrow sits centred on the first line of the title. */
+  .post-row__arrow {
+    display: flex;
+    align-items: center;
+    height: 1.08em;
+    color: var(--accent-text);
+    font-size: var(--fs-title);
+    margin-block-start: calc(var(--fs-label) * 1.3 + 0.45rem);
+  }
+
+  .post-row__arrow :global(.arrow) {
+    width: 0.62em;
+    height: 0.62em;
+    transition: translate var(--dur-2) var(--ease-out);
+  }
+
+  .post-row__link:is(:hover, :focus-visible) .post-row__title {
+    translate: 12px 0;
+  }
+
+  .post-row__link:is(:hover, :focus-visible) .post-row__arrow :global(.arrow) {
+    translate: 4px -4px;
+  }
+
+  .post-row__link:is(:hover, :focus-visible) .post-row__day {
+    color: var(--accent-text);
+  }
+
+  .post-row__link:focus-visible {
+    outline-offset: -2px;
+  }
+
+  /* Narrow screens: the date is one mono line (`THU · 12 NOV 2026`) above a full-width
+     title, so long (Uzbek) titles and descriptions get the whole width. */
+  @media (width < 30rem) {
+    .post-row__link {
+      grid-template-columns: minmax(0, 1fr) auto;
+      row-gap: 0.75rem;
+    }
+
+    .post-row__date {
+      grid-column: 1 / -1;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0 0.6em;
+    }
+
+    .post-row__weekday::after {
+      content: '·' / '';
+      margin-inline-start: 0.6em;
+    }
+
+    /* The day numeral takes the label style of its neighbours. */
+    .post-row__day {
+      font-family: var(--font-mono);
+      font-size: var(--fs-label);
+      font-weight: 500;
+      font-stretch: normal;
+      line-height: 1.3;
+      letter-spacing: 0.08em;
+      color: var(--ink-soft);
+    }
+
+    .post-row__title,
+    .post-row__arrow {
+      margin-block-start: 0;
+    }
+  }
+</style>

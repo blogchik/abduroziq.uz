@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "abduroziq-uz",
+  "compatibility_date": "2026-11-12",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./apps/web/dist",
+    // Serves dist/404.html with a real 404 status.
+    "not_found_handling": "404-page",
+    // Default: files without slash, folder indexes with a trailing slash (matches Astro trailingSlash: 'always').
+    "html_handling": "auto-trailing-slash",
+  },
+  // After the abduroziq.uz zone is active on Cloudflare, uncomment the line below (see docs/DEPLOY.md).
+  // www is not listed on purpose: a dashboard Redirect Rule sends it to the apex.
+  // "routes": [{ "pattern": "abduroziq.uz", "custom_domain": true }]
+}

@@ -1,0 +1,112 @@
+---
+title: "Hello, world: a kitchen sink draft"
+description: "A placeholder draft that uses every element the blog can render, so a typography change shows up in one place."
+date: 2026-11-12
+tags: [meta, typography]
+draft: true
+cover: ../../assets/portrait.jpg
+coverAlt: "Portrait of the site's author, used here only as a test image"
+translationKey: hello-world
+---
+
+import shot from '../../assets/portrait.jpg';
+
+This is a placeholder draft for testing typography. It is not an article and says nothing about its author. The first paragraph carries the drop cap, so it needs a few lines of text: the capital should span three lines, sit on the baseline of the third, and let the rest of the paragraph wrap calmly around it. Here is an [internal link](/blog/) and an [external link](https://docs.astro.build) so both link styles are on the page.
+
+## Headings and paragraphs
+
+Second-level headings are numbered automatically, with a mono number and a short rule above the text. This paragraph has **bold text**, *italic text*, `inline code`, a key press such as <kbd>Cmd</kbd> + <kbd>K</kbd>, and a footnote reference.[^1] A long unbreakable word follows, to check that nothing ever pushes the page sideways: supercalifragilisticexpialidocious-and-then-some-more-letters-to-make-it-really-long-indeed.
+
+### A third-level heading
+
+Third-level headings are set at body size in weight 600. They organise a section without competing with the numbered headings above them.
+
+#### A fourth-level heading
+
+Fourth-level headings are a quiet mono label, for the rare case where a section needs one more step.
+
+## Lists
+
+An unordered list with a nested level:
+
+- The first item is a short one.
+- The second item is longer, so that it wraps onto a second line and shows how the hanging marker keeps the text aligned with the paragraphs around it.
+- The third item has a nested list:
+  - a nested item
+  - another nested item
+
+An ordered list:
+
+1. Write the post as an MDX file.
+2. Keep `draft: true` while it is not ready.
+3. Merge when it is.
+
+## Quotes
+
+A plain Markdown quote is set as a pull quote. On a wide screen it hangs outside the column to the right.
+
+> Think beyond limits.
+
+The component form adds a source line:
+
+<PullQuote cite="A named source">A quote with an attribution sits in the same place and looks the same.</PullQuote>
+
+## Figures
+
+A figure the width of the column, with a mono caption:
+
+<Figure src={shot} alt="Portrait of the site's author, used here only as a test image" caption="A figure at column width. The caption is set in mono." />
+
+A wide figure grows to 920px on desktop:
+
+<Figure wide src={shot} alt="The same test image, shown wide" caption="A wide figure. Below 960px it falls back to the column width." />
+
+## Code
+
+A TypeScript block with a language tag:
+
+```ts
+interface Post {
+  title: string;
+  draft: boolean;
+}
+
+export function isPublished(post: Post): boolean {
+  return !post.draft;
+}
+```
+
+A shell block with a very long line, which scrolls sideways inside the block instead of widening the page:
+
+```bash
+pnpm --filter @abduroziq/web exec astro build --mode production --verbose --config ./astro.config.ts --outDir ./dist-preview-with-a-deliberately-long-directory-name
+```
+
+## Tables
+
+A table scrolls inside its own region when it is wider than the column:
+
+| Element | Where it lives | Notes |
+| --- | --- | --- |
+| Heading | Markdown | Numbered when second level |
+| Figure | `Figure` component | Optional `wide` prop |
+| Callout | `Note` component | Hairline and a mono label |
+| Table | Markdown | Hairlines only, mono data |
+
+A wider table, with six columns, to check the sideways scroll on a phone:
+
+| Year | Item | Kind | Status | Width | Remark |
+| --- | --- | --- | --- | --- | --- |
+| 2026 | Heading | Markdown | Ready | Column | Second level is numbered |
+| 2026 | Figure | Component | Ready | Column or 920px | Caption in mono |
+| 2026 | Code block | Markdown | Ready | Column | Scrolls sideways |
+
+<Note>
+A note is a quiet aside: a hairline, a mono label and a few lines of text. It is not a card.
+</Note>
+
+---
+
+That is the end of the test. The real writing starts later.
+
+[^1]: Footnotes are set in mono under a hairline at the end of the article.

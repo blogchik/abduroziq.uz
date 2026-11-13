@@ -1,0 +1,40 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import Arrow from '@/components/ui/Arrow.astro';
+import { localeFromPath, t } from '@/i18n';
+import { isExternalHref, isMailHref } from '@/lib/markdown/links';
+
+/**
+ * The `a` of every MDX post. External links open in a new tab with `rel="noopener"`, get the
+ * `open` cursor, a small drawn arrow and a screen-reader note; mail links get the `open`
+ * cursor only. Internal links and anchors are plain links (the cursor picks `link` itself).
+ * The back-reference of a footnote gets its label in the page language: the processor writes an
+ * English `aria-label` ("Back to reference 1") that cannot be set per post, so it is dropped
+ * here and replaced (an `a` with two `aria-label`s keeps the first one, the English one).
+ */
+interface Props extends HTMLAttributes<'a'> {
+  'data-footnote-backref'?: boolean | string;
+}
+
+const { href: rawHref, class: className, 'aria-label': ariaLabel, ...rest } = Astro.props;
+const href = rawHref == null ? undefined : String(rawHref);
+const external = isExternalHref(href);
+const mail = isMailHref(href);
+const locale = localeFromPath(Astro.url.pathname);
+const backref = 'data-footnote-backref' in rest;
+const label = backref ? t(locale, 'blog.post.footnoteBack') : ariaLabel;
+---
+
+<a
+  {...rest}
+  aria-label={label}
+  href={href}
+  class:list={['prose-link', { 'prose-link--external': external }, className]}
+  target={external ? '_blank' : undefined}
+  rel={external ? 'noopener' : undefined}
+  data-cursor={external || mail ? 'open' : undefined}
+>
+  <slot />
+  {external && <Arrow direction="up-right" class="prose-link__arrow" />}
+  {external && <span class="sr-only">{` ${t(locale, 'common.a11y.newTab')}`}</span>}
+</a>

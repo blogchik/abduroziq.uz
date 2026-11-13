@@ -1,0 +1,325 @@
+---
+import { profile } from '@abduroziq/content';
+import Arrow from '@/components/ui/Arrow.astro';
+import ArrowLink from '@/components/ui/ArrowLink.astro';
+import GiantName from '@/components/ui/GiantName.astro';
+import SectionLabel from '@/components/ui/SectionLabel.astro';
+import { t, type Locale } from '@/i18n';
+
+/**
+ * Footer, section `04 — Contact` (DESIGN 3.3): a full-bleed accent block. Label and year,
+ * "Say hello" and the e-mail, socials as a hairline list, the tagline in hand, back to top,
+ * the motion switch, and the giant name clipped by the bottom edge (letters rise as it
+ * enters, via the kit).
+ *
+ * Spacing: the section gap above the footer is dropped when the page's main content ends
+ * with an ink band (`surface-ink` as the last child of <main>), or always with `flush`.
+ *
+ * The year is written at build time and corrected on the client (a cached build may be
+ * older than the current year). The motion switch (WCAG 2.2.2: the tape, loops and pulses
+ * can be stopped) writes `localStorage.motion` (`reduced`, or removed / `full` when the
+ * system asks for reduced motion), updates `data-motion` and tells the motion kit
+ * (`site:motion`), which re-initialises the page in the new mode.
+ */
+interface Props {
+  locale: Locale;
+  /** No section gap above the footer (a page that ends with a full-bleed band). */
+  flush?: boolean;
+}
+
+const { locale, flush = false } = Astro.props;
+const year = new Date().getFullYear();
+---
+
+<footer class:list={['site-footer surface-accent', { 'is-flush': flush }]} id="contact">
+  <div class="shell">
+    <div class="site-footer__top">
+      <SectionLabel as="h2" number={4} name={t(locale, 'common.footer.contact')} />
+      <p class="type-label site-footer__year">
+        © <span data-footer-year>{year}</span>
+      </p>
+    </div>
+
+    <div class="site-footer__main grid-12">
+      <div class="site-footer__hello">
+        <p class="type-lead site-footer__say">{t(locale, 'common.footer.hello')}</p>
+        <a class="type-title link-underline site-footer__mail" href={`mailto:${profile.email}`}>
+          {profile.email}
+        </a>
+      </div>
+
+      <div class="site-footer__social">
+        <p class="type-label site-footer__caption" id="footer-elsewhere">
+          {t(locale, 'common.footer.elsewhere')}
+        </p>
+        <ul class="site-footer__list" aria-labelledby="footer-elsewhere">
+          {profile.socials.map((social) => (
+            <li>
+              <a
+                class="site-footer__social-link type-label"
+                href={social.href}
+                rel="me noopener"
+                target="_blank"
+                data-cursor="open"
+              >
+                <span>{social.label}</span>
+                <Arrow direction="up-right" class="site-footer__social-arrow" />
+                <span class="sr-only">{` ${t(locale, 'common.a11y.newTab')}`}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+
+    <div class="site-footer__end">
+      <p class="type-hand site-footer__tagline">{profile.tagline}</p>
+      <div class="site-footer__actions">
+        <button
+          type="button"
+          class="motion-switch type-label"
+          aria-pressed="true"
+          data-motion-switch
+        >
+          <span>{t(locale, 'common.motion.label')}</span>
+          <span aria-hidden="true">: </span>
+          <span class="motion-switch__state" aria-hidden="true">
+            <span data-when="on">{t(locale, 'common.motion.on')}</span>
+            <span data-when="off">{t(locale, 'common.motion.off')}</span>
+          </span>
+        </button>
+        <ArrowLink href="#top" direction="up" label={t(locale, 'common.footer.backToTop')} />
+      </div>
+    </div>
+  </div>
+
+  <div class="shell site-footer__name">
+    <GiantName decorative reveal="chars" />
+  </div>
+</footer>
+
+<script>
+  /*
+   * The year, and the motion switch. Runs once per session: delegated listeners plus a sync
+   * on every page load (the footer is replaced on navigation).
+   */
+  type MotionWindow = Window & { __siteMotion?: string | null };
+  const reduceMedia = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  function syncYear(): void {
+    const year = new Intl.DateTimeFormat('en', {
+      year: 'numeric',
+      timeZone: 'Asia/Tashkent',
+    }).format(new Date());
+    document.querySelectorAll('[data-footer-year]').forEach((el) => {
+      if (el.textContent !== year) el.textContent = year;
+    });
+  }
+
+  function motionOn(): boolean {
+    return document.documentElement.dataset['motion'] !== 'reduced';
+  }
+
+  function syncSwitch(): void {
+    const on = String(motionOn());
+    document.querySelectorAll('[data-motion-switch]').forEach((button) => {
+      button.setAttribute('aria-pressed', on);
+    });
+  }
+
+  function store(value: 'reduced' | 'full' | null): void {
+    // In memory too: BaseLayout's root script reads it when storage is unavailable.
+    (window as MotionWindow).__siteMotion = value;
+    try {
+      if (value) localStorage.setItem('motion', value);
+      else localStorage.removeItem('motion');
+    } catch {
+      // Storage unavailable (private mode): the in-memory value lasts for this session.
+    }
+  }
+
+  document.addEventListener('click', (event) => {
+    const target = event.target as Element | null;
+    if (!target?.closest('[data-motion-switch]')) return;
+    const next = motionOn() ? 'reduced' : 'full';
+    // Off is an explicit choice; on returns to the system setting unless that asks for less.
+    store(next === 'reduced' ? 'reduced' : reduceMedia.matches ? 'full' : null);
+    document.documentElement.dataset['motion'] = next;
+    syncSwitch();
+    document.dispatchEvent(new CustomEvent('site:motion', { detail: { motion: next } }));
+  });
+
+  document.addEventListener('astro:page-load', () => {
+    syncYear();
+    syncSwitch();
+  });
+</script>
+
+<style>
+  .site-footer {
+    margin-block-start: var(--section);
+    overflow: hidden;
+  }
+
+  /* Flush under a page that ends with an ink band, or when asked to. */
+  :global(main:has(> .surface-ink:last-child)) + .site-footer,
+  .site-footer.is-flush {
+    margin-block-start: 0;
+  }
+
+  .site-footer__top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 1.5rem;
+    border-block-end: var(--hairline) solid var(--rule);
+  }
+
+  .site-footer__year {
+    margin: 0;
+  }
+
+  .site-footer__main {
+    row-gap: 3.5rem;
+    padding-block: clamp(4rem, 2.6667rem + 5.9259vw, 8rem) clamp(3rem, 2.3333rem + 2.963vw, 5rem);
+  }
+
+  .site-footer__hello {
+    grid-column: 1 / -1;
+  }
+
+  .site-footer__say {
+    margin: 0 0 0.6rem;
+  }
+
+  .site-footer__mail {
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+
+  .site-footer__social {
+    grid-column: 1 / -1;
+  }
+
+  @media (width >= 48rem) {
+    .site-footer__hello {
+      grid-column: 1 / span 7;
+    }
+
+    .site-footer__social {
+      grid-column: 9 / -1;
+    }
+  }
+
+  .site-footer__caption {
+    margin: 0 0 0.9rem;
+    color: var(--ink-soft);
+  }
+
+  .site-footer__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .site-footer__list li {
+    border-block-start: var(--hairline) solid var(--rule);
+  }
+
+  .site-footer__list li:last-child {
+    border-block-end: var(--hairline) solid var(--rule);
+  }
+
+  .site-footer__social-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 0.85rem 0.8rem;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .site-footer__social-link :global(.site-footer__social-arrow) {
+    transition: translate var(--dur-2) var(--ease-out);
+  }
+
+  .site-footer__social-link > span:first-child {
+    transition: translate var(--dur-2) var(--ease-out);
+  }
+
+  .site-footer__social-link:hover > span:first-child {
+    translate: 8px 0;
+  }
+
+  .site-footer__social-link:hover :global(.site-footer__social-arrow) {
+    translate: 2px -2px;
+  }
+
+  .site-footer__end {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding-block-end: clamp(2rem, 1.3333rem + 2.963vw, 4rem);
+  }
+
+  .site-footer__tagline {
+    margin: 0;
+    rotate: -4deg;
+    transform-origin: left bottom;
+  }
+
+  .site-footer__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 2rem;
+  }
+
+  /* A mono label like the links around it; 24px tall hit area at the label's size. */
+  .motion-switch {
+    display: inline-block;
+    margin-block: -0.3125rem;
+    padding: 0.3125rem 0;
+    border: 0;
+    background: none;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .motion-switch__state {
+    display: inline-grid;
+  }
+
+  /* Both words share one cell, so the width never jumps between ON and OFF. */
+  .motion-switch__state > span {
+    grid-area: 1 / 1;
+  }
+
+  .motion-switch[aria-pressed='true'] [data-when='off'],
+  .motion-switch[aria-pressed='false'] [data-when='on'] {
+    visibility: hidden;
+  }
+
+  .motion-switch:hover .motion-switch__state {
+    text-decoration: underline;
+    text-decoration-thickness: var(--hairline);
+    text-underline-offset: 0.3em;
+  }
+
+  /* Needs JavaScript. */
+  :global(html:not(.js)) .motion-switch {
+    display: none;
+  }
+
+  /* The name sits on the bottom edge, which cuts through the tail of the Q (it drops 0.15em
+     below the baseline): the word box ends 0.07em below the baseline plus the 0.09em tail
+     padding, so pulling it up by 0.06em puts the edge 0.1em below the baseline. Every other
+     letter stands whole on the edge and the Q still reads as a Q. */
+  .site-footer__name :global(.giant__word) {
+    margin-block-end: -0.06em;
+  }
+</style>

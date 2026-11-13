@@ -1,0 +1,48 @@
+{
+  "hero": {
+    "label": "Hello",
+    "meta": "Available for new projects. Local time in Tashkent is UTC+5."
+  },
+  "desk": {
+    "cups": "Cups today",
+    "refill": "Refill",
+    "notes": {
+      "ticket": "no handoff needed",
+      "flag": "works nights too"
+    }
+  },
+  "about": {
+    "title": "About"
+  },
+  "tape": "What I'm building",
+  "building": {
+    "title": "Building",
+    "table": "Projects",
+    "columns": {
+      "year": "Year",
+      "project": "Project",
+      "role": "Role",
+      "status": "Status"
+    },
+    "status": {
+      "live": "Live",
+      "design": "In design",
+      "planned": "Planned"
+    }
+  },
+  "writing": {
+    "title": "Writing",
+    "all": "All posts",
+    "empty": "The first post is being written.",
+    "emptyNote": "Notes on building products, design and code. It will land here first.",
+    "emptyKicker": "Soon",
+    "emptyStatus": "In progress",
+    "rss": "Follow via RSS"
+  },
+  "notFound": {
+    "line": "This page was dragged somewhere else.",
+    "home": "Back to the home page",
+    "note": "throw something, it helps",
+    "keycap": "esc"
+  }
+}

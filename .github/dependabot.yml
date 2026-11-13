@@ -1,0 +1,33 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    target-branch: dev
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # @astrojs/check and typescript-eslint do not support TypeScript 7 yet.
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
+      # @types/node must track the Node major in .nvmrc (24), not the latest Node.
+      - dependency-name: '@types/node'
+        update-types: [version-update:semver-major]
+      # Astro pins its own Vite major; a different one breaks the build.
+      - dependency-name: vite
+        update-types: [version-update:semver-major]
+      # onlyBuiltDependencies was replaced by allowBuilds in pnpm 11; stay on 10.
+      - dependency-name: pnpm
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    target-branch: dev
+    groups:
+      actions:
+        update-types: [minor, patch]

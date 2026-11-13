@@ -1,0 +1,15 @@
+{
+  "name": "Abduroziq",
+  "short_name": "Abduroziq",
+  "description": "Personal website and blog of Abduroziq Jabborov, a Product Engineer based in Tashkent.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "browser",
+  "background_color": "#ECEAE5",
+  "theme_color": "#ECEAE5",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

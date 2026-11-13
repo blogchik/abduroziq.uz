@@ -1,0 +1,422 @@
+/*
+ * Styles that belong to the motion kit: the custom cursor, the page-transition panel and
+ * the prepared (pre-animation) states of elements that opt in through data attributes.
+ *
+ * Loaded from BaseLayout so it is in the <head> before first paint. Rules that hide or
+ * offset content are scoped to `html.js[data-motion='full']`, so that everything stays
+ * visible without JavaScript and under reduced motion. Each of them stops matching as soon
+ * as the kit takes the element over (`data-reveal-ready`, `data-desk-ready`), and a CSS
+ * failsafe shows everything after 1s if the kit never arrives (keep in sync with
+ * `reveal.failsafeMs` in config.ts).
+ *
+ * Raw values live in the tokens (styles/tokens.css): colours, z-index, font families.
+ */
+
+/* ------------------------------------------------------------ prepared states */
+
+@keyframes m-failsafe {
+  to {
+    opacity: 1;
+  }
+}
+
+html.js[data-motion='full'] [data-reveal]:not([data-reveal-ready]),
+html.js[data-motion='full'] [data-reveal-group]:not([data-reveal-ready]) [data-reveal-item],
+html.js[data-motion='full'] [data-desk]:not([data-desk-ready]) [data-draggable] {
+  opacity: 0;
+  animation: m-failsafe 0.01s linear 1s forwards;
+}
+
+/* ------------------------------------------------------------------- marquee */
+
+[data-marquee] {
+  overflow: hidden;
+}
+
+[data-marquee-track] {
+  display: flex;
+  width: max-content;
+}
+
+[data-marquee-ready] [data-marquee-track] {
+  will-change: transform;
+}
+
+/* ---------------------------------------------------------------------- desk */
+
+/* Placement is done by the kit (left/top 0 plus a transform); without JavaScript the
+   author's own layout applies. */
+html.js [data-desk] {
+  position: relative;
+  /* Draggable raises z-index on every press; keep that inside the desk. */
+  isolation: isolate;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html.js [data-desk] [data-draggable] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+[data-desk] [data-draggable] img {
+  -webkit-user-drag: none;
+}
+
+/* ------------------------------------------------------------------ follower */
+
+[data-follower-panel] {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--z-follower);
+  pointer-events: none;
+  visibility: hidden;
+  /* Scale and tilt pivot on the edge next to the pointer, so the gap to it stays. */
+  transform-origin: 0 50%;
+  opacity: 0;
+}
+
+[data-follower-panel] [data-follower-for]:not([data-follower-current]) {
+  display: none;
+}
+
+/* -------------------------------------------------------------- smooth scroll */
+
+/* The rules of lenis/dist/lenis.css that apply to this site. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+
+.lenis [data-lenis-prevent],
+.lenis [data-lenis-prevent-wheel],
+.lenis [data-lenis-prevent-touch] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+/* -------------------------------------------------------------------- cursor */
+
+html[data-cursor-active]:not([data-cursor-native]),
+html[data-cursor-active]:not([data-cursor-native]) * {
+  cursor: none !important;
+}
+
+.m-cursor {
+  /* Colours follow the surface under the pointer (cursor.ts sets `data-surface`): ink on
+     paper, on-accent on the accent fill, paper on ink. The halo is a 1px ring in the
+     surface's own colour: invisible on a plain surface, it keeps the cursor readable over
+     photos and anything else that is neither. */
+  --m-cursor-fg: var(--ink);
+  --m-cursor-halo: var(--paper);
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--z-cursor);
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  color: var(--m-cursor-fg);
+  opacity: 0;
+  transition:
+    opacity var(--m-dur-2) var(--m-ease-out),
+    color var(--m-dur-1) var(--m-ease-out);
+}
+
+.m-cursor[data-surface='accent'] {
+  --m-cursor-fg: var(--on-accent);
+  --m-cursor-halo: var(--accent);
+}
+
+.m-cursor[data-surface='ink'] {
+  --m-cursor-fg: var(--paper);
+  --m-cursor-halo: var(--ink);
+}
+
+.m-cursor[data-visible] {
+  opacity: 1;
+}
+
+.m-cursor[data-state='text'],
+.m-cursor[data-state='hide'] {
+  opacity: 0;
+}
+
+/* Reference colours read by cursor.ts to recognise the surfaces. */
+.m-cursor__probe {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.m-cursor__probe[data-probe='accent'] {
+  color: var(--accent);
+}
+
+.m-cursor__probe[data-probe='ink'] {
+  color: var(--ink);
+}
+
+.m-cursor__probe[data-probe='paper'] {
+  color: var(--paper);
+}
+
+.m-cursor__dot,
+.m-cursor__ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+}
+
+.m-cursor__dot-shape,
+.m-cursor__ring-shape,
+.m-cursor__pill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition:
+    transform var(--m-dur-1) var(--m-ease-out),
+    opacity var(--m-dur-1) var(--m-ease-out);
+}
+
+.m-cursor__dot-shape {
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: var(--radius-pill);
+  background: currentColor;
+  box-shadow: 0 0 0 1px var(--m-cursor-halo);
+}
+
+.m-cursor__ring-shape {
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  border: 1.5px solid currentColor;
+  border-radius: var(--radius-pill);
+  box-shadow:
+    0 0 0 1px var(--m-cursor-halo),
+    inset 0 0 0 1px var(--m-cursor-halo);
+  opacity: 0;
+  transform: scale(0.3);
+}
+
+.m-cursor__label {
+  position: absolute;
+  top: 14px;
+  left: 24px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-shadow:
+    1px 0 var(--m-cursor-halo),
+    -1px 0 var(--m-cursor-halo),
+    0 1px var(--m-cursor-halo),
+    0 -1px var(--m-cursor-halo);
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    transform var(--m-dur-1) var(--m-ease-out),
+    opacity var(--m-dur-1) var(--m-ease-out);
+}
+
+.m-cursor__pill {
+  padding: 9px 14px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.4);
+}
+
+.m-cursor:is([data-state='link'], [data-state='open'], [data-state='drag']) .m-cursor__ring-shape {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.m-cursor:is([data-state='link'], [data-state='open'], [data-state='drag']) .m-cursor__dot-shape {
+  transform: scale(0.6);
+}
+
+.m-cursor[data-label] .m-cursor__label {
+  opacity: 1;
+  transform: none;
+}
+
+.m-cursor[data-state='read'] .m-cursor__pill {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.m-cursor[data-state='read'] .m-cursor__dot-shape {
+  opacity: 0;
+  transform: scale(0);
+}
+
+.m-cursor[data-pressed] .m-cursor__dot-shape {
+  transform: scale(0.5);
+}
+
+.m-cursor[data-pressed] .m-cursor__ring-shape {
+  transform: scale(0.82);
+}
+
+.m-cursor[data-pressed][data-state='read'] .m-cursor__pill {
+  transform: translate(-50%, -50%) scale(0.92);
+}
+
+/* Press burst: eight short rays. */
+.m-cursor__burst {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.m-cursor__burst i {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: rotate(var(--a));
+}
+
+.m-cursor__burst b {
+  position: absolute;
+  top: -0.75px;
+  left: 0;
+  width: 7px;
+  height: 1.5px;
+  border-radius: 1px;
+  background: currentColor;
+  opacity: 0;
+  transform-origin: 0 50%;
+}
+
+.m-cursor__burst.is-active b {
+  animation: m-ray var(--m-burst, 200ms) var(--m-ease-out) forwards;
+}
+
+@keyframes m-ray {
+  from {
+    opacity: 1;
+    transform: translateX(8px) scaleX(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(20px) scaleX(0.4);
+  }
+}
+
+/* -------------------------------------------------------------------- wipe */
+
+.m-wipe {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-wipe);
+  pointer-events: none;
+  background: var(--paper);
+  /* Positioned by the kit (yPercent); hidden while idle. */
+  visibility: hidden;
+}
+
+/* The accent hairline on the leading (top) edge. */
+.m-wipe::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: var(--accent);
+  content: '';
+}
+
+/* The panel is the transition: no default cross-fade of the whole page on top of it. Named
+   elements (shared-element morphs) keep their own animations. */
+html[data-motion='full']::view-transition-old(root),
+html[data-motion='full']::view-transition-new(root) {
+  animation: none;
+}
+
+/* Text morphs (shared names starting with `post-`; transition.ts gives them the class
+   `m-text`): a post title changes font, size, alignment and line count between the row and
+   the article, so a stretched snapshot would smear. Only the box morphs; the old and new
+   text keep their natural size, pinned to the box's top left, and cross-fade. */
+html[data-motion='full']::view-transition-group(*.m-text) {
+  overflow: clip;
+  animation-duration: var(--dur-3);
+  animation-timing-function: var(--ease-out);
+}
+
+html[data-motion='full']::view-transition-image-pair(*.m-text) {
+  isolation: auto;
+}
+
+html[data-motion='full']::view-transition-old(*.m-text),
+html[data-motion='full']::view-transition-new(*.m-text) {
+  inset: 0 auto auto 0;
+  inline-size: auto;
+  block-size: auto;
+  mix-blend-mode: normal;
+  animation-duration: 200ms;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+
+html[data-motion='full']::view-transition-old(*.m-text) {
+  animation-name: m-text-out;
+}
+
+html[data-motion='full']::view-transition-new(*.m-text) {
+  animation-name: m-text-in;
+}
+
+@keyframes m-text-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes m-text-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ----------------------------------------------------------- reduced motion */
+
+html[data-motion='reduced'] .m-cursor,
+html[data-motion='reduced'] .m-wipe {
+  display: none;
+}
+
+/* The native cursor stays for forced colours and for visitors who asked for more contrast
+   (cursor.ts does not enable the replacement then either). */
+@media (forced-colors: active), (prefers-contrast: more) {
+  .m-cursor {
+    display: none;
+  }
+}

@@ -1,0 +1,24 @@
+---
+// One JSON-LD block. `@context` is added when missing. The serialised text is escaped so
+// that it can never close the <script> element or break out of it.
+interface Props {
+  data: object;
+}
+
+const { data } = Astro.props;
+const withContext = '@context' in data ? data : { '@context': 'https://schema.org', ...data };
+
+const ESCAPES: Record<string, string> = {
+  '<': '\\u003c',
+  '>': '\\u003e',
+  '&': '\\u0026',
+  [String.fromCharCode(0x2028)]: '\\u2028',
+  [String.fromCharCode(0x2029)]: '\\u2029',
+};
+const json = JSON.stringify(withContext).replace(
+  new RegExp(`[${Object.keys(ESCAPES).join('')}]`, 'g'),
+  (char) => ESCAPES[char] ?? char,
+);
+---
+
+<script is:inline type="application/ld+json" set:html={json} />

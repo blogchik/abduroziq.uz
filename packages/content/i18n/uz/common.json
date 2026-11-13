@@ -1,0 +1,58 @@
+{
+  "skip": "Asosiy mazmunga o'tish",
+  "nav": {
+    "label": "Asosiy menyu",
+    "home": "Bosh sahifa",
+    "homeLabel": "abduroziq.uz, bosh sahifa",
+    "building": "Loyihalar",
+    "writing": "Yozuvlar",
+    "menu": "Menyu",
+    "close": "Yopish",
+    "menuLabel": "Sayt menyusi"
+  },
+  "lang": {
+    "label": "Til",
+    "en": "EN",
+    "uz": "UZ",
+    "enName": "Inglizcha",
+    "uzName": "O'zbekcha",
+    "writtenIn": {
+      "en": "Ingliz tilida yozilgan",
+      "uz": "O'zbek tilida yozilgan"
+    }
+  },
+  "theme": {
+    "toggle": "Tungi rejim"
+  },
+  "a11y": {
+    "newTab": "(yangi oynada ochiladi)"
+  },
+  "footer": {
+    "hello": "Salom yo'llang",
+    "contact": "Aloqa",
+    "elsewhere": "Tarmoqlarda",
+    "email": "E-pochta",
+    "rights": "Barcha huquqlar himoyalangan.",
+    "backToTop": "Yuqoriga"
+  },
+  "motion": {
+    "label": "Harakat",
+    "on": "Yoniq",
+    "off": "O'chiq"
+  },
+  "cursor": {
+    "open": "Ochish",
+    "read": "O'qish",
+    "drag": "Sudrash",
+    "drop": "Qo'yish"
+  },
+  "tag": {
+    "countOne": "{n} ta yozuv",
+    "countOther": "{n} ta yozuv"
+  },
+  "notFound": {
+    "title": "Sahifa topilmadi",
+    "text": "Bu manzilda hech narsa yo'q.",
+    "home": "Bosh sahifaga qaytish"
+  }
+}

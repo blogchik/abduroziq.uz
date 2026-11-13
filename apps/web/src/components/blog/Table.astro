@@ -1,0 +1,29 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import { localeFromPath, t } from '@/i18n';
+import { nextIndex } from '@/lib/render-counter';
+
+/**
+ * Wraps a table in a keyboard-focusable, horizontally scrollable region, so a wide table
+ * scrolls inside the column and never widens the page. Each region needs its own accessible
+ * name (two landmarks with the same name are an axe violation), so the label carries the
+ * table's position in the post: "Table 2, scrollable".
+ */
+type Props = HTMLAttributes<'table'>;
+
+const locale = localeFromPath(Astro.url.pathname);
+
+const index = nextIndex(Astro.request, 'table');
+---
+
+<div
+  class="table-wrap"
+  role="region"
+  tabindex="0"
+  aria-label={t(locale, 'blog.post.tableLabel', { n: index })}
+  data-lenis-prevent
+>
+  <table {...Astro.props}>
+    <slot />
+  </table>
+</div>

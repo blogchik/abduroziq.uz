@@ -1,0 +1,112 @@
+---
+title: "Salom, dunyo: barcha elementli qoralama"
+description: "Blog ko'rsata oladigan barcha elementlarni bir joyda sinash uchun vaqtinchalik qoralama. Tipografiyadagi o'zgarish shu yerda ko'rinadi."
+date: 2026-11-12
+tags: [meta, typography]
+draft: true
+cover: ../../assets/portrait.jpg
+coverAlt: "Sayt muallifining portreti, bu yerda faqat sinov uchun ishlatilgan"
+translationKey: hello-world
+---
+
+import shot from '../../assets/portrait.jpg';
+
+Bu tipografiyani sinash uchun vaqtinchalik qoralama. U maqola emas va muallif haqida hech narsa demaydi. Birinchi abzatsda katta bosh harf bor, shuning uchun u bir necha qator matn talab qiladi: bosh harf uch qatorni egallashi, uchinchi qatorning asosiy chizig'ida turishi va abzatsning qolgan qismi uning atrofida sokin o'ralishi kerak. Mana [ichki havola](/uz/blog/) va [tashqi havola](https://docs.astro.build): ikkala havola uslubi ham sahifada bo'lsin.
+
+## Sarlavhalar va abzatslar
+
+Ikkinchi darajali sarlavhalar avtomatik raqamlanadi: matn tepasida mono raqam va qisqa chiziq turadi. Bu abzatsda **qalin matn**, *qiya matn*, `qator ichidagi kod`, <kbd>Cmd</kbd> + <kbd>K</kbd> kabi tugmalar va izoh havolasi bor.[^1] Quyida bo'linmaydigan uzun so'z keltirilgan, u sahifa hech qachon yon tomonga cho'zilib ketmasligini tekshiradi: o'zbekchalashtirilmaganlardanmisizlar-va-yana-biroz-harflar-qo'shilgan-juda-uzun-sinov-so'zi.
+
+### Uchinchi darajali sarlavha
+
+Uchinchi darajali sarlavhalar asosiy matn o'lchamida, 600 vaznda beriladi. Ular bo'limni tartibga soladi, ammo yuqoridagi raqamlangan sarlavhalar bilan raqobatlashmaydi.
+
+#### To'rtinchi darajali sarlavha
+
+To'rtinchi darajali sarlavha tinch mono yorliq bo'lib, bo'limga yana bir qadam kerak bo'ladigan kamdan-kam holat uchun mo'ljallangan.
+
+## Ro'yxatlar
+
+Ichki darajali tartibsiz ro'yxat:
+
+- Birinchi band qisqa.
+- Ikkinchi band uzunroq, shuning uchun ikkinchi qatorga o'tadi va osilgan belgi matnni atrofdagi abzatslar bilan bir tekis ushlab turishini ko'rsatadi.
+- Uchinchi bandda ichki ro'yxat bor:
+  - ichki band
+  - yana bir ichki band
+
+Tartibli ro'yxat:
+
+1. Yozuvni MDX fayl sifatida yozing.
+2. Tayyor bo'lmaguncha `draft: true` qoldiring.
+3. Tayyor bo'lganda birlashtiring.
+
+## Iqtiboslar
+
+Oddiy Markdown iqtibosi ajratilgan iqtibos sifatida beriladi. Keng ekranda u ustun tashqarisiga, o'ng tomonga chiqib turadi.
+
+> Chegaradan tashqarida o'ylang.
+
+Komponent shakli manba qatorini qo'shadi:
+
+<PullQuote cite="Nomlangan manba">Manbasi ko'rsatilgan iqtibos ham xuddi shu joyda turadi va bir xil ko'rinadi.</PullQuote>
+
+## Rasmlar
+
+Ustun kengligidagi rasm, mono izoh bilan:
+
+<Figure src={shot} alt="Sayt muallifining portreti, bu yerda faqat sinov uchun ishlatilgan" caption="Ustun kengligidagi rasm. Izoh mono shriftda berilgan." />
+
+Keng rasm kompyuterda 920 pikselgacha kengayadi:
+
+<Figure wide src={shot} alt="Xuddi shu sinov rasmi, keng ko'rinishda" caption="Keng rasm. 960 pikseldan kichik ekranda ustun kengligiga qaytadi." />
+
+## Kod
+
+Til yorlig'i bilan TypeScript bloki:
+
+```ts
+interface Post {
+  title: string;
+  draft: boolean;
+}
+
+export function isPublished(post: Post): boolean {
+  return !post.draft;
+}
+```
+
+Juda uzun qatorli shell bloki. U sahifani kengaytirmaydi, blok ichida yon tomonga aylanadi:
+
+```bash
+pnpm --filter @abduroziq/web exec astro build --mode production --verbose --config ./astro.config.ts --outDir ./dist-preview-with-a-deliberately-long-directory-name
+```
+
+## Jadvallar
+
+Ustundan keng jadval o'z hududi ichida aylanadi:
+
+| Element | Qayerda turadi | Izoh |
+| --- | --- | --- |
+| Sarlavha | Markdown | Ikkinchi daraja raqamlanadi |
+| Rasm | `Figure` komponenti | Ixtiyoriy `wide` xususiyati |
+| Eslatma | `Note` komponenti | Chiziq va mono yorliq |
+| Jadval | Markdown | Faqat ingichka chiziqlar, mono ma'lumot |
+
+Telefonda yon tomonga aylanishni tekshirish uchun oltita ustunli kengroq jadval:
+
+| Yil | Element | Turi | Holati | Kengligi | Izoh |
+| --- | --- | --- | --- | --- | --- |
+| 2026 | Sarlavha | Markdown | Tayyor | Ustun | Ikkinchi daraja raqamlanadi |
+| 2026 | Rasm | Komponent | Tayyor | Ustun yoki 920 piksel | Izoh mono shriftda |
+| 2026 | Kod bloki | Markdown | Tayyor | Ustun | Yon tomonga aylanadi |
+
+<Note>
+Eslatma tinch qo'shimcha: chiziq, mono yorliq va bir necha qator matn. U karta emas.
+</Note>
+
+---
+
+Sinov shu bilan tugaydi. Haqiqiy yozuvlar keyinroq boshlanadi.
+
+[^1]: Izohlar maqola oxirida, chiziq ostida mono shriftda beriladi.

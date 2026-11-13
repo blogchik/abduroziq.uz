@@ -1,0 +1,48 @@
+{
+  "hero": {
+    "label": "Salom",
+    "meta": "Yangi loyihalar uchun ochiqman. Toshkent vaqti: UTC+5."
+  },
+  "desk": {
+    "cups": "Bugungi piyolalar",
+    "refill": "Quyish",
+    "notes": {
+      "ticket": "handoff shart emas",
+      "flag": "tunda ham ishlaydi"
+    }
+  },
+  "about": {
+    "title": "Men haqimda"
+  },
+  "tape": "Nimalar quryapman",
+  "building": {
+    "title": "Loyihalar",
+    "table": "Loyihalar ro'yxati",
+    "columns": {
+      "year": "Yil",
+      "project": "Loyiha",
+      "role": "Rol",
+      "status": "Holat"
+    },
+    "status": {
+      "live": "Ishlamoqda",
+      "design": "Dizayn bosqichida",
+      "planned": "Rejada"
+    }
+  },
+  "writing": {
+    "title": "Yozuvlar",
+    "all": "Barcha yozuvlar",
+    "empty": "Birinchi yozuv yozilmoqda.",
+    "emptyNote": "Mahsulot qurish, dizayn va kod haqida qaydlar. Birinchi bo'lib shu yerda chiqadi.",
+    "emptyKicker": "Yaqinda",
+    "emptyStatus": "Yozilmoqda",
+    "rss": "RSS orqali kuzatish"
+  },
+  "notFound": {
+    "line": "Bu sahifani boshqa joyga sudrab ketishgan.",
+    "home": "Bosh sahifaga qaytish",
+    "note": "biror narsani uloqtiring, yengil tortasiz",
+    "keycap": "esc"
+  }
+}

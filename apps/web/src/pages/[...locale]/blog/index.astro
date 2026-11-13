@@ -1,0 +1,41 @@
+---
+import type { GetStaticPaths } from 'astro';
+import BlogHeader from '@/components/blog/BlogHeader.astro';
+import PostList from '@/components/blog/PostList.astro';
+import TagNav from '@/components/blog/TagNav.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { localeParam, locales, resolveLocale, t } from '@/i18n';
+import { getAllTags, getPosts } from '@/lib/posts';
+import { blogSchema, breadcrumbSchema } from '@/lib/seo/schema';
+
+export const getStaticPaths = (() =>
+  locales.map((locale) => ({ params: { locale: localeParam(locale) } }))) satisfies GetStaticPaths;
+
+const locale = resolveLocale(Astro.params.locale);
+// This language's posts, plus posts that exist only in the other language (badge, own URL).
+const posts = await getPosts(locale, { includeOtherLocale: true });
+const tags = await getAllTags(locale);
+const ownPosts = posts.filter((post) => post.locale === locale);
+---
+
+<BaseLayout
+  locale={locale}
+  path="/blog/"
+  title={t(locale, 'seo.blog.title')}
+  description={t(locale, 'seo.blog.description')}
+  seo={{
+    // An index with nothing on it is a thin page: keep it out of search until the first post.
+    noindex: posts.length === 0,
+    jsonLd: [
+      blogSchema(locale, ownPosts),
+      breadcrumbSchema(locale, [
+        { name: t(locale, 'common.nav.home'), path: '/' },
+        { name: t(locale, 'blog.title'), path: '/blog/' },
+      ]),
+    ],
+  }}
+>
+  <BlogHeader title={t(locale, 'blog.title')} subtitle={t(locale, 'blog.intro')} />
+  <TagNav locale={locale} tags={tags} />
+  <PostList posts={posts} locale={locale} />
+</BaseLayout>

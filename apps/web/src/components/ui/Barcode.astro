@@ -1,0 +1,95 @@
+---
+/**
+ * A run of barcode ticks, deterministic from `seed` (same seed, same bars, on every build).
+ * Drawn as one SVG with a single path in currentColor (one subpath per bar, so the page
+ * carries one element per barcode, not one per bar). Decorative: hidden from assistive tech.
+ *
+ * `fill` stretches the run to the width of its box (meta-bar flanks); otherwise each module
+ * is `module` px wide and the run has its natural width.
+ */
+interface Props {
+  seed: string | number;
+  /** Number of bars. */
+  bars?: number;
+  /** Any CSS length. */
+  height?: string;
+  /** Width of one module (the thinnest bar) in px when not filling. */
+  module?: number;
+  fill?: boolean;
+  class?: string;
+}
+
+const {
+  seed,
+  bars = 40,
+  height = '1em',
+  module = 1.5,
+  fill = false,
+  class: className,
+} = Astro.props;
+
+/** FNV-1a hash of the seed, then mulberry32: tiny, stable, good enough for ticks. */
+function rng(input: string): () => number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < input.length; i++) {
+    h ^= input.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  let a = h >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const random = rng(String(seed));
+const pick = (weights: number[]): number => {
+  const total = weights.reduce((sum, w) => sum + w, 0);
+  let roll = random() * total;
+  for (let i = 0; i < weights.length; i++) {
+    roll -= weights[i] ?? 0;
+    if (roll <= 0) return i + 1;
+  }
+  return weights.length;
+};
+
+// Bars are 1-4 modules wide (thin bars most common), gaps 1-3 modules.
+const rects: { x: number; w: number }[] = [];
+let x = 0;
+for (let i = 0; i < bars; i++) {
+  const w = pick([5, 3, 2, 1]);
+  rects.push({ x, w });
+  x += w + (i === bars - 1 ? 0 : pick([5, 3, 1]));
+}
+const total = x;
+// `M x 0 h w v 10 h -w z` per bar, absolute moves so bars never drift.
+const d = rects.map((rect) => `M${rect.x} 0h${rect.w}v10h-${rect.w}z`).join('');
+---
+
+<svg
+  class:list={['barcode', { 'barcode--fill': fill }, className]}
+  viewBox={`0 0 ${total} 10`}
+  preserveAspectRatio="none"
+  aria-hidden="true"
+  focusable="false"
+  style={{ height, width: fill ? '100%' : `${total * module}px` }}
+>
+  <path d={d} />
+</svg>
+
+<style>
+  .barcode {
+    display: block;
+    flex: none;
+    fill: currentColor;
+    shape-rendering: crispEdges;
+  }
+
+  .barcode--fill {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+</style>

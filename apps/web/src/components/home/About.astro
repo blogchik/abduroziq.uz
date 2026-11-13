@@ -1,0 +1,130 @@
+---
+import { profile } from '@abduroziq/content';
+import Container from '@/components/ui/Container.astro';
+import SectionLabel from '@/components/ui/SectionLabel.astro';
+import { t, type Locale } from '@/i18n';
+
+/**
+ * `01 — About` (DESIGN 4.3): the label in the left columns, one paragraph in `lead` (key
+ * phrases in ink, connecting words in ink-soft) and the facts as a hairline list of mono
+ * labels and body values.
+ */
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+---
+
+<Container as="section" grid class="about" id="about" aria-labelledby="about-title">
+  <SectionLabel
+    as="h2"
+    number={1}
+    name={t(locale, 'home.about.title')}
+    id="about-title"
+    class="about__label"
+    data-reveal="fade"
+  />
+
+  <div class="about__body">
+    {profile.about[locale].map((paragraph) => (
+      <p class="about__text type-lead" data-reveal="lines">
+        {paragraph.map((span) => (span.strong ? <strong>{span.text}</strong> : span.text))}
+      </p>
+    ))}
+
+    <dl class="about__facts" data-reveal-group>
+      {profile.facts.map((fact) => (
+        <div class="about__fact" data-reveal-item>
+          <dt class="type-label">{fact.label[locale]}</dt>
+          <dd class="type-body">{fact.value[locale]}</dd>
+        </div>
+      ))}
+    </dl>
+  </div>
+</Container>
+
+<style>
+  .about {
+    padding-block-start: var(--section);
+    row-gap: clamp(1.5rem, 1.2rem + 1.4vw, 2.5rem);
+  }
+
+  .about :global(.about__label) {
+    grid-column: 1 / -1;
+    align-self: start;
+  }
+
+  .about__body {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .about__text {
+    margin: 0;
+    color: var(--ink-soft);
+  }
+
+  .about__text + .about__text {
+    margin-block-start: 1em;
+  }
+
+  .about__text strong {
+    color: var(--ink);
+    font-weight: inherit;
+  }
+
+  .about__facts {
+    margin: clamp(2.5rem, 1.9rem + 2.6vw, 4.25rem) 0 0;
+  }
+
+  .about__fact {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.3rem;
+    padding-block: 0.9rem;
+    border-block-start: var(--hairline) solid var(--rule);
+  }
+
+  .about__fact:last-child {
+    border-block-end: var(--hairline) solid var(--rule);
+  }
+
+  .about__fact dt {
+    color: var(--ink-soft);
+  }
+
+  .about__fact dd {
+    margin: 0;
+  }
+
+  @media (width >= 40rem) {
+    /* Label and value on one line; the label is centred on the value's first line. */
+    .about__fact {
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      column-gap: var(--col-gap);
+      align-items: baseline;
+      padding-block: 1.05rem;
+    }
+
+    .about__fact dt {
+      grid-column: span 2;
+    }
+
+    .about__fact dd {
+      grid-column: span 6;
+    }
+  }
+
+  @media (width >= 64rem) {
+    /* The label stands on the baseline of the paragraph's first line. */
+    .about :global(.about__label) {
+      grid-column: 1 / span 3;
+      padding-block-start: calc(var(--fs-lead) * 0.941 - var(--fs-label) * 0.917);
+    }
+
+    .about__body {
+      grid-column: 4 / span 8;
+    }
+  }
+</style>

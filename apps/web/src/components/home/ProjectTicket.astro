@@ -1,0 +1,123 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import type { Project } from '@abduroziq/content';
+import Barcode from '@/components/ui/Barcode.astro';
+import QrBlock from './desk/QrBlock.astro';
+import { ticketColors } from './lib';
+
+/**
+ * The ticket preview of a project (DESIGN 4.5): a 240x300 card in the project's two colours
+ * with its glyph, name, year and a QR-like block. The same construction as the desk ticket:
+ * a body and a tear-off stub whose rounded corners meet in the notches of the perforation.
+ *
+ * Colours come from the project data. Small print uses a tone of the foreground that
+ * reaches AA contrast on the background. Decorative: the panel that shows it is hidden
+ * from assistive technology.
+ */
+interface Props extends HTMLAttributes<'div'> {
+  project: Project;
+  /** Position in the list, printed as the ticket number. */
+  index: number;
+  status: string;
+}
+
+const { project, index, status, class: className, ...rest } = Astro.props;
+const colors = ticketColors(project.colors);
+const number = String(index + 1).padStart(2, '0');
+---
+
+<div
+  class:list={['pticket', className]}
+  style={{ '--t-bg': colors.bg, '--t-fg': colors.fg, '--t-text': colors.text }}
+  {...rest}
+>
+  <div class="pticket__body">
+    <p class="pticket__row type-micro">
+      <span>No. {number}</span>
+      <span>{status}</span>
+    </p>
+    <p class="pticket__glyph type-display">{project.glyph}</p>
+    <p class="pticket__name type-label">{project.name}</p>
+  </div>
+  <div class="pticket__stub">
+    <div class="pticket__meta">
+      <p class="type-micro">Admit one</p>
+      <p class="pticket__year type-label">{project.year}</p>
+      <div class="pticket__bars">
+        <Barcode seed={project.id} bars={22} height="12px" fill />
+      </div>
+    </div>
+    <QrBlock seed={project.id} class="pticket__qr" />
+  </div>
+</div>
+
+<style>
+  .pticket {
+    display: flex;
+    flex-direction: column;
+    width: 240px;
+    height: 300px;
+    color: var(--t-text);
+  }
+
+  .pticket p {
+    margin: 0;
+  }
+
+  .pticket__body,
+  .pticket__stub {
+    border: var(--hairline) solid var(--ink);
+    border-radius: var(--radius-card);
+    background-color: var(--t-bg);
+  }
+
+  .pticket__body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 0;
+    padding: 14px 16px 14px;
+    border-block-end: 0;
+  }
+
+  .pticket__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  /* The glyph is the picture on the ticket: large type, the project's own colour. */
+  .pticket__glyph {
+    color: var(--t-fg);
+    text-transform: none;
+  }
+
+  /* The perforation: a dashed line where the stub tears off. */
+  .pticket__stub {
+    display: flex;
+    flex: none;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 14px 16px;
+    border-block-start: var(--hairline) dashed color-mix(in srgb, var(--t-text) 60%, var(--t-bg));
+  }
+
+  .pticket__meta {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  .pticket__bars {
+    display: flex;
+    margin-block-start: 3px;
+  }
+
+  .pticket__stub :global(.pticket__qr) {
+    width: 62px;
+  }
+</style>

@@ -1,0 +1,197 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+import { profile } from '@abduroziq/content';
+
+/**
+ * A word set in `type-name`, exactly as wide as its container at every width (DESIGN 4.1).
+ *
+ * How the fit works without JavaScript:
+ *  - The root is a size container; the word's font size is `100cqi / --fit`, where `--fit`
+ *    is the word's ink width in em. It is computed here from a table of Bricolage Grotesque
+ *    advance widths measured at the exact instance used (wght 500, wdth 100, opsz 96;
+ *    optical size is pinned so widths do not change with the rendered size).
+ *  - Every letter is its own block (a mask with the letter inside, so the motion kit can
+ *    raise letters from the baseline), so there is no kerning between letters and the sum of
+ *    advances is exact. Tracking is applied as a negative margin, and the first and last
+ *    letters are pulled out by their side bearings so the ink touches both edges.
+ *  - The line box is `0.8em` of a size derived only from the container width, so the height
+ *    never changes when fonts load; the fallback is clipped horizontally until the swap.
+ * A tiny script re-measures after fonts load and corrects `--fit` if the rendered width
+ * differs (unknown characters, a different font build).
+ */
+interface Props extends HTMLAttributes<'div'> {
+  /** Defaults to the profile name. Rendered uppercase. */
+  text?: string;
+  as?: 'h1' | 'h2' | 'p' | 'div';
+  /** Passed to `data-reveal` on the word (for the motion kit), e.g. "chars". */
+  reveal?: string;
+  revealDelay?: number;
+  /** Hide from assistive tech (a repeated name, as in the footer). */
+  decorative?: boolean;
+}
+
+const {
+  text = profile.name,
+  as: Element = 'p',
+  reveal,
+  revealDelay,
+  decorative = false,
+  class: className,
+  ...rest
+} = Astro.props;
+
+/** [advance, left side bearing, right side bearing] in em, measured in Chromium at 1000px. */
+const METRICS: Record<string, [number, number, number]> = {
+  A: [0.621, 0.008, 0.007],
+  B: [0.588, 0.048, 0.024],
+  C: [0.625, 0.034, 0.025],
+  D: [0.614, 0.048, 0.034],
+  E: [0.531, 0.048, 0.027],
+  F: [0.507, 0.048, 0.017],
+  G: [0.645, 0.034, 0.039],
+  H: [0.625, 0.048, 0.049],
+  I: [0.209, 0.048, 0.049],
+  J: [0.306, 0.008, 0.046],
+  K: [0.594, 0.048, 0.022],
+  L: [0.45, 0.048, 0.008],
+  M: [0.784, 0.048, 0.048],
+  N: [0.664, 0.048, 0.048],
+  O: [0.657, 0.034, 0.033],
+  P: [0.566, 0.048, 0.02],
+  Q: [0.656, 0.034, 0.034],
+  R: [0.591, 0.048, 0.021],
+  S: [0.573, 0.03, 0.023],
+  T: [0.504, 0.014, 0.014],
+  U: [0.62, 0.046, 0.046],
+  V: [0.606, 0.008, 0.008],
+  W: [0.897, 0.014, 0.013],
+  X: [0.579, 0.012, 0.011],
+  Y: [0.556, 0.006, 0.006],
+  Z: [0.534, 0.022, 0.022],
+  '0': [0.594, 0.036, 0.036],
+  '1': [0.264, 0.018, 0.048],
+  '2': [0.534, 0.034, 0.028],
+  '3': [0.556, 0.018, 0.02],
+  '4': [0.572, 0.016, 0.024],
+  '5': [0.551, 0.03, 0.033],
+  '6': [0.591, 0.034, 0.033],
+  '7': [0.471, 0.012, 0.017],
+  '8': [0.599, 0.03, 0.029],
+  '9': [0.592, 0.032, 0.034],
+  '.': [0.178, 0.016, 0.016],
+  '-': [0.3, 0.016, 0.016],
+  ' ': [0.22, 0, 0],
+};
+const UNKNOWN: [number, number, number] = [0.6, 0.03, 0.03];
+const TRACKING = -0.045;
+
+const letters = [...text.toLocaleUpperCase('en')];
+const metric = (ch: string) => METRICS[ch] ?? UNKNOWN;
+const first = metric(letters[0] ?? 'A');
+const last = metric(letters.at(-1) ?? 'A');
+const advance = letters.reduce((sum, ch) => sum + metric(ch)[0], 0);
+const fit = advance + TRACKING * (letters.length - 1) - first[1] - last[2];
+// Q's tail drops 0.15em below the baseline, 0.08em past the 0.8 line box.
+const tail = letters.includes('Q') ? 0.09 : 0;
+---
+
+<div
+  class:list={['giant', className]}
+  data-giant
+  style={{ '--fit': fit.toFixed(4), '--lead': `${first[1]}em`, '--trail': `${last[2]}em` }}
+  aria-hidden={decorative ? 'true' : undefined}
+  {...rest}
+>
+  <Element
+    class="giant__word type-name"
+    data-giant-word
+    data-reveal={reveal}
+    data-reveal-delay={revealDelay}
+    style={tail ? { '--tail': `${tail}em` } : undefined}
+  >
+    {!decorative && <span class="sr-only">{text}</span>}
+    <span class="giant__letters" aria-hidden="true">
+      {letters.map((ch) => (
+        <span class="giant__mask" data-giant-mask>
+          <span class="giant__letter" data-giant-letter>
+            {ch === ' ' ? ' ' : ch}
+          </span>
+        </span>
+      ))}
+    </span>
+  </Element>
+</div>
+
+<script>
+  /**
+   * Fine-tune after fonts load: measure the rendered letters and correct --fit when the
+   * static table is off by more than 0.2% (only for characters missing from the table).
+   */
+  function tune(root: HTMLElement): void {
+    const word = root.querySelector<HTMLElement>('[data-giant-word]');
+    const masks = root.querySelectorAll<HTMLElement>('[data-giant-mask]');
+    const first = masks[0];
+    const last = masks[masks.length - 1];
+    if (!word || !first || !last) return;
+    const style = getComputedStyle(root);
+    const size = parseFloat(getComputedStyle(word).fontSize);
+    const fit = parseFloat(style.getPropertyValue('--fit'));
+    if (!size || !fit) return;
+    // Rendered ink width in em: the masks' span minus the side bearings pulled outside.
+    const span = (last.getBoundingClientRect().right - first.getBoundingClientRect().left) / size;
+    const bearings =
+      parseFloat(style.getPropertyValue('--lead')) + parseFloat(style.getPropertyValue('--trail'));
+    const actual = span - bearings;
+    if (Math.abs(actual / fit - 1) < 0.002) return;
+    root.style.setProperty('--fit', actual.toFixed(4));
+  }
+
+  function tuneAll(): void {
+    document.querySelectorAll<HTMLElement>('[data-giant]').forEach(tune);
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    if (document.fonts.status === 'loaded') tuneAll();
+    else void document.fonts.ready.then(tuneAll);
+  });
+</script>
+
+<style>
+  .giant {
+    container-type: inline-size;
+    overflow-x: clip;
+    overflow-y: visible;
+  }
+
+  .giant__word {
+    --name-size: calc(100cqi / var(--fit));
+    margin: 0;
+    padding-block-end: var(--tail, 0);
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+
+  .giant__letters {
+    display: flex;
+    margin-inline: calc(-1 * var(--lead)) calc(-1 * var(--trail));
+  }
+
+  /* Each letter's mask: as tall as the line, plus room for descenders (Q), which the
+     negative margin gives back so the line box stays 0.8em. */
+  .giant__mask {
+    display: block;
+    flex: none;
+    overflow: hidden;
+    padding-block-end: 0.2em;
+    margin-block-end: -0.2em;
+    margin-inline-end: -0.045em;
+  }
+
+  .giant__mask:last-child {
+    margin-inline-end: 0;
+  }
+
+  .giant__letter {
+    display: block;
+  }
+</style>

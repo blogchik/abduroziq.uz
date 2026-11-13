@@ -1,0 +1,25 @@
+/*
+ * Global stylesheet, imported once by BaseLayout. Order: Tailwind, fonts, tokens, base
+ * elements, then the design-system utilities. See /styleguide/ in dev for every token.
+ */
+@import 'tailwindcss';
+@import './fonts.css';
+@import './tokens.css';
+@import './base.css';
+@import './type.css';
+@import './layout.css';
+
+/* Class names used in the content package (posts, data) must be scanned too. */
+@source '../../../../packages/content';
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+/* Shiki dual themes: light colours are inline, dark ones come from --shiki-dark* variables. */
+[data-theme='dark'] .astro-code,
+[data-theme='dark'] .astro-code span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+  font-style: var(--shiki-dark-font-style) !important;
+  font-weight: var(--shiki-dark-font-weight) !important;
+  text-decoration: var(--shiki-dark-text-decoration) !important;
+}

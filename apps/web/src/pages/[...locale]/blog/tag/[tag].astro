@@ -1,0 +1,72 @@
+---
+import type { GetStaticPaths } from 'astro';
+import BlogHeader from '@/components/blog/BlogHeader.astro';
+import PostList from '@/components/blog/PostList.astro';
+import TagNav from '@/components/blog/TagNav.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { localeParam, locales, localePath, resolveLocale, t } from '@/i18n';
+import { getAllTags, getPosts } from '@/lib/posts';
+import { MIN_POSTS_PER_TAG } from '@/lib/seo/thresholds';
+import { breadcrumbSchema, collectionPageSchema } from '@/lib/seo/schema';
+
+export const getStaticPaths = (async () => {
+  const paths = [];
+  for (const locale of locales) {
+    for (const { tag } of await getAllTags(locale)) {
+      paths.push({ params: { locale: localeParam(locale), tag } });
+    }
+  }
+  return paths;
+}) satisfies GetStaticPaths;
+
+const locale = resolveLocale(Astro.params.locale);
+const { tag } = Astro.params;
+const path = `/blog/tag/${tag}/`;
+
+const posts = (await getPosts(locale)).filter((post) => post.tags.includes(tag));
+const tags = await getAllTags(locale);
+const count = t(locale, posts.length === 1 ? 'blog.tag.count.one' : 'blog.tag.count.other', {
+  count: posts.length,
+});
+
+// The tag page of the other locale exists only if that locale uses the tag.
+const otherLocales = locales.filter((l) => l !== locale);
+const alternates = [{ locale, href: localePath(locale, path) }];
+for (const other of otherLocales) {
+  if ((await getAllTags(other)).some((entry) => entry.tag === tag)) {
+    alternates.push({ locale: other, href: localePath(other, path) });
+  }
+}
+---
+
+<BaseLayout
+  locale={locale}
+  path={path}
+  title={t(locale, 'seo.tag.title', { tag })}
+  description={t(locale, 'seo.tag.description', { tag })}
+  seo={{
+    // A tag with only a post or two is a thin page: followed, but not indexed.
+    noindex: posts.length < MIN_POSTS_PER_TAG,
+    alternates,
+    jsonLd: [
+      collectionPageSchema(locale, {
+        path,
+        name: t(locale, 'seo.tag.title', { tag }),
+        description: t(locale, 'seo.tag.description', { tag }),
+      }),
+      breadcrumbSchema(locale, [
+        { name: t(locale, 'common.nav.home'), path: '/' },
+        { name: t(locale, 'blog.title'), path: '/blog/' },
+        { name: tag, path },
+      ]),
+    ],
+  }}
+>
+  <BlogHeader
+    title={t(locale, 'blog.tag.title', { tag })}
+    subtitle={count}
+    back={{ href: localePath(locale, '/blog/'), label: t(locale, 'blog.tag.all') }}
+  />
+  <TagNav locale={locale} tags={tags} active={tag} />
+  <PostList posts={posts} locale={locale} />
+</BaseLayout>
