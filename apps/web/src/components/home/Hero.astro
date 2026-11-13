@@ -11,8 +11,8 @@ import Statement from './Statement.astro';
 /**
  * `00 — Hello` (DESIGN 4.1 and 4.2): two things to look at, in this order.
  *
- *  1. The statement: one plain sentence (the page's `h1`) with the eyes after the name, and
- *     one quiet action under it.
+ *  1. The statement: one plain sentence in two tones (the page's `h1`) with the rolling
+ *     capsule after the name, and one quiet action under it, down to the work.
  *  2. The meeting: the thin name edge to edge, and in front of it the dotted graphic of two
  *     cursors about to touch. It is the visual centre of the first screen.
  *
@@ -21,7 +21,7 @@ import Statement from './Statement.astro';
  *
  * The statement and the action are painted with the first frame and never hidden or moved
  * (the sentence is the page's largest paint). Only decoration is held back by CSS, and only
- * while JavaScript and full motion are on, with a 2.5s failsafe: the eyes here (popped by
+ * while JavaScript and full motion are on, with a 2.5s failsafe: the capsule here (popped by
  * `hero.ts`), the picture and the tags of the meeting (`meeting.ts`), and the name, which
  * the motion kit reveals.
  *
@@ -47,7 +47,7 @@ const zone = `UTC${TASHKENT_UTC_OFFSET >= 0 ? '+' : ''}${TASHKENT_UTC_OFFSET}`;
 
     <Statement locale={locale} id="hero-title" />
     <p class="hero__action">
-      <ArrowLink href="#contact" label={t(locale, 'home.hero.action')} direction="down" />
+      <ArrowLink href="#building" label={t(locale, 'home.hero.action')} direction="down" />
     </p>
 
     <div class="hero__meeting">
@@ -76,7 +76,6 @@ const zone = `UTC${TASHKENT_UTC_OFFSET >= 0 ? '+' : ''}${TASHKENT_UTC_OFFSET}`;
 
 <script>
   import './hero';
-  import './eyes';
 </script>
 
 <style>
@@ -133,10 +132,10 @@ const zone = `UTC${TASHKENT_UTC_OFFSET >= 0 ? '+' : ''}${TASHKENT_UTC_OFFSET}`;
 
   /* --------------------------------------------------------------- entrance */
 
-  /* The eyes wait for hero.ts (it sets `data-hero-ready` in the same task in which it
-     applies their start pose); the words around them are painted at once. Never without
+  /* The capsule waits for hero.ts (it sets `data-hero-ready` in the same task in which it
+     applies its start pose); the words around it are painted at once. Never without
      JavaScript or under reduced motion. */
-  :global(html.js[data-motion='full']) .hero:not([data-hero-ready]) :global([data-hero-eyes]) {
+  :global(html.js[data-motion='full']) .hero:not([data-hero-ready]) :global([data-hero-capsule]) {
     opacity: 0;
     animation: m-failsafe 0.01s linear 2.5s forwards;
   }

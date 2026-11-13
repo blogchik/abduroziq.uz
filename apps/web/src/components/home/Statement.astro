@@ -5,17 +5,21 @@ import type { Locale } from '@/i18n';
 
 /**
  * The statement (DESIGN 4.1): the `h1` of the page, set in `type-statement`: one plain
- * sentence with a single living thing in it, the eyes after the name.
+ * sentence in two tones with a single living thing in it, the capsule after the name.
  *
- * The eyes are a drawn stand-in for the author: two eyes on an accent pill, as tall as a
- * capital letter and standing on the baseline, so they never change the height of a line.
- * They follow the pointer, look around on their own, blink and wink when clicked
- * (`eyes.ts`); without JavaScript they glance at the name beside them. They are decoration,
- * hidden from assistive technology, so the text of the heading is the plain sentence.
+ * The tones: who he is stays in the ink, what follows (`quiet` parts of the content) steps
+ * back into the soft ink, so the eye lands on the name and the role first.
+ *
+ * The capsule is an accent pill, as tall as a capital letter and standing on the baseline,
+ * so it never changes the height of a line. It rolls through four drawn glyphs: design (a
+ * selection frame), code (`</>`), production (a rocket) and a smile. The roll is one CSS
+ * loop that runs only with full motion and while the hero is on screen; otherwise the pill
+ * shows the first glyph. It is decoration, hidden from assistive technology, so the text of
+ * the heading is the plain sentence.
  *
  * Spaces come from the content strings only (`compressHTML` would remove whitespace written
- * between inline elements in the template). The eyes stay on one line with the name before
- * them and the comma after them.
+ * between inline elements in the template). The capsule stays on one line with the name
+ * before it and the comma after it.
  */
 interface Props {
   locale: Locale;
@@ -24,7 +28,7 @@ interface Props {
 
 const { locale, id } = Astro.props;
 
-// Words: the parts between two spaces. The eyes belong to the word they touch.
+// Words: the parts between two spaces. The capsule belongs to the word it touches.
 const words: SentencePart[][] = [[]];
 for (const part of profile.sentence[locale]) {
   if (part.kind !== 'text') {
@@ -33,39 +37,107 @@ for (const part of profile.sentence[locale]) {
   }
   part.value.split(' ').forEach((piece, index) => {
     if (index > 0) words.push([]);
-    if (piece) words.at(-1)?.push({ kind: 'text', value: piece });
+    if (piece) words.at(-1)?.push({ ...part, value: piece });
   });
 }
+
+// Runs: neighbouring words of one tone. A quiet run is a single element.
+const runs: { quiet: boolean; words: SentencePart[][] }[] = [];
+for (const word of words) {
+  if (word.length === 0) continue;
+  const quiet = word.every((part) => part.kind === 'text' && part.quiet === true);
+  const last = runs.at(-1);
+  if (last?.quiet === quiet) last.words.push(word);
+  else runs.push({ quiet, words: [word] });
+}
+
+const plainText = (word: SentencePart[]): string =>
+  word.map((part) => (part.kind === 'text' ? part.value : '')).join('');
+
+/**
+ * What the capsule rolls through, drawn like the site's arrow (square caps, mitred joins)
+ * on a 24 unit grid. The keyframes below count on four of them.
+ */
+const glyphs: { name: string; line: string; solid?: string; rotate?: number }[] = [
+  {
+    // Design: a selection frame and its four handles.
+    name: 'design',
+    line: 'M6 6h12v12H6z',
+    solid: 'M3.5 3.5h5v5h-5zM15.5 3.5h5v5h-5zM3.5 15.5h5v5h-5zM15.5 15.5h5v5h-5z',
+  },
+  {
+    // Code: </>
+    name: 'code',
+    line: 'M8.5 6.5 3 12l5.5 5.5M15.5 6.5 21 12l-5.5 5.5M13.75 4.5l-3.5 15',
+  },
+  {
+    // Production: a rocket on its way up.
+    name: 'ship',
+    line: 'M12 2.5c3 2.5 4 6 4 9.5v4H8v-4c0-3.5 1-7 4-9.5zM8 12l-3 3.5v3h3M16 12l3 3.5v3h-3M12 18.75v2.75M12 8a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z',
+    rotate: 45,
+  },
+  {
+    // And a smile.
+    name: 'smile',
+    line: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM9 9v2M15 9v2M7.9 14c1 1.6 2.4 2.5 4.1 2.5s3.1-.9 4.1-2.5',
+  },
+];
+// The first glyph again at the end: the loop restarts on the picture it ends with.
+const slides = [...glyphs, ...glyphs.slice(0, 1)];
 ---
 
 <h1 class="statement type-statement" id={id} data-hero-statement>
-  {words.map((word, index) => {
-    const nodes = word.map((part, i) => {
-      if (part.kind === 'text') return part.value;
-      // A word space towards the word before, none towards the punctuation after.
-      const prev = word[i - 1];
-      const spaced = prev?.kind === 'text' && /[\p{L}\p{N}]$/u.test(prev.value);
-      return (
-        <span
-          class:list={['statement__eyes', { 'statement__eyes--spaced': spaced }]}
-          data-hero-eyes
-        >
-          <Capsule tone="accent" class="capsule-eyes">
-            <span class="eyes" data-eyes data-cursor="link">
-              <span class="eye" data-eye>
-                <span class="eye__pupil" />
-              </span>
-              <span class="eye" data-eye>
-                <span class="eye__pupil" />
-              </span>
+  {runs.map((run, r) => [
+    r > 0 ? ' ' : '',
+    run.quiet ? (
+      <span class="statement__quiet">{run.words.map(plainText).join(' ')}</span>
+    ) : (
+      run.words.map((word, w) => {
+        const nodes = word.map((part, i) => {
+          if (part.kind === 'text') {
+            return part.quiet ? <span class="statement__quiet">{part.value}</span> : part.value;
+          }
+          // A word space towards the word before, none towards the punctuation after.
+          const prev = word[i - 1];
+          const spaced = prev?.kind === 'text' && /[\p{L}\p{N}]$/u.test(prev.value);
+          return (
+            <span
+              class:list={['statement__capsule', { 'statement__capsule--spaced': spaced }]}
+              data-hero-capsule
+            >
+              <Capsule tone="accent" class="capsule-roll">
+                <span class="roll">
+                  {slides.map((glyph) => (
+                    <span class="roll__slide" data-glyph={glyph.name}>
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="square"
+                        stroke-linejoin="miter"
+                        aria-hidden="true"
+                        focusable="false"
+                      >
+                        <g transform={glyph.rotate ? `rotate(${glyph.rotate} 12 12)` : undefined}>
+                          <path d={glyph.line} />
+                          {glyph.solid && (
+                            <path d={glyph.solid} fill="currentColor" stroke="none" />
+                          )}
+                        </g>
+                      </svg>
+                    </span>
+                  ))}
+                </span>
+              </Capsule>
             </span>
-          </Capsule>
-        </span>
-      );
-    });
-    const plain = word.length === 1 && word[0]?.kind === 'text';
-    return [index > 0 ? ' ' : '', plain ? nodes : <span class="statement__keep">{nodes}</span>];
-  })}
+          );
+        });
+        const plain = word.length === 1 && word[0]?.kind === 'text' && !word[0].quiet;
+        return [w > 0 ? ' ' : '', plain ? nodes : <span class="statement__keep">{nodes}</span>];
+      })
+    ),
+  ])}
 </h1>
 
 <style is:global>
@@ -88,110 +160,98 @@ for (const part of profile.sentence[locale]) {
     white-space: nowrap;
   }
 
-  /* -------------------------------------------------------------------- eyes */
+  /* The second tone: everything after the name and the role (AA on paper in both themes). */
+  .statement__quiet {
+    color: var(--ink-soft);
+  }
 
-  .statement__eyes {
+  /* ----------------------------------------------------------------- capsule */
+
+  .statement__capsule {
     position: relative;
     display: inline-block;
-    width: 1.42em;
+    width: 1.3em;
     /* From just under the baseline to just over the capitals (cap height 0.66em). */
     height: 0.74em;
     vertical-align: -0.04em;
-    /* The entrance (hero.ts) pops the eyes from their centre. */
+    /* The entrance (hero.ts) pops the capsule from its centre. */
     transform-origin: 50% 60%;
   }
 
   /* The word space to the name (a space is about 0.2em). */
-  .statement__eyes--spaced {
+  .statement__capsule--spaced {
     margin-inline-start: 0.2em;
   }
 
   /* The capsule primitive fills the chip instead of setting its own size on the line. */
-  .statement__eyes .capsule.capsule-eyes {
+  .statement__capsule .capsule.capsule-roll {
     display: block;
     width: 100%;
     height: 100%;
     margin: 0;
-    /* Physical tones: the whites stay light and the pupils dark in both themes. */
-    --eye-white: var(--paper-raised);
-    --eye-ink: var(--ink);
+    /* The accent is the same in both themes, and so is the ink drawn on it. */
+    color: var(--on-accent);
   }
 
-  @supports (color: light-dark(#000, #fff)) {
-    .statement__eyes .capsule.capsule-eyes {
-      --eye-white: light-dark(var(--paper-raised), var(--inv-paper-raised));
-      --eye-ink: light-dark(var(--ink), var(--inv-ink));
-    }
-  }
-
-  /* The capsule lays its child out as a block; the eyes need a centred row. */
-  .capsule.capsule-eyes > .eyes {
+  /* The track: one slide per glyph, each as tall as the pill, stacked. */
+  .capsule.capsule-roll > .roll {
     display: flex;
+    flex-direction: column;
+    height: 500%;
+  }
+
+  .roll__slide {
+    display: flex;
+    flex: 1 1 0;
     align-items: center;
     justify-content: center;
-    gap: 0.06em;
-    transition: scale var(--dur-2) var(--ease-out);
+    min-height: 0;
   }
 
-  .capsule-eyes:hover .eyes {
-    scale: 1.1;
-  }
-
-  .eye {
-    /* How far a pupil travels from the centre of its eye. */
-    --travel: 0.125em;
-    position: relative;
+  .roll__slide svg {
     display: block;
     flex: none;
-    width: 0.47em;
-    height: 0.47em;
-    border-radius: 50%;
-    background-color: var(--eye-white);
+    width: auto;
+    height: 70%;
+    aspect-ratio: 1;
+    overflow: visible;
   }
 
-  /* Without JavaScript (and under reduced motion) the eyes glance at the name beside them;
-     eyes.ts moves `--look-x` / `--look-y` between -1 and 1. */
-  .eye__pupil {
-    position: absolute;
-    inset: 0;
-    width: 0.21em;
-    height: 0.21em;
-    margin: auto;
-    border-radius: 50%;
-    background-color: var(--eye-ink);
-    translate: calc(var(--look-x, -0.6) * var(--travel)) calc(var(--look-y, 0.15) * var(--travel));
-    transition: translate var(--dur-1) var(--ease-out);
-  }
-
-  /* Wandering on their own, the eyes move slowly. */
-  .eyes[data-idle] .eye__pupil {
-    transition-duration: var(--dur-3);
-  }
-
-  @keyframes eye-blink {
+  /* Four glyphs, each held for about two seconds and rolled away in half a second. The
+     fifth slide repeats the first, so the loop restarts unseen. */
+  @keyframes capsule-roll {
     0%,
-    93%,
-    100% {
-      scale: 1 1;
+    19.8% {
+      translate: 0 0;
     }
 
-    96.5% {
-      scale: 1 0.06;
+    25%,
+    44.8% {
+      translate: 0 -20%;
+    }
+
+    50%,
+    69.8% {
+      translate: 0 -40%;
+    }
+
+    75%,
+    94.8% {
+      translate: 0 -60%;
+    }
+
+    100% {
+      translate: 0 -80%;
     }
   }
 
-  html[data-motion='full'] .eye {
-    animation: eye-blink 5.4s ease-in-out 1.6s infinite;
+  html[data-motion='full'] .capsule-roll > .roll {
+    /* A small overshoot: the glyph lands like a counter wheel. */
+    animation: capsule-roll 9.6s cubic-bezier(0.6, 0, 0.2, 1.25) 0.4s infinite;
   }
 
   /* Nothing in the hero animates while it is off screen (hero.ts sets the attribute). */
-  [data-hero][data-offscreen] .eye {
+  [data-hero][data-offscreen] .capsule-roll > .roll {
     animation-play-state: paused;
-  }
-
-  /* A click winks the right eye. */
-  html[data-motion='full'] .eyes[data-wink] .eye:last-child {
-    animation: none;
-    scale: 1 0.06;
   }
 </style>

@@ -195,9 +195,16 @@ attribute value), springing back on leave. Fine pointers, full motion.
   While the custom cursor is active the kit adds `data-cursor-active` (native cursor
   hidden) and `data-cursor-native` (native cursor shown again, for text and `hide`).
 - **Smooth scroll**: one Lenis instance (lerp 0.14, native wheel speed, native touch),
-  loaded only for fine pointers with full motion. Anchors work, back/forward keeps its
-  position, new pages start at the top. Use `data-lenis-prevent` on nested scrollers.
+  loaded only for fine pointers with full motion. Back/forward keeps its position, new
+  pages start at the top. Use `data-lenis-prevent` on nested scrollers.
   The `site:menu` event (`detail.open`) stops and restarts it.
+- **Same-page anchors** (`#building`, `#top`): the router owns the navigation (history
+  entry, address, the browser's own jump to the fragment, so `scroll-padding-top` and
+  `scroll-margin` decide where it lands). The kit only adds the glide, one second, with or
+  without Lenis: in the same click it puts the page back where the click happened and
+  scrolls it to where the browser had jumped. Lenis' own `anchors` option stays off: it
+  would measure the target after the jump and add its stale position to it. Under reduced
+  motion the jump stands.
 - **Page transition**: a paper panel with an accent hairline wipes up over the old page,
   the swap happens underneath, the panel leaves, then the new page's entrances run.
   No panel under reduced motion. Links to files (an extension other than `.html`, such as

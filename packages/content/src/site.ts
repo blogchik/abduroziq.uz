@@ -20,22 +20,24 @@ export const profile: Profile = {
   sentence: {
     en: [
       { kind: 'text', value: "I'm Abduroziq" },
-      { kind: 'eyes' },
+      { kind: 'capsule' },
+      { kind: 'text', value: ', a product engineer' },
       // The no-break spaces keep "from Figma to" together: too long to end the second line
       // on a desktop, so the last line starts with "from".
       {
         kind: 'text',
-        value:
-          ', a product engineer designing and building products, from\u00a0Figma\u00a0to production.',
+        value: ' designing and building products, from\u00a0Figma\u00a0to production.',
+        quiet: true,
       },
     ],
     uz: [
       { kind: 'text', value: 'Men Abduroziq' },
-      { kind: 'eyes' },
+      { kind: 'capsule' },
+      { kind: 'text', value: ', product engineerman:' },
       {
         kind: 'text',
-        value:
-          ", product engineerman: mahsulotni Figma'dan production'gacha loyihalayman va quraman.",
+        value: " mahsulotni Figma'dan production'gacha loyihalayman va quraman.",
+        quiet: true,
       },
     ],
   },

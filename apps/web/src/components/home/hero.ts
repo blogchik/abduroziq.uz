@@ -4,12 +4,12 @@
  *
  * The sentence (the page's `h1` and its largest paint) and the action are never hidden or
  * moved: they are painted with the first frame and stay as written. The only thing that
- * enters here is the eyes, which pop with the spring after 100ms; the name is revealed by
+ * enters here is the capsule, which pops with the spring after 100ms; the name is revealed by
  * the motion kit (`data-reveal`) and the dots of the meeting by `meeting.ts`.
  *
- * The eyes are held back by CSS (Hero.astro) until this module applies their start pose and
+ * The capsule is held back by CSS (Hero.astro) until this module applies its start pose and
  * marks the hero `data-hero-ready`. Without JavaScript, under reduced motion, or when the
- * CSS failsafe has already shown them, they stay as written.
+ * CSS failsafe has already shown it, it stays as written.
  */
 import { afterGate, dur, ease, gsap, onPageEnter } from '@/motion';
 
@@ -20,7 +20,7 @@ declare global {
   }
 }
 
-/** The CSS failsafe in Hero.astro shows the eyes after this long (keep in sync). */
+/** The CSS failsafe in Hero.astro shows the capsule after this long (keep in sync). */
 const FAILSAFE_MS = 2500;
 /** How long after its end an entrance without frames is completed by hand. */
 const WATCHDOG_MS = 600;
@@ -63,24 +63,24 @@ onPageEnter(({ reduced, first, late }) => {
   // Shown as written: reduced motion, a first load so slow that the CSS failsafe has
   // revealed the page (the kit's `late`, or the failsafe passing while the kit got ready),
   // or a hero already scrolled past (history restore).
-  const eyes = hero.querySelector<HTMLElement>('[data-hero-eyes]');
+  const capsule = hero.querySelector<HTMLElement>('[data-hero-capsule]');
   const failsafePassed = first && performance.now() > FAILSAFE_MS - 100;
-  if (!eyes || reduced || late || failsafePassed || hero.getBoundingClientRect().bottom < 0) {
+  if (!capsule || reduced || late || failsafePassed || hero.getBoundingClientRect().bottom < 0) {
     hero.setAttribute('data-hero-ready', '');
     return cleanup;
   }
 
   // The pose is applied now (after a client-side navigation the transition panel still
-  // covers the page); from here on the eyes are hidden by it, no longer by the CSS hold.
-  gsap.set(eyes, { scale: 0 });
+  // covers the page); from here on the capsule is hidden by it, no longer by the CSS hold.
+  gsap.set(capsule, { scale: 0 });
   hero.setAttribute('data-hero-ready', '');
-  const entrance = gsap.to(eyes, {
+  const entrance = gsap.to(capsule, {
     scale: 1,
     duration: dur[3],
     ease: ease.springSoft,
     delay: 0.1,
     paused: true,
-    onComplete: () => gsap.set(eyes, { clearProps: 'transform' }),
+    onComplete: () => gsap.set(capsule, { clearProps: 'transform' }),
   });
 
   // The pop plays once the panel has left. Where it cannot be seen (a hidden tab) it is

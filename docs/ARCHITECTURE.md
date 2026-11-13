@@ -188,9 +188,10 @@ translation in the requested locale.
 export type Locale = 'en' | 'uz';
 export type Localized<T = string> = Record<Locale, T>;
 
-// One piece of the hero statement: words, or the eyes after the name. Joined in order, the
-// `value`s read as the plain sentence.
-export type SentencePart = { kind: 'text'; value: string } | { kind: 'eyes' };
+// One piece of the hero statement: words, or the capsule after the name. Joined in order,
+// the `value`s read as the plain sentence. `quiet` words are set in the soft ink.
+export type SentencePart =
+  { kind: 'text'; value: string; quiet?: boolean } | { kind: 'capsule' };
 
 export interface Profile {
   name: string;                 // "Abduroziq"
@@ -221,9 +222,10 @@ export interface Project {
 `@abduroziq/content` exports `profile`, `projects` and the types. Only information that
 is already public may go in here.
 
-The statement is written as parts so that the page can set the eyes inside it and still
-output a plain sentence as the text of its `h1`. The eyes stay on one line with whatever
-touches them without a space (the name before, the comma after). No-break spaces in a text
+The statement is written as parts so that the page can set the capsule inside it, give the
+words after the name and the role their quieter tone, and still output a plain sentence as
+the text of its `h1`. The capsule stays on one line with whatever touches it without a space
+(the name before, the comma after). No-break spaces in a text
 part keep words on one line, which is how the English sentence starts its last line with
 "from". `apps/web/src/components/home/Statement.astro` renders the parts.
 
@@ -343,7 +345,7 @@ export { gsap, ScrollTrigger };
 Page code imports from `@/motion` only, never from the kit's internal modules.
 
 The home hero follows the same contract with two page scripts of its own:
-`components/home/hero.ts` (the time in Tashkent, the eyes' entrance) and
+`components/home/hero.ts` (the time in Tashkent, the capsule's entrance) and
 `components/home/meeting/meeting.ts` (the canvas of the meeting). Both register through
 `onPageEnter`, wait for the transition gate, clean up on leave, and read reduced motion from
 the page context. The dot field itself (`meeting/field.ts`) is pure geometry without DOM:

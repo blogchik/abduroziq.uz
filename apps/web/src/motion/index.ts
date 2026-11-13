@@ -39,6 +39,7 @@ import { applyScrollState } from './root-state';
 import {
   destroySmoothScroll,
   initSmoothScroll,
+  installAnchorGlide,
   pauseSmoothScroll,
   resumeSmoothScroll,
   syncSmoothScroll,
@@ -166,6 +167,7 @@ function onMenu(event: Event): void {
 }
 
 installTransitions();
+installAnchorGlide();
 watchCursorConditions();
 document.addEventListener('astro:page-load', () => enter());
 document.addEventListener('astro:before-swap', leave);

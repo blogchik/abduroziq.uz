@@ -4,11 +4,13 @@ export type { Locale };
 export type Localized<T = string> = Record<Locale, T>;
 
 /**
- * One piece of the hero statement: words, or the eyes (a drawn stand-in for the author, set
- * on the line after his name). Joined in order, the `value`s read as the plain sentence.
- * The eyes stay on one line with whatever touches them without a space.
+ * One piece of the hero statement: words, or the capsule (a small accent pill set on the line
+ * after his name; the page rolls drawn glyphs of his work through it). Joined in order, the
+ * `value`s read as the plain sentence. `quiet` words are set in the soft ink: the sentence
+ * leads with who he is and lets the rest step back. The capsule stays on one line with
+ * whatever touches it without a space.
  */
-export type SentencePart = { kind: 'text'; value: string } | { kind: 'eyes' };
+export type SentencePart = { kind: 'text'; value: string; quiet?: boolean } | { kind: 'capsule' };
 
 export interface Profile {
   name: string; // "Abduroziq"

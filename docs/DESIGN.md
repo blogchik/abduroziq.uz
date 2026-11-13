@@ -9,8 +9,9 @@ Abduroziq is a product engineer: he designs products and builds them, from Figma
 production, and he works with AI agents every day. The site is a quiet, type-first page (ink
 on paper, hairlines, one accent) with exactly three loud ideas:
 
-1. **The statement.** The introduction is one large, plain sentence in the brand sans. A
-   single living thing sits in it: a pair of eyes after his name.
+1. **The statement.** The introduction is one large, plain sentence in the brand sans, in
+   two tones. A single living thing sits in it: a small capsule after his name that rolls
+   through what he does.
 2. **The meeting.** Under it his name runs edge to edge, thin and calm, and in front of the
    name stands one large dotted object: a hand cursor and an arrow cursor about to touch.
    The person and the agent. It is the visual centre of the first screen.
@@ -28,7 +29,7 @@ Principles, in priority order:
 - **One accent.** Orange `#E28413` is the only colour. No second accent, no gradients, no
   glass, no glow, no drop shadows except the lifted desk objects.
 - **Motion has weight.** Things rise, settle, get thrown and land. Nothing floats
-  aimlessly. The few loops are small and slow (the blinking eyes, the breathing cursors and
+  aimlessly. The few loops are small and slow (the rolling capsule, the breathing cursors and
   their spark, the tape) and all of them stop with the motion switch.
 - **Content first.** Every word is in the HTML and readable with JavaScript off. Motion is
   an enhancement and never delays the first paint of text.
@@ -46,7 +47,7 @@ Principles, in priority order:
 | `ink` | `#141310` | `#EFECE6` | text, rules at full strength, inverted bands |
 | `ink-soft` | `#5C574E` | `#9C968A` | secondary text |
 | `rule` | `#D2CEC6` | `#2C2A26` | hairlines |
-| `accent` | `#E28413` | `#E28413` | fills: tape, footer, the eyes, the agent's name tag, the spark, cursor burst |
+| `accent` | `#E28413` | `#E28413` | fills: tape, footer, the capsule, the agent's name tag, the spark, cursor burst |
 | `accent-text` | `#9C5200` | `#E28413` | accent-coloured text and icons on `paper` |
 | `on-accent` | `#141310` | `#141310` | text on an accent fill (always dark ink) |
 
@@ -108,11 +109,11 @@ Scale (fluid with `clamp()`; values are min at 360px and max at 1440px):
 |---|---|---|
 | `dur-1` | 160ms | hover colour, cursor state |
 | `dur-2` | 320ms | row shifts, chips, toggles |
-| `dur-3` | 700ms | text reveals, the eyes' pop |
+| `dur-3` | 700ms | text reveals, the capsule's pop |
 | `dur-4` | 1100ms | giant name, page transition |
 | `ease-out` | `cubic-bezier(0.16, 1, 0.3, 1)` | default for entrances |
 | `ease-in-out` | `cubic-bezier(0.65, 0, 0.35, 1)` | wipes, page transition |
-| `spring` | GSAP `elastic.out(1, 0.6)` / `back.out(1.6)` | the eyes, object drop-in |
+| `spring` | GSAP `elastic.out(1, 0.6)` / `back.out(1.6)` | the capsule, object drop-in |
 
 ## 3. Global chrome
 
@@ -158,7 +159,7 @@ A full-bleed **accent** block, text in `on-accent`:
 - Tagline `Think beyond limits.` in `hand` style, slightly rotated.
 - Bottom: the giant **name** again, clipped by the bottom edge, letters rising on scroll.
 - A `BACK TO TOP ↑` label link, and next to it a `MOTION: ON / OFF` switch that stops every
-  looping or decorative motion on the site (the tape, the eyes, the dots of the meeting,
+  looping or decorative motion on the site (the tape, the capsule, the dots of the meeting,
   pulsing dots, cursor, smooth scrolling, reveals) and remembers the choice.
 
 ### 3.4 Page transition
@@ -184,7 +185,7 @@ Order, top to bottom:
 1. One quiet row: the section label `00 — HELLO` on the left and, opposite it, a single line
    of meta in `label` style and `ink-soft`: the city and its time now, `TASHKENT 16:39 UTC+5`.
    Minutes only, nothing ticks. Without JavaScript the line shows the city and the zone.
-2. **The statement**, the page's `h1`: style `statement`, left aligned, all ink.
+2. **The statement**, the page's `h1`: style `statement`, left aligned, in two tones.
 
    > I'm Abduroziq ◉, a product engineer
    > designing and building products,
@@ -201,14 +202,21 @@ Order, top to bottom:
    so the lines keep their width in em at every size. Phones set it at 38px on six or seven
    balanced lines.
 
-   `◉` is the only living thing in the sentence, **the eyes**: a drawn stand-in for him, two
-   eyes on an accent pill with a 1px ink border, as tall as a capital letter (0.74em,
-   standing just under the baseline), so it never changes the height of a line and never
-   parts from the name. They follow the pointer, look around on their own when it rests (and
-   on touch screens), blink, and wink when clicked. Without JavaScript they glance at the
-   name beside them. They are decoration: the text of the heading is the plain sentence.
-   (His photo appears once, on the polaroid in About.)
-3. One quiet action, a mono label with a down arrow: `SAY HELLO`, to the contact section.
+   Two tones: who he is, the name and the role, stays in `ink`; everything after it steps
+   back into `ink-soft` (AA on paper in both themes). From tablets up that is exactly the
+   first line against the other two, so the eye lands on the name first.
+
+   `◉` is the only living thing in the sentence, **the capsule**: an accent pill with a 1px
+   ink border, 1.3em wide and as tall as a capital letter (0.74em, standing just under the
+   baseline), so it never changes the height of a line and never parts from the name. It
+   rolls through four glyphs drawn like the site's arrow, in the dark ink that sits on the
+   accent: design (a selection frame with its handles), code (`</>`), production (a rocket)
+   and a smile. Each is held for about two seconds and rolled up and away in half a second
+   with a small overshoot, like a counter wheel. The roll is one CSS loop: it runs only with
+   full motion and while the hero is on screen; otherwise the pill shows the first glyph. It
+   is decoration: the text of the heading is the plain sentence. (His photo appears once, on
+   the polaroid in About.)
+3. One quiet action, a mono label with a down arrow: `WHAT I'M BUILDING`, to the projects.
 
 Then air (72px on a desktop), and the object.
 
@@ -381,7 +389,7 @@ Total about 1.5s, starting immediately. The statement is the page's largest pain
 the action are simply there from the first frame and are never hidden or moved. Nothing
 waits for fonts. Little enters, and it leads the eye from the sentence to the object:
 
-1. 100ms: the eyes pop into the sentence with the spring. The name's letters rise from the
+1. 100ms: the capsule pops into the sentence with the spring. The name's letters rise from the
    baseline (35ms stagger, `dur-4`). The dots of the meeting fly in from scattered places
    and assemble (about 1.2s).
 2. About 1.05s: the spark pops and flashes, and the two name tags appear.

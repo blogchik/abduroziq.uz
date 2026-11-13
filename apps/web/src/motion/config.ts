@@ -55,6 +55,9 @@ export const smooth = {
   /** Lenis lerp: higher is tighter. 0.1 is the Lenis default and feels floaty. */
   lerp: 0.14,
   wheelMultiplier: 1,
+  /** A click on a same-page anchor: one second whatever the distance, easing out (quart). */
+  anchorDuration: 1,
+  anchorEase: (t: number): number => 1 - (1 - t) ** 4,
 } as const;
 
 export const scroll = {
