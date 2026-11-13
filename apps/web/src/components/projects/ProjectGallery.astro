@@ -71,4 +71,14 @@ const posters = await Promise.all(
     display: grid;
     gap: clamp(2.5rem, 1.9rem + 2.8vw, 5rem);
   }
+
+  /* The gallery is always below the first screen. Until a figure comes near the viewport the
+     browser skips its rendering, and with it the download of its lazy image, which would
+     otherwise compete with the cover (the page's largest paint) on a slow connection. The
+     placeholder height is a 16:10 picture at the full width plus its caption; once shown, the
+     real height is remembered. */
+  .pgallery__item {
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto calc(62.5vw + 2.5rem);
+  }
 </style>

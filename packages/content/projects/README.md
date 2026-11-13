@@ -63,9 +63,11 @@ out and that language shows the facts, the stack and the media only.
 
 ## Media
 
-The repository is public. Images must carry no EXIF (which holds the GPS position), XMP or
-IPTC metadata: `pnpm check` runs `apps/web/scripts/check-media.mjs` and fails on any image
-under `packages/content` that has some. Export screenshots without metadata, or strip it
+The repository is public. Images must carry no metadata: `pnpm check` runs
+`apps/web/scripts/check-media.mjs` and fails on any raster image under `packages/content`
+with EXIF (which holds the GPS position), XMP, IPTC or text chunks (where some tools put
+EXIF in a PNG), and on any SVG with an editor `<metadata>` block, `sodipodi:` / `inkscape:`
+attributes or a path from your machine. Export screenshots without metadata, or strip it
 with `sharp(input).rotate().toFile(output)`.
 
 How a picture is shown is decided from the file, not by a field. A landscape screenshot
@@ -73,7 +75,9 @@ How a picture is shown is decided from the file, not by a field. A landscape scr
 width. A phone screenshot, a square picture and every SVG keep a size of their own on a matte
 in the project's background colour (`colors[0]`). A project without a `cover` gets a plate
 drawn from `colors` and `glyph` instead. SVGs are served as they are, so an animated one
-keeps playing: include a `prefers-reduced-motion` rule inside the file if it loops.
+keeps playing, and the site's motion switch cannot reach inside it: if it loops, include
+`<style>@media (prefers-reduced-motion: reduce){*{animation:none!important}}</style>` right
+after its opening `<svg>` tag (the two subagent-monitor pictures do).
 
 Keep videos short and small (they are committed and served as files): H.264 `.mp4`, no
 sound track unless it matters, and a poster. They are never played automatically.

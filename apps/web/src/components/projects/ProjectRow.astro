@@ -69,7 +69,7 @@ const more = project.stack.length - shown.length;
       <div class="prow__facts type-label" id={`${id}-facts`}>
         <p class="prow__role">{project.role}</p>
         {shown.length > 0 && (
-          <ul class="prow__stack" aria-label={t(locale, 'projects.stack')}>
+          <ul class="prow__stack">
             {shown.map((name) => (
               <li>{name}</li>
             ))}
@@ -108,6 +108,10 @@ const more = project.stack.length - shown.length;
     grid-template-columns: minmax(0, 1fr);
     row-gap: 1.25rem;
     padding-block: clamp(1.5rem, 1.2rem + 1.4vw, 2.5rem);
+    /* Room for the focus ring: the link reaches into the gutter by what it gives back as
+       padding, so the ring clears the text and the picture's frame. */
+    margin-inline: -0.75rem;
+    padding-inline: 0.75rem;
     color: var(--ink);
     text-decoration: none;
   }

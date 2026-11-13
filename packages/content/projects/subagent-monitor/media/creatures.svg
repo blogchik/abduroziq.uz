@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="640" height="228" viewBox="0 0 640 228"><svg x="54" y="18" xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 64 64"><style>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="228" viewBox="0 0 640 228"><style>@media (prefers-reduced-motion: reduce){*{animation:none!important}}</style><svg x="54" y="18" xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 64 64"><style>
 *{transform-box:fill-box;transform-origin:center}
 @keyframes pop{0%{transform:scale(.2);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
 @keyframes bob{0%,100%{transform:translateY(0) scale(1,1)}50%{transform:translateY(-3px) scale(1.03,.97)}}

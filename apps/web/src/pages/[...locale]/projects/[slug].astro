@@ -44,9 +44,13 @@ const Body = project.body ? (await render(project.body)).Content : undefined;
 // The position in the list is the number printed on a plate.
 const index = (await getProjects(locale)).findIndex((other) => other.slug === project.slug);
 
-// The cover joins the generated card in the structured data, as an absolute URL.
-const coverImage = project.cover
-  ? absoluteUrl((await getImage({ src: project.cover.src, width: 1200 })).src)
+// The cover joins the generated card in the structured data, as an absolute URL. An SVG
+// is used as it is (getImage would only emit another copy of the same file).
+const cover = project.cover?.src;
+const coverImage = cover
+  ? absoluteUrl(
+      cover.format === 'svg' ? cover.src : (await getImage({ src: cover, width: 1200 })).src,
+    )
   : undefined;
 ---
 
