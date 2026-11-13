@@ -64,6 +64,22 @@ Cloudflare zone"; a hostname with an existing CNAME cannot be used).
      preserve query string.
    Cloudflare's docs confirm the proxied dummy record plus redirect rule pattern. The exact
    dashboard labels may differ slightly.
+   Done on 2026-11-13: proxied `A www -> 192.0.2.1`, Single Redirect "www to abduroziq.uz"
+   (`https://www.abduroziq.uz/*` -> `https://abduroziq.uz/${1}`, 301, query string kept).
+4. HTTPS only. SSL/TLS -> Edge Certificates -> Always Use HTTPS: on (2026-11-13), so
+   `http://` answers with a 301 to `https://`.
+
+## E-mail: hello@abduroziq.uz
+
+Cloudflare Email Routing (free) forwards `hello@abduroziq.uz` to the owner's own inbox;
+nothing is stored on Cloudflare. Set up on 2026-11-13: Email -> Email Routing ->
+Destination addresses (verified), Routing rules (`hello@` -> that address; catch-all
+stays off), Settings -> DNS records (three `route*.mx.cloudflare.net` MX records, the
+`cf2024-1._domainkey` DKIM record, SPF `v=spf1 include:_spf.mx.cloudflare.net ~all`).
+The zone's earlier records were replaced then: `MX 0 abduroziq.uz` and
+`TXT "v=spf1 +a +mx +ip4:185.196.212.52 ~all"` (left over from the old hosting; the apex
+had no mail server any more). Email Routing only receives: sending as `hello@` needs a
+separate service.
 
 ### If the registrar does not allow Cloudflare nameservers
 
