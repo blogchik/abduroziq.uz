@@ -24,9 +24,13 @@
 
 /* The hero statement: the brand sans, medium, tight. Optical size is pinned (as for the
    name), so its lines are the same number of em wide at every size: that lets
-   `--fs-statement` be derived from the measure (see tokens.css and Statement.astro). */
+   `--fs-statement` be derived from the measure (see tokens.css and Statement.astro). The
+   family is `--font-display` with a fallback matched to this cut (fonts.css), so a late font
+   does not rewrap the sentence. */
 @utility type-statement {
-  font-family: var(--font-display);
+  font-family:
+    'Bricolage Grotesque Variable', 'Bricolage Statement Fallback', ui-sans-serif, system-ui,
+    sans-serif;
   font-size: var(--fs-statement);
   font-weight: 500;
   font-stretch: 100%;

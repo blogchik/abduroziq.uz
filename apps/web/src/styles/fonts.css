@@ -18,7 +18,9 @@
  * text fallbacks for body sizes.
  */
 /*
- * Only the latin subset is declared (it covers English and Uzbek, including U+02BB-02BC).
+ * Only the latin subset is declared: it covers English and Uzbek written with the plain
+ * apostrophe. Its unicode-range (Fontsource's) lists U+02BB-02BC, but Bricolage Grotesque
+ * has no glyph for them (see above), so a browser would draw those two from a fallback.
  * Bricolage Grotesque and Geist Mono come unmodified from their Fontsource packages;
  * Newsreader and Caveat are small static cuts built by scripts/build-fonts.py (see
  * src/assets/fonts/README.md).
@@ -134,6 +136,20 @@
   size-adjust: 105.16%;
   ascent-override: 88.44%;
   descent-override: 25.68%;
+  line-gap-override: 0%;
+}
+
+/* Bricolage as the hero statement sets it (weight 500, opsz 96: about 5% wider than the
+   average above). Matching that width keeps the statement on the same three lines across the
+   swap in both languages (the Uzbek first line fills 95% of the measure). Measured on the
+   statement text of both languages. */
+@font-face {
+  font-family: 'Bricolage Statement Fallback';
+  src:
+    local('Arial'), local('ArialMT'), local('Helvetica Neue'), local('Helvetica'), local('Roboto');
+  size-adjust: 95%;
+  ascent-override: 97.89%;
+  descent-override: 28.42%;
   line-gap-override: 0%;
 }
 

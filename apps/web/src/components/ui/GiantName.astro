@@ -18,9 +18,11 @@ import { profile } from '@abduroziq/content';
  *    advances is exact. Tracking is applied as a negative margin, and the first and last
  *    letters are pulled out by their side bearings so the ink touches both edges.
  *  - The line box is `0.8em` of a size derived only from the container width, so the height
- *    never changes when fonts load; the fallback is clipped horizontally until the swap.
+ *    never changes when fonts load. Each letter's mask is as wide as the letter's advance in
+ *    the table, so the fallback face (wider) does not move the letters either: it is clipped
+ *    until the swap.
  * A tiny script re-measures after fonts load and corrects `--fit` if the rendered width
- * differs (unknown characters, a different font build).
+ * differs (characters missing from the table).
  */
 interface Props extends HTMLAttributes<'div'> {
   /** Defaults to the profile name. Rendered uppercase. */
@@ -171,7 +173,11 @@ const tail = letters.includes('Q') ? 0.09 : 0;
     {!decorative && <span class="sr-only">{text}</span>}
     <span class="giant__letters" aria-hidden="true">
       {letters.map((ch) => (
-        <span class="giant__mask" data-giant-mask>
+        <span
+          class="giant__mask"
+          data-giant-mask
+          style={table[ch] ? { '--advance': `${table[ch][0]}em` } : undefined}
+        >
           <span class="giant__letter" data-giant-letter>
             {ch === ' ' ? ' ' : ch}
           </span>
@@ -240,6 +246,8 @@ const tail = letters.includes('Q') ? 0.09 : 0;
   .giant__mask {
     display: block;
     flex: none;
+    /* The advance from the table; letters missing from it keep their own (and `tune`). */
+    width: var(--advance, auto);
     overflow: hidden;
     padding-block-end: 0.2em;
     margin-block-end: -0.2em;
