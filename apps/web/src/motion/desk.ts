@@ -39,6 +39,8 @@ export interface DeskState {
   save(o: DeskObject, x: number, y: number): void;
   /** Called after every layout pass (the drag module refreshes its bounds). */
   onLayout?: () => void;
+  /** Lets go of every object that is not held, stopping throws (set by the drag module). */
+  halt?: () => void;
 }
 
 const INTERACTIVE = 'a, button, input, select, textarea, label, [role="button"]';
@@ -130,6 +132,8 @@ function setupDesk(desk: HTMLElement, reduced: boolean, late: boolean): void {
   listen(desk, 'dblclick', (event) => {
     if (event.target instanceof Element && event.target.closest(INTERACTIVE)) return;
     window.getSelection()?.removeAllRanges();
+    // A throw still running would land after the reset and undo it.
+    state.halt?.();
     objects.forEach((o, i) => {
       o.pos = { x: o.home.x, y: o.home.y };
       o.rest = o.home.r;
@@ -144,6 +148,8 @@ function setupDesk(desk: HTMLElement, reduced: boolean, late: boolean): void {
         delay: reduced ? 0 : i * cfg.resetStagger,
         ease: ease.springSoft,
         overwrite: 'auto',
+        // Back in the drag bounds, which count the rotated corners (as after placing).
+        onComplete: () => state.onLayout?.(),
       });
     });
   });

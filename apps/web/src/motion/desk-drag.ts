@@ -13,12 +13,33 @@ import type { DeskObject, DeskState } from './desk';
 
 gsap.registerPlugin(Draggable, InertiaPlugin);
 
+/**
+ * Every element whose velocity InertiaPlugin tracks for a Draggable, oldest first. GSAP
+ * 3.15.1 keeps its trackers in a list whose head it forgets to move when the newest tracker
+ * is removed while older ones remain (`VelocityTracker.remove`): the list then keeps every
+ * removed element, and the page around it, alive and ticking. Killing a Draggable also
+ * leaves its element in the tracker lookup. So on leave all of them are released together,
+ * oldest first, completely, before the Draggables are killed.
+ */
+const tracked: HTMLElement[] = [];
+
+function releaseTracking(): void {
+  for (const el of tracked) {
+    (InertiaPlugin.getByTarget(el) as gsap.VelocityTrackerInstance | undefined)?.kill();
+  }
+  tracked.length = 0;
+}
+
 export function enableDrag(state: DeskState): void {
   const { desk, objects, reduced, busy } = state;
   let justDragged = false;
   const draggables: Draggable[] = [];
+  /** Per object: lets go of it (a throw stops where it is), for the desk's reset. */
+  const halts: (() => void)[] = [];
 
   for (const o of objects) draggables.push(makeDraggable(o));
+  // Draggable tracks the velocity whenever InertiaPlugin is registered, reduced or not.
+  tracked.push(...objects.map((o) => o.el));
 
   function makeDraggable(o: DeskObject): Draggable {
     const el = o.el;
@@ -27,9 +48,8 @@ export function enableDrag(state: DeskState): void {
     let vx = 0;
     let tilt = 0;
     let landed = true;
-    const rotateTo = reduced
-      ? undefined
-      : gsap.quickTo(el, 'rotation', { duration: 0.35, ease: 'power3.out' });
+    /** Follows the velocity tilt; made anew on every press, as the press kills its tween. */
+    let rotateTo: ((value: number) => void) | undefined;
 
     function sample(x: number): void {
       const now = performance.now();
@@ -70,6 +90,8 @@ export function enableDrag(state: DeskState): void {
       allowContextMenu: true,
       onPress(this: Draggable) {
         gsap.killTweensOf(el);
+        if (!reduced)
+          rotateTo = gsap.quickTo(el, 'rotation', { duration: 0.35, ease: 'power3.out' });
         gsap.set(el, { opacity: 1 });
         landed = false;
         busy.add(el);
@@ -100,6 +122,14 @@ export function enableDrag(state: DeskState): void {
         });
       },
     });
+    halts.push(() => {
+      if (draggable?.isDragging) return;
+      draggable?.tween?.kill();
+      gsap.killTweensOf(el);
+      landed = true;
+      busy.delete(el);
+      el.removeAttribute('data-dragging');
+    });
     return draggable!;
   }
 
@@ -120,9 +150,14 @@ export function enableDrag(state: DeskState): void {
   state.onLayout = () => {
     for (const d of draggables) if (!d.isDragging && !d.isThrowing) d.applyBounds(desk);
   };
+  state.halt = () => halts.forEach((halt) => halt());
 
   track(() => {
     delete state.onLayout;
+    delete state.halt;
+    releaseTracking();
     for (const d of draggables) d.kill();
+    draggables.length = 0;
+    halts.length = 0;
   });
 }
