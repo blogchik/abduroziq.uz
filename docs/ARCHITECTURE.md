@@ -390,8 +390,12 @@ page load and after every client-side navigation, and cleans up before the next 
 
 Root state on `<html>`:
 
-- Set by the inline script in BaseLayout before first paint and after every swap:
-  `data-theme="light|dark"`, `data-motion="full|reduced"` and the class `js`.
+- Set by the inline script in BaseLayout before first paint and on every swap:
+  `data-theme="light|dark"`, `data-motion="full|reduced"` and the class `js`. On a swap it
+  is applied to the incoming document at `astro:before-swap` (and again at `astro:after-swap`):
+  Astro restores the scroll position between the swap and `astro:after-swap`, and without `js`
+  the page is laid out for no JavaScript (taller, non-sticky header), so the restored
+  position would end up short.
   `data-motion` is the single source of truth for reduced motion: it follows
   `prefers-reduced-motion`, and `localStorage.motion = 'reduced' | 'full'` overrides it
   (a testing aid). The kit's `prefersReducedMotion()` reads this attribute. Without a

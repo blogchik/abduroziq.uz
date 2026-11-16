@@ -72,7 +72,7 @@ const preloads = [bricolageUrl, geistMonoUrl, ...(isPost ? [serifDisplay400, ser
     ))}
     <Seo {...seo} locale={locale} path={path} title={title} description={description} />
     <script is:inline define:vars={{ themeColors }}>
-      // Root state, set before first paint and again after every client-side swap (Astro
+      // Root state, set before first paint and again on every client-side swap (Astro
       // replaces the <html> attributes on navigation):
       //   data-theme  = light | dark    (localStorage `theme`, else the system preference)
       //   data-motion = full | reduced  (localStorage `motion`: the footer's motion switch,
@@ -82,6 +82,11 @@ const preloads = [bricolageUrl, geistMonoUrl, ...(isPost ? [serifDisplay400, ser
       // (`__siteTheme`, `__siteMotion`), read here when storage is unavailable, so a choice
       // survives client-side navigation in private mode. `<meta name="theme-color">` follows
       // the active theme (the toggle calls `__siteThemeColor` too).
+      // The incoming document gets the state before the swap: Astro restores the scroll
+      // position right after it and before `astro:after-swap`, and without the `js` class the
+      // page is laid out for no JavaScript (a taller, non-sticky header) at that moment. The
+      // browser then keeps the content in place with scroll anchoring and the restored
+      // position ends up short.
       (() => {
         const read = (key, memory) => {
           try {
@@ -100,8 +105,7 @@ const preloads = [bricolageUrl, geistMonoUrl, ...(isPost ? [serifDisplay400, ser
             .forEach((meta) => meta.setAttribute('content', color));
         };
         window.__siteThemeColor = themeColor;
-        const applyRootState = () => {
-          const root = document.documentElement;
+        const applyRootState = (root = document.documentElement) => {
           let theme = read('theme', '__siteTheme');
           if (theme !== 'light' && theme !== 'dark') {
             theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -116,7 +120,10 @@ const preloads = [bricolageUrl, geistMonoUrl, ...(isPost ? [serifDisplay400, ser
           themeColor(theme);
         };
         applyRootState();
-        document.addEventListener('astro:after-swap', applyRootState);
+        document.addEventListener('astro:before-swap', (event) =>
+          applyRootState(event.newDocument.documentElement),
+        );
+        document.addEventListener('astro:after-swap', () => applyRootState());
         // A system change while the page is open is followed when no choice is stored: the
         // theme at once, reduced motion through the kit (`site:motion`). The theme toggle
         // and the motion switch show the new state.

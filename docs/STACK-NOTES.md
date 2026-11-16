@@ -270,7 +270,7 @@ document.addEventListener('astro:page-load', () => {
 });
 ```
 
-- Theme flash: set `data-theme` in an `is:inline` script run on first load AND on `astro:after-swap` (docs example). Astro copies `<html>` attributes from the new page on swap, so `data-theme` set only via JS would be lost -> re-apply in `astro:after-swap`.
+- Theme flash: set `data-theme` in an `is:inline` script run on first load AND on `astro:after-swap` (docs example). Astro copies `<html>` attributes from the new page on swap, so `data-theme` set only via JS would be lost -> re-apply in `astro:after-swap`. The router restores scroll between the swap and `astro:after-swap`, so anything that changes layout (the `js` class) must be set on `event.newDocument.documentElement` in `astro:before-swap`, or the restored position is off once the layout changes (39px on a phone with Linux fonts).
 
 **Gotchas:** persisted elements keep their DOM so GSAP tweens on them must NOT be reverted in `before-swap`; Draggable instances are killed by `ctx.revert()` only if created inside `gsap.context`. `ScrollTrigger.refresh()` after fonts/images. **Unverified:** interplay of Lenis with the browser's native view-transition snapshot (test visually).
 **Source:** guides/view-transitions, reference/modules/astro-transitions (raw docs).

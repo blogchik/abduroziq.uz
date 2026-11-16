@@ -54,11 +54,32 @@ test('home, projects, a project, Back: panel away, scroll restored', async ({ pa
   await expect(page).toHaveURL(new RegExp(`${target}$`));
   await expect.poll(() => panelAway(page), { timeout: 3_000 }).toBe(true);
 
+  // Astro restores the scroll position right after the swap, before `astro:after-swap`: the root
+  // must already carry the `js` class then, or the page is laid out for no JavaScript (a taller,
+  // non-sticky header) and scroll anchoring moves the restored position (39px with Linux fonts).
+  await page.evaluate(() => {
+    const root = document.documentElement;
+    const seen: boolean[] = [];
+    const scrollTo = window.scrollTo.bind(window) as (...args: unknown[]) => void;
+    window.scrollTo = ((...args: unknown[]) => {
+      seen.push(root.classList.contains('js'));
+      scrollTo(...args);
+    }) as typeof window.scrollTo;
+    (window as unknown as { __jsAtScroll: boolean[] }).__jsAtScroll = seen;
+  });
   await page.goBack();
   await expect(page).toHaveURL(/\/projects\/$/);
   await expect
     .poll(() => panelAway(page), { message: 'panel after Back', timeout: 3_000 })
     .toBe(true);
+  const jsAtScroll = () =>
+    page.evaluate(() => (window as unknown as { __jsAtScroll: boolean[] }).__jsAtScroll);
+  await expect
+    .poll(async () => (await jsAtScroll()).length, { message: 'the router restored the scroll' })
+    .toBeGreaterThan(0);
+  expect(await jsAtScroll(), 'the js class when the router restores the scroll').not.toContain(
+    false,
+  );
   await expect
     .poll(() => page.evaluate(() => Math.round(window.scrollY)), {
       message: 'scroll position after Back',
