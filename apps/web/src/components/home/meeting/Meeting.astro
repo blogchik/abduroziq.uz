@@ -15,9 +15,9 @@ import { buildField, fieldToPaths, starPath } from './field';
  * stand-in is held back until the canvas has drawn its first frame, with the usual failsafe
  * if the script never arrives.
  *
- * The stage reserves its height in CSS (29% of its width, between 10rem and 46% of the
- * screen's height), so neither the canvas nor the name can move the page. To assistive technology the whole thing is one
- * image with a sentence for a name.
+ * The stage reserves its height in CSS (29% of its width, at least 10rem, at most 46% of the
+ * screen's height and never past the fold), so neither the canvas nor the name can move the
+ * page. To assistive technology the whole thing is one image with a sentence for a name.
  */
 interface Props {
   locale: Locale;
@@ -89,14 +89,30 @@ const tagStyle = (tag: { x: number; y: number }): string =>
     /* One unit of the stand-in (drawn 1200 x 348, filling the stage) in px. */
     --unit: max(100cqi / 1200, 10rem / 348);
     position: relative;
-    /* 29% of the width; never lower than 10rem, and never more than 46% of the screen's
-       height, so the whole picture shares the first screen with the statement. */
-    height: clamp(10rem, 29cqi, 46svh);
-    /* A finger may scroll the page over the stage; sideways it stirs the dots. */
-    touch-action: pan-y;
+    /* What lies above the stage on a desktop (the header, the hero's top row and margins and
+       the action) besides the statement's three lines (3 x 1.02em), plus a few px of air:
+       measured at 1440 x 900; less on short desktop screens (below). */
+    --above: 18.6rem;
+    /* 29% of the width; never lower than 10rem, never more than 46% of the screen's height,
+       and ending a few px above the fold where the statement has three lines, so the whole
+       picture shares the first screen with the statement. */
+    height: clamp(
+      10rem,
+      29cqi,
+      min(46svh, calc(100svh - var(--above) - 3.06 * var(--fs-statement)))
+    );
+    /* A finger may scroll the page over the stage, or pinch it; sideways it stirs the dots. */
+    touch-action: pan-y pinch-zoom;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
     -webkit-user-select: none;
+  }
+
+  /* Short desktop screens (Hero.astro): less air above the stage. */
+  @media (width >= 64rem) and (height <= 50rem) {
+    .meeting__stage {
+      --above: 12.35rem;
+    }
   }
 
   /* The name behind: ink at reduced strength (3.2:1 on paper in the light theme, 3.4:1 in the

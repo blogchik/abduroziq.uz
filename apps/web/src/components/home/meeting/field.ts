@@ -255,14 +255,26 @@ const BODY_RADIUS = 0.74;
 const SPAN = { width: 6.16, height: 2.86, meetX: 3.96, meetY: 1.35 };
 /** The part of the stage height the cursors may fill. */
 const FILL = 0.92;
+/** At most this many dots (DESIGN 4.2). */
+const MAX_DOTS = 1400;
 
 /**
  * Lays the two cursors out on a stage of `width` x `height` px, centred, and returns their
  * dots. The hand is 34% of the width (never smaller than 170px, never more than 52%), unless
- * the stage is too low for that.
+ * the stage is too low for that. Where the grid would carry more than 1,400 dots it is made
+ * a little coarser.
  */
 export function buildField(width: number, height: number, options: FieldOptions = {}): Field {
-  const pitch = options.pitch ?? clamp(width / 215, 3.4, 6.4);
+  let pitch = options.pitch ?? clamp(width / 215, 3.4, 6.4);
+  let field = layOut(width, height, pitch, options.dark ?? false);
+  for (let tries = 0; tries < 4 && field.dots > MAX_DOTS; tries++) {
+    pitch *= Math.sqrt(field.dots / MAX_DOTS) * 1.005;
+    field = layOut(width, height, pitch, options.dark ?? false);
+  }
+  return field;
+}
+
+function layOut(width: number, height: number, pitch: number, dark: boolean): Field {
   const handWidth = Math.min(width * 0.52, Math.max(width * 0.34, 170));
   const unit = Math.min(handWidth / HAND_SPAN, (height * FILL) / SPAN.height);
   const star = clamp(unit * 0.125, 6.5, 15);
@@ -291,7 +303,7 @@ export function buildField(width: number, height: number, options: FieldOptions 
     meet.y,
   );
 
-  const side = options.dark ? -1 : 1;
+  const side = dark ? -1 : 1;
   const lightLength = Math.hypot(LIGHT.x, LIGHT.y, LIGHT.z);
   const lx = (LIGHT.x * side) / lightLength;
   const ly = (LIGHT.y * side) / lightLength;

@@ -8,15 +8,19 @@ import { ARROW, buildField, fieldToPaths, HAND, starPath, STRIDE, type Field } f
 
 /**
  * Stage sizes the hero really produces: 29% of the width, never lower than 160px, and lower
- * than that where the screen is short (1185 x 331 is a 1280 x 720 window).
+ * than that where the screen is short (the stage ends above the fold: 1200 x 313 is a
+ * 1280 x 720 window, 1360 x 365 a 1440 x 900 one and 1360 x 265 a 1440 x 700 one).
  */
 const STAGES: [number, number][] = [
   [328, 160],
   [358, 160],
   [720, 209],
   [929, 269],
-  [1185, 331],
+  [1200, 313],
   [1200, 348],
+  [1286, 346],
+  [1360, 265],
+  [1360, 365],
   [1360, 394],
 ];
 
@@ -58,6 +62,20 @@ test('a few thousand dots at most, and both cursors are there', () => {
     }
     assert.ok(hand > 100 && arrow > 100 && hand + arrow === field.count);
   }
+});
+
+test('never more than 1,400 dots, in either theme (DESIGN 4.2)', () => {
+  // Every stage from a phone to a wide screen: 160px up to 29% of the width.
+  for (let width = 320; width <= 1400; width += 40) {
+    for (let height = 160; height <= Math.max(160, width * 0.29); height += 30) {
+      for (const dark of [false, true]) {
+        const { dots } = buildField(width, height, { dark });
+        assert.ok(dots <= 1400, `${dots} dots at ${width} x ${height}${dark ? ', dark' : ''}`);
+      }
+    }
+  }
+  // The stage that had 1,407.
+  assert.ok(buildField(1240, 360, { dark: true }).dots <= 1400);
 });
 
 test('the hand ends left of the meeting point, the arrow starts right of it', () => {

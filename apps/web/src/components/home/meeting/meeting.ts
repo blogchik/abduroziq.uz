@@ -4,14 +4,17 @@
  *  - Entrance: the dots fly in from scattered places and assemble, outer parts first, the
  *    two tips last; then the starburst pops and the name tags appear.
  *  - Idle: the two cursors breathe, and every few seconds they drift together until the
- *    tips touch and the starburst flashes.
+ *    tips touch and the starburst flashes. Breathing alone moves a fraction of a pixel per
+ *    frame, so it is drawn at about 30 frames a second; everything else at the display's
+ *    rate.
  *  - Pointer (mouse, pen or finger): dots near it are pushed away and spring back; a press
  *    sends a ripple through all of them.
  *
  * The first frame is drawn in the same task that sets the canvas up, never inside
  * `requestAnimationFrame`, so there is a picture under reduced motion, in a background tab
  * and wherever frames are throttled; if the entrance cannot get frames, the dots are simply
- * put in place. After a client-side navigation the entrance waits for the transition panel. Under reduced motion that still picture is all there is. The loop runs only
+ * put in place. After a client-side navigation the entrance waits for the transition panel.
+ * Under reduced motion that still picture is all there is. The loop runs only
  * while the stage is on screen and the tab is visible, and the canvas is rebuilt when the
  * stage is resized, the pixel density changes or the theme changes (ink and paper swap, and
  * so does the light).
@@ -50,6 +53,8 @@ const RIPPLE_LIFE = 1.5;
 
 /** Frames that do not come within this long (ms) mean a view that is not painting. */
 const WATCHDOG_MS = 450;
+/** While only breathing: at least this long (ms) between two drawn frames (about 30 fps). */
+const IDLE_FRAME_MS = 29;
 
 const easeOut = (t: number): number => 1 - (1 - t) ** 4;
 const easeInOut = (t: number): number => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
@@ -195,7 +200,9 @@ function setup(root: HTMLElement, reduced: boolean, entrance: boolean): (() => v
     if (entering > 0) {
       entering = Math.max(0, entering - dt);
       if (clock - enteredAt >= STAR_AT && flashAt === -Infinity) flashAt = clock;
-      if (clock - enteredAt >= TAGS_AT) root.setAttribute('data-meeting-tags', '');
+      if (clock - enteredAt >= TAGS_AT && !root.hasAttribute('data-meeting-tags')) {
+        root.setAttribute('data-meeting-tags', '');
+      }
       if (entering === 0) nextTouch = clock + TOUCH_EVERY * 0.5;
     } else if (!reduced && clock >= nextTouch) {
       touchAt = clock;
@@ -212,7 +219,8 @@ function setup(root: HTMLElement, reduced: boolean, entrance: boolean): (() => v
     shift[2] = -reach + Math.sin(clock * 0.6 + 2) * amp * 0.5;
     shift[3] = Math.sin(clock * 0.95 + 1.3) * amp;
 
-    ripples = ripples.filter((ripple) => clock - ripple.born < RIPPLE_LIFE);
+    // Ripples are born in order: the oldest go first.
+    while ((ripples[0]?.born ?? clock) <= clock - RIPPLE_LIFE) ripples.shift();
     if (!stirred && !pointer.on && ripples.length === 0) return;
 
     let energy = 0;
@@ -391,10 +399,26 @@ function setup(root: HTMLElement, reduced: boolean, entrance: boolean): (() => v
     draw();
   }
 
+  /** Only breathing: no entrance, nothing pushed or rippling, no pointer, no touch going on. */
+  function resting(): boolean {
+    return (
+      entering === 0 &&
+      !stirred &&
+      !pointer.on &&
+      ripples.length === 0 &&
+      clock - touchAt > APPROACH + HOLD + RETREAT &&
+      clock - flashAt > 0.7
+    );
+  }
+
   function frame(now: number): void {
     raf = 0;
     window.clearTimeout(watchdog);
     watchdog = 0;
+    if (last && now - last < IDLE_FRAME_MS && resting()) {
+      schedule();
+      return;
+    }
     const dt = Math.min(0.05, last ? (now - last) / 1000 : 1 / 60);
     last = now;
     // Two half steps keep the springs steady on slow frames.
