@@ -74,8 +74,12 @@ const { status, label, hideLabel = false, pulse = 'hover', class: className } = 
     pointer-events: none;
   }
 
+  /* The row belongs to another component, so its part of the selector is global; focus is
+     on a link inside the row (or on the row link itself), hence `:focus-within`. */
   [data-pulse='always'] .status__dot::after,
-  :is(a, [data-pulse-scope]):is(:hover, :focus-visible) [data-pulse='hover'] .status__dot::after {
+  :global(:is(a, [data-pulse-scope]):is(:hover, :focus-within))
+    [data-pulse='hover']
+    .status__dot::after {
     animation: status-pulse 2.4s var(--ease-out) infinite;
   }
 

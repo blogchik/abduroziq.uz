@@ -62,7 +62,12 @@ const projects = await getProjects(locale);
                 {project.year}
               </span>
               <div class="prow__project" role="rowheader">
-                <a class="prow__name type-title" href={project.href}>
+                <a
+                  class="prow__name type-title"
+                  href={project.href}
+                  data-cursor="read"
+                  data-cursor-label={t(locale, 'projects.view')}
+                >
                   <span class="prow__label">{project.name}</span>
                 </a>
                 <p class="prow__desc type-body">{project.summary}</p>

@@ -7,10 +7,12 @@
  * The panel sits 32px beside the pointer (further when the cursor shows a label), centred
  * on it vertically, and pivots on its near edge. It lags behind the pointer but never
  * slides under it: when a fast move would bring its near edge closer than the gap, the
- * edge is pushed along with the pointer.
+ * edge is pushed along with the pointer. The tilt eases back to level when the pointer
+ * stops. When the page scrolls under a still pointer the panel shows the row now under it
+ * (or hides); a panel shown for the focused row stays while focus is in the scope.
  */
 import { dur, ease, follower as cfg } from './config';
-import { clamp, finePointer, gsap, listen } from './core';
+import { clamp, finePointer, gsap, listen, track } from './core';
 import { cursorExtent } from './cursor';
 
 /** Space between the pointer and the near edge of the panel, in px. */
@@ -29,6 +31,10 @@ function setup(scope: HTMLElement): void {
   let shown = false;
   let lastX = 0;
   let lastT = 0;
+  /** The pointer while it is over the scope (client px), for re-reading it on scroll. */
+  const pointer = { x: 0, y: 0, over: false };
+  // The tilt follows the velocity of the last move: level it once the pointer rests.
+  const level = gsap.delayedCall(0.1, () => rTo(0)).pause();
 
   gsap.set(panel, { autoAlpha: 0, scale: 0.92 });
   panel.setAttribute('data-follower-ready', '');
@@ -107,11 +113,16 @@ function setup(scope: HTMLElement): void {
   }
 
   function itemOf(target: EventTarget | null): HTMLElement | null {
-    return target instanceof Element ? target.closest<HTMLElement>('[data-follower-item]') : null;
+    const item =
+      target instanceof Element ? target.closest<HTMLElement>('[data-follower-item]') : null;
+    return item && scope.contains(item) ? item : null;
   }
 
   listen(scope, 'pointermove', (event) => {
     if (event.pointerType === 'touch') return;
+    pointer.x = event.clientX;
+    pointer.y = event.clientY;
+    pointer.over = true;
     const item = itemOf(event.target);
     if (!item) return hide();
     const id = item.dataset['followerItem'] ?? '';
@@ -121,8 +132,12 @@ function setup(scope: HTMLElement): void {
     lastX = event.clientX;
     lastT = now;
     rTo(clamp(vx * cfg.tiltPerVelocity, -cfg.maxTilt, cfg.maxTilt));
+    level.restart(true);
   });
-  listen(scope, 'pointerleave', hide);
+  listen(scope, 'pointerleave', () => {
+    pointer.over = false;
+    hide();
+  });
   listen(scope, 'focusin', (event) => {
     const item = itemOf(event.target);
     if (!item) return;
@@ -137,15 +152,26 @@ function setup(scope: HTMLElement): void {
   listen(scope, 'focusout', (event) => {
     if (!itemOf(event.relatedTarget)) hide();
   });
-  // The panel is fixed: it would drift away from its row while the page scrolls.
+  // The panel is fixed while the rows move: once per frame, show the row now under the
+  // pointer, or hide. A panel shown for the focused row stays (focus scrolls its row into
+  // view).
+  let frame = 0;
+  function onScroll(): void {
+    frame = 0;
+    if (!shown) return;
+    const item = pointer.over ? itemOf(document.elementFromPoint(pointer.x, pointer.y)) : null;
+    if (item) select(item.dataset['followerItem'] ?? '');
+    else if (!scope.contains(document.activeElement)) hide();
+  }
   listen(
     window,
     'scroll',
     () => {
-      if (shown && !scope.matches(':hover')) hide();
+      if (shown && !frame) frame = requestAnimationFrame(onScroll);
     },
     { passive: true },
   );
+  track(() => cancelAnimationFrame(frame));
 }
 
 export function initFollowers(reduced: boolean): void {

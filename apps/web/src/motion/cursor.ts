@@ -1,7 +1,8 @@
 /**
  * Custom cursor (docs/DESIGN.md 3.2). One persistent element for the whole session, moved
  * back into the new <body> after every swap. Enabled only for fine pointers with full
- * motion and without forced colours; the native cursor is hidden only while it is active.
+ * motion and without forced colours; the native cursor is hidden only while the custom one
+ * is shown (`data-cursor-active`, from the first pointer move on).
  *
  * States (attribute `data-state` on the root): default, link, open, read, drag, text, hide.
  * Markup can force one with `data-cursor="…"` and change the label with `data-cursor-label`.
@@ -123,6 +124,8 @@ function setVisible(next: boolean): void {
   if (!root || visible === next) return;
   visible = next;
   root.toggleAttribute('data-visible', next);
+  // The native cursor goes only when this one is there to replace it.
+  html.toggleAttribute('data-cursor-active', next);
 }
 
 function render(): void {
@@ -262,9 +265,12 @@ function surfaceOf(target: Element | null): Surface {
 
 /** True while the label comes from `data-cursor-label` (it then also replaces `Drop`). */
 let customLabel = false;
+/** The element the state was last read from (dropped on a swap: it belongs to the old page). */
+let resolved: Element | null = null;
 
 function resolve(target: EventTarget | null): void {
   const el = target instanceof Element ? target : null;
+  resolved = el;
   let next: State = 'default';
   let nextLabel = '';
   let custom = false;
@@ -364,13 +370,18 @@ function shouldEnable(): boolean {
   );
 }
 
-/** The page scrolled under a still pointer: re-read what is under it (once per frame). */
+/**
+ * The page scrolled under a still pointer: re-read what is under it (once per frame, and
+ * only when it is another element).
+ */
 let scrollFrame = 0;
 function onScroll(): void {
   if (!visible || scrollFrame) return;
   scrollFrame = requestAnimationFrame(() => {
     scrollFrame = 0;
-    refreshCursorTarget();
+    if (!enabled || !visible) return;
+    const el = document.elementFromPoint(pointer.x, pointer.y);
+    if (el !== resolved) resolve(el);
   });
 }
 
@@ -379,7 +390,6 @@ function enable(): void {
   enabled = true;
   root ??= build();
   document.body.append(root);
-  html.setAttribute('data-cursor-active', '');
   document.addEventListener('pointermove', onMove, { passive: true });
   document.addEventListener('pointerover', onOver, { passive: true });
   document.addEventListener('pointerdown', onDown, { passive: true });
@@ -396,6 +406,7 @@ function disable(): void {
   stop();
   root?.remove();
   visible = false;
+  resolved = null;
   root?.removeAttribute('data-visible');
   html.removeAttribute('data-cursor-active');
   html.removeAttribute('data-cursor-native');
@@ -424,12 +435,13 @@ export function updateCursor(): void {
 export function restoreCursor(): void {
   if (!enabled || !root) return;
   document.body.append(root);
-  html.setAttribute('data-cursor-active', '');
+  html.toggleAttribute('data-cursor-active', visible);
   pressed = false;
   state = 'default';
   label = '';
   customLabel = false;
   surface = 'paper';
+  resolved = null;
   render();
 }
 
@@ -445,10 +457,11 @@ export function resetCursor(): void {
   label = '';
   customLabel = false;
   surface = 'paper';
+  resolved = null;
   stop();
   setVisible(false);
+  html.removeAttribute('data-cursor-active');
   render();
-  if (enabled) html.setAttribute('data-cursor-active', '');
 }
 
 /**
