@@ -7,7 +7,6 @@
     "building": "Loyihalar",
     "writing": "Yozuvlar",
     "menu": "Menyu",
-    "close": "Yopish",
     "menuLabel": "Sayt menyusi"
   },
   "lang": {
@@ -31,8 +30,6 @@
     "hello": "Salom yo'llang",
     "contact": "Aloqa",
     "elsewhere": "Tarmoqlarda",
-    "email": "E-pochta",
-    "rights": "Barcha huquqlar himoyalangan.",
     "backToTop": "Yuqoriga"
   },
   "motion": {
@@ -51,8 +48,6 @@
     "countOther": "{n} ta yozuv"
   },
   "notFound": {
-    "title": "Sahifa topilmadi",
-    "text": "Bu manzilda hech narsa yo'q.",
-    "home": "Bosh sahifaga qaytish"
+    "title": "Sahifa topilmadi"
   }
 }

@@ -25,11 +25,11 @@ export const formatWeekdayShort: Formatter = (date, locale) =>
 export const formatDay: Formatter = (date, locale) =>
   formatter(locale, { day: 'numeric' }).format(date);
 
-/** Month and year: `November 2026` / `noyabr 2026`. */
+/** Month and year: `November 2026` / `noyabr, 2026`. */
 export const formatMonthYear: Formatter = (date, locale) =>
   formatter(locale, { month: 'long', year: 'numeric' }).format(date);
 
-/** Full date: `12 November 2026` / `12-noyabr, 2026`. */
+/** Full date: `November 12, 2026` / `12-noyabr, 2026`. */
 export const formatDate: Formatter = (date, locale) =>
   formatter(locale, { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
 

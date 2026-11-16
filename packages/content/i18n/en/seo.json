@@ -1,6 +1,5 @@
 {
   "site": {
-    "name": "Abduroziq",
     "description": "Personal website and blog of Abduroziq Jabborov, a Product Engineer based in Tashkent, in English and Uzbek.",
     "titleTemplate": "{title} — {site}"
   },

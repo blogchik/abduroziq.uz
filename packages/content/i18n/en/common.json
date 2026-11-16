@@ -7,7 +7,6 @@
     "building": "Building",
     "writing": "Writing",
     "menu": "Menu",
-    "close": "Close",
     "menuLabel": "Site menu"
   },
   "lang": {
@@ -31,8 +30,6 @@
     "hello": "Say hello",
     "contact": "Contact",
     "elsewhere": "Elsewhere",
-    "email": "E-mail",
-    "rights": "All rights reserved.",
     "backToTop": "Back to top"
   },
   "motion": {
@@ -51,8 +48,6 @@
     "countOther": "{n} posts"
   },
   "notFound": {
-    "title": "Page not found",
-    "text": "There is nothing at this address.",
-    "home": "Back to the home page"
+    "title": "Page not found"
   }
 }

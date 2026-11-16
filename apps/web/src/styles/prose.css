@@ -324,6 +324,13 @@
   .prose :is(blockquote, .pull-quote) {
     margin-inline-end: calc(var(--prose-hang) * -1);
   }
+
+  /* The text of a project page stands in the right-hand columns of the grid, so there is no
+     margin to hang into: a quote would leave the viewport below 1440px. It stays in the
+     column. */
+  .prose.project__body {
+    --prose-hang: 0px;
+  }
 }
 
 /* ---------------------------------------------------- figures and images */

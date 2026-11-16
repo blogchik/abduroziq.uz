@@ -7,7 +7,6 @@
   "rss": "RSS feed",
   "readingTime": "{minutes} min read",
   "draft": "Draft",
-  "published": "Published {date}",
   "updated": "Updated {date}",
   "tags": "Tags",
   "filter": {
@@ -23,8 +22,6 @@
     }
   },
   "post": {
-    "prev": "Previous post",
-    "next": "Next post",
     "more": "More entries",
     "previousShort": "Previous",
     "nextShort": "Next",

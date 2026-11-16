@@ -37,7 +37,8 @@ const { title, target } = Astro.props;
       position: absolute;
       inset-block: 0;
       inset-inline-start: max(0.5rem, calc(50% - 340px - 9.5rem));
-      width: 1.75rem;
+      /* The line (2px), the gap and one line of the title (about 1.3em of 12px). */
+      width: 2rem;
       pointer-events: none;
     }
   }
@@ -66,7 +67,10 @@ const { title, target } = Astro.props;
     transform-origin: top center;
   }
 
+  /* `flex: none`: the title keeps the width of its line instead of shrinking to fit the rail,
+     which clipped the letters' edges. */
   .rail__title {
+    flex: none;
     min-height: 0;
     height: 100%;
     writing-mode: vertical-rl;

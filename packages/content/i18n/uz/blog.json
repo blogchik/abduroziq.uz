@@ -7,7 +7,6 @@
   "rss": "RSS tasma",
   "readingTime": "{minutes} daqiqalik o'qish",
   "draft": "Qoralama",
-  "published": "E'lon qilingan: {date}",
   "updated": "Yangilangan: {date}",
   "tags": "Teglar",
   "filter": {
@@ -23,8 +22,6 @@
     }
   },
   "post": {
-    "prev": "Oldingi yozuv",
-    "next": "Keyingi yozuv",
     "more": "Yana yozuvlar",
     "previousShort": "Oldingi",
     "nextShort": "Keyingi",

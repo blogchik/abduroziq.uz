@@ -42,12 +42,19 @@ const { locale, url } = Astro.props;
       return true;
     } catch {
       // The Clipboard API is blocked in some embedded browsers: copy a selection instead.
+      const previous =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
       const field = document.createElement('textarea');
       field.value = text;
       field.setAttribute('readonly', '');
-      field.style.cssText = 'position:fixed;inset-block-start:0;opacity:0;pointer-events:none';
+      // 16px: iOS zooms the page when it focuses a smaller field.
+      field.style.cssText =
+        'position:fixed;inset-block-start:0;opacity:0;pointer-events:none;font-size:16px';
       document.body.append(field);
+      field.focus({ preventScroll: true });
       field.select();
+      // iOS Safari ignores `select()` on its own; the range makes it copy.
+      field.setSelectionRange(0, text.length);
       let ok: boolean;
       try {
         ok = document.execCommand('copy');
@@ -55,6 +62,8 @@ const { locale, url } = Astro.props;
         ok = false;
       }
       field.remove();
+      // Focus goes back to the button (or whatever had it), not to the page.
+      previous?.focus({ preventScroll: true });
       return ok;
     }
   }
