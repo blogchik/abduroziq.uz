@@ -225,9 +225,9 @@ Then air (72px on a desktop), and the object.
 ### 4.2 The meeting
 
 The visual centre of the first screen: full content width, on a stage that is 29% as high as
-it is wide, never lower than 160px and never more than 46% of the screen's height, so that
-the whole object shares the first screen with the statement (at 1440x900 and at 1280x720
-it ends a few pixels above the fold).
+it is wide, never lower than 160px, never more than 46% of the screen's height, and on a
+desktop never past the fold, so that the whole object shares the first screen with the
+statement (at 1440x900, 1366x768 and 1280x720 it ends a few pixels above the fold).
 
 - **Behind: the name.** `ABDUROZIQ` in the thin cut of the `name` style, exactly as wide as
   the content box, vertically centred on the stage, in ink at reduced strength (a 48% mix
@@ -457,7 +457,9 @@ zoom, carousels, tags and filters, hover effects on pictures, a second column of
 
 - **404**: an ink band. Giant `404` in `name` style, the line
   `This page was dragged somewhere else.`, a link home, and three desk objects to throw
-  (a sticky note, the piala, and a single dark keycap with the legend `ESC`).
+  (a sticky note, the piala, and a single dark keycap with the legend `ESC`). From 1024px
+  they lie on the band itself, across the digits; below 1440px, where the band is lower,
+  the piala and the keycap stay on the digits, clear of the line and the link.
   It is built once per language (`/404.html` and `/uz/404.html`), so a missing Uzbek path
   gets a page that is Uzbek from header to footer.
 - **Tag page** `/blog/tag/<tag>`: same as the blog index with the tag as the title.

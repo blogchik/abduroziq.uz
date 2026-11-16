@@ -8,13 +8,17 @@
  * the desk is decoration and hidden from assistive technology.
  */
 interface Props {
-  /** `Cups today`, shown uppercase before the count. */
-  counterLabel: string;
+  /**
+   * `Cups today`, shown uppercase before the count. On the 404 page one per language, each
+   * in a `data-nf-lang` span (NotFoundPage.astro shows the page's one).
+   */
+  counterLabel: string | Record<string, string>;
   /** Cursor label while hovering the bowl. */
   refillLabel: string;
 }
 
 const { counterLabel, refillLabel } = Astro.props;
+const counterLabels = typeof counterLabel === 'string' ? undefined : Object.entries(counterLabel);
 const bolls = Array.from({ length: 8 }, (_, i) => i * 45);
 ---
 
@@ -59,7 +63,10 @@ const bolls = Array.from({ length: 8 }, (_, i) => i * 45);
   </button>
 
   <p class="piala__count type-label">
-    {counterLabel}: <span data-piala-count>0</span>
+    {counterLabels
+      ? counterLabels.map(([lang, label]) => <span data-nf-lang={lang}>{label}</span>)
+      : counterLabel}
+    : <span data-piala-count>0</span>
   </p>
 </div>
 

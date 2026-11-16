@@ -1,7 +1,8 @@
 /**
  * The piala gag: a click on a bowl (never a drag: the motion kit swallows the click after
  * one) drinks what is left, refills it, lets a little steam rise and counts the cup. The
- * count is kept per calendar day in localStorage and shared by every bowl on the page.
+ * count is kept per calendar day in localStorage and shared by every bowl on the page; where
+ * storage is blocked it is kept in memory for the visit.
  */
 import { dur, ease, gsap, onPageEnter } from '@/motion';
 
@@ -12,22 +13,28 @@ function today(): string {
   return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
 }
 
+/** The last count written, and its day: what counts when storage is blocked. */
+let memory = { day: '', n: 0 };
+
 function readCups(): number {
+  const day = today();
+  const kept = memory.day === day ? memory.n : 0;
   try {
     const stored = JSON.parse(localStorage.getItem(KEY) ?? 'null') as {
       day?: unknown;
       n?: unknown;
     } | null;
-    if (stored && stored.day === today() && typeof stored.n === 'number' && stored.n > 0) {
-      return Math.floor(stored.n);
+    if (stored && stored.day === day && typeof stored.n === 'number' && stored.n > 0) {
+      return Math.max(kept, Math.floor(stored.n));
     }
   } catch {
-    // Storage blocked or the value is not ours: start from zero.
+    // Storage blocked or the value is not ours: the count in memory, if any.
   }
-  return 0;
+  return kept;
 }
 
 function writeCups(n: number): void {
+  memory = { day: today(), n };
   try {
     localStorage.setItem(KEY, JSON.stringify({ day: today(), n }));
   } catch {

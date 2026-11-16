@@ -1,8 +1,9 @@
 ---
 /**
- * A single key (DESIGN 6, the 404 page): a dark base with a slightly lighter top face (the bevel is two
- * flat tones, no gradient). A leading command sign in the legend is drawn, because the
- * fonts do not have the glyph.
+ * A single key (DESIGN 6.4, the 404 page): a dark base with a slightly lighter top face (the
+ * bevel is two flat tones, no gradient). Like every desk object it is the same in both themes
+ * and inside the ink band (the `--desk-*` colours, DeskObject.astro). A leading command sign
+ * in the legend is drawn, because the fonts do not have the glyph.
  */
 interface Props {
   legend: string;
@@ -30,8 +31,8 @@ const text = command ? legend.slice(1) : legend;
     height: calc(72px * var(--desk-k, 1));
     padding: 4px 6px 10px;
     border-radius: var(--radius-card);
-    background-color: color-mix(in srgb, var(--ink) 82%, var(--paper));
-    color: var(--paper);
+    background-color: color-mix(in srgb, var(--desk-ink) 82%, var(--desk-paper));
+    color: var(--desk-paper);
   }
 
   .keycap__face {
@@ -42,7 +43,7 @@ const text = command ? legend.slice(1) : legend;
     width: 100%;
     height: 100%;
     border-radius: var(--radius-card);
-    background-color: var(--ink);
+    background-color: var(--desk-ink);
     font-weight: 500;
     line-height: 1;
     text-transform: uppercase;

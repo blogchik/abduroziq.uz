@@ -9,16 +9,17 @@ import StickyNote from './StickyNote.astro';
 
 /**
  * A desk: objects that can be picked up and thrown, through the motion kit's desk contract.
- * Four layouts share the object components:
+ * Five layouts share the object components:
  *
  *  - `about`: the collage next to the About paragraph (DESIGN 4.3): the polaroid, the sticky
  *    note and the piala, tilted and overlapping, in the column under the section label.
  *  - `about-band`: the same three in a band of their own under the paragraph, on screens
  *    without that column.
- *  - `notfound` and `notfound-band`: three objects to throw on the 404 page (DESIGN 6), over
- *    the whole ink band on wide screens and in a band of their own on small ones. The one
- *    404 page serves every locale, so its note is printed in each (`data-nf-lang`, see
- *    404.astro).
+ *  - `notfound`, `notfound-mid` and `notfound-band`: three objects to throw on the 404 page
+ *    (DESIGN 6.4), over the whole ink band on wide screens (`notfound-mid` below 90rem, where
+ *    the band is lower and the piala and the keycap move left of the text) and in a band of
+ *    their own on small ones. The root 404 page may answer any locale's path, so its words
+ *    are printed in each language (`data-nf-lang`, see NotFoundPage.astro).
  *
  * Decoration only: hidden from assistive technology, nothing in it is focusable.
  */
@@ -33,7 +34,7 @@ interface Pose {
 
 interface Props {
   locale: Locale;
-  variant: 'about' | 'about-band' | 'notfound' | 'notfound-band';
+  variant: 'about' | 'about-band' | 'notfound' | 'notfound-mid' | 'notfound-band';
   /** Seconds before the objects drop in (the kit's `data-desk-entrance`). */
   entrance?: number;
   class?: string;
@@ -42,8 +43,10 @@ interface Props {
 const { locale, variant, entrance, class: className } = Astro.props;
 
 const layouts: Record<Props['variant'], Pose[]> = {
+  // Poses keep the rotated corners inside the desk (the drag bounds count them): the
+  // polaroid's stick out by 3% of the width and 1.7% of the height.
   about: [
-    { kind: 'polaroid', x: 0, y: 0, rotate: -6 },
+    { kind: 'polaroid', x: 3.1, y: 1.8, rotate: -6 },
     { kind: 'sticky', x: 46, y: 23, rotate: 5 },
     { kind: 'piala', x: 4, y: 66, rotate: 0 },
   ],
@@ -56,6 +59,11 @@ const layouts: Record<Props['variant'], Pose[]> = {
     { kind: 'sticky', x: 67, y: 7, rotate: 5 },
     { kind: 'piala', x: 87.5, y: 33, rotate: 0 },
     { kind: 'keycap', x: 64, y: 45, rotate: -10 },
+  ],
+  'notfound-mid': [
+    { kind: 'sticky', x: 67, y: 7, rotate: 5 },
+    { kind: 'piala', x: 37, y: 52, rotate: 0 },
+    { kind: 'keycap', x: 20, y: 28, rotate: -10 },
   ],
   'notfound-band': [
     { kind: 'piala', x: 30, y: 14, rotate: 0 },
@@ -91,11 +99,21 @@ const notFound = variant.startsWith('notfound');
       {pose.kind === 'piala' && (
         <>
           <Piala
-            counterLabel={t(locale, 'home.desk.cups')}
+            counterLabel={
+              notFound
+                ? Object.fromEntries(locales.map((lang) => [lang, t(lang, 'home.desk.cups')]))
+                : t(locale, 'home.desk.cups')
+            }
             refillLabel={t(locale, 'home.desk.refill')}
           />
           <span class="note note--piala">
-            <span class="note__text type-hand">{profile.desk.pialaNote[locale]}</span>
+            <span class="note__text type-hand">
+              {notFound
+                ? locales.map((lang) => (
+                    <span data-nf-lang={lang}>{profile.desk.pialaNote[lang]}</span>
+                  ))
+                : profile.desk.pialaNote[locale]}
+            </span>
             <svg class="note__arrow" viewBox="0 0 56 44" focusable="false">
               <path d="M4 4c10 2 22 10 20 20-2 8-12 6-9-2 3-8 20-4 34 14M47.5 27.1 49 36l-8.2-3.7" />
             </svg>
