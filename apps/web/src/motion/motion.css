@@ -103,6 +103,14 @@ html.lenis body {
   overscroll-behavior: contain;
 }
 
+/* Code blocks and tables scroll sideways only. Contained, they would swallow the vertical
+   wheel in Chromium (a scroll container that cannot scroll that way still ends the chain),
+   so the page under the pointer would not move. */
+.lenis pre[data-lenis-prevent],
+.lenis .table-wrap[data-lenis-prevent] {
+  overscroll-behavior: auto;
+}
+
 .lenis.lenis-smooth iframe {
   pointer-events: none;
 }
@@ -411,6 +419,14 @@ html[data-motion='full']::view-transition-new(*.m-text) {
 html[data-motion='reduced'] .m-cursor,
 html[data-motion='reduced'] .m-wipe {
   display: none;
+}
+
+/* The footer's motion switch turned off over a system that does not ask for it: no morph or
+   cross-fade either, as Astro does under prefers-reduced-motion. */
+html[data-motion='reduced']::view-transition-group(*),
+html[data-motion='reduced']::view-transition-old(*),
+html[data-motion='reduced']::view-transition-new(*) {
+  animation: none;
 }
 
 /* The native cursor stays for forced colours and for visitors who asked for more contrast

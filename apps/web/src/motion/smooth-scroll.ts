@@ -37,6 +37,9 @@ export function initSmoothScroll(): Promise<void> {
         autoRaf: false,
         // Nested scrollers (code blocks, menus) keep their own native scrolling.
         allowNestedScroll: true,
+        // The kit decides from `data-motion` (the footer's switch can turn motion on over a
+        // system preference); Lenis must not make scrolling instant on its own.
+        respectReducedMotion: false,
       });
       lenis.on('scroll', ScrollTrigger.update);
       raf = (time) => lenis?.raf(time * 1000);
@@ -74,13 +77,15 @@ export function resumeSmoothScroll(): void {
 /**
  * After a swap: Astro has already moved the window (top for a new page, the saved position
  * for back/forward), so Lenis adopts that position instead of animating to its old one.
- * Astro also replaced the <html> attributes, so the `lenis` class is restored.
+ * Astro also replaced the <html> attributes, so the `lenis` class is restored. Lenis measures
+ * the new page first: it clamps a position to the scroll limit it knows, and the previous
+ * page's limit would pull a restored position on a longer page back up.
  */
 export function syncSmoothScroll(): void {
   if (!lenis) return;
   lenis.start();
-  lenis.scrollTo(window.scrollY, { immediate: true, force: true });
   lenis.resize();
+  lenis.scrollTo(window.scrollY, { immediate: true, force: true });
   // Lenis only rewrites its classes on state changes; the base class is the one that matters.
   document.documentElement.classList.add('lenis');
 }
