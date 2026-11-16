@@ -41,7 +41,8 @@ const zone = `UTC${TASHKENT_UTC_OFFSET >= 0 ? '+' : ''}${TASHKENT_UTC_OFFSET}`;
     <div class="hero__top">
       <SectionLabel number={0} name={t(locale, 'home.hero.label')} />
       <p class="hero__meta type-label">
-        {profile.location.city[locale]} <span data-hero-clock></span> {zone}
+        {profile.location.city[locale]}
+        <span data-hero-clock></span> {zone}
       </p>
     </div>
 
@@ -57,11 +58,12 @@ const zone = `UTC${TASHKENT_UTC_OFFSET >= 0 ? '+' : ''}${TASHKENT_UTC_OFFSET}`;
 
   <script is:inline data-astro-rerun define:vars={{ offset: TASHKENT_UTC_OFFSET }}>
     // The time in Tashkent, written before first paint; `hero.ts` calls the same function
-    // every minute.
+    // every minute. It carries its own leading space, so that without it the line reads
+    // "Tashkent UTC+5" with a single space.
     (() => {
       const paint = (hero) => {
         // Shifted so that the UTC getters read Tashkent wall-clock time.
-        const time = new Date(Date.now() + offset * 36e5).toISOString().slice(11, 16);
+        const time = ` ${new Date(Date.now() + offset * 36e5).toISOString().slice(11, 16)}`;
         for (const el of hero.querySelectorAll('[data-hero-clock]')) {
           if (el.textContent !== time) el.textContent = time;
         }

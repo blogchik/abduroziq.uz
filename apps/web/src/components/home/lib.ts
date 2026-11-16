@@ -104,7 +104,8 @@ const toHex = (rgb: Rgb): string =>
 
 /**
  * A project's ticket colours. `fg` is used for the glyph and large shapes; `text` is the
- * same hue pushed away from the background until small text reaches 4.5:1 (AA).
+ * same hue pushed away from the background, towards black or white (whichever contrasts more
+ * with it), until small text reaches 4.5:1 (AA).
  */
 export function ticketColors([bg, fg]: [string, string]): {
   bg: string;
@@ -113,7 +114,9 @@ export function ticketColors([bg, fg]: [string, string]): {
 } {
   const back = parseHex(bg);
   const front = parseHex(fg);
-  const pole: Rgb = luminance(back) > 0.4 ? [0, 0, 0] : [255, 255, 255];
+  const black: Rgb = [0, 0, 0];
+  const white: Rgb = [255, 255, 255];
+  const pole = contrast(black, back) >= contrast(white, back) ? black : white;
   let text = front;
   for (let step = 0; step <= 20 && contrast(text, back) < 4.5; step++) {
     const k = step / 20;
