@@ -45,14 +45,15 @@ const themeColors = { light: palette.paper, dark: palette.paperDark };
 
 // The language switch follows `seo.alternates` when a page has one (translated posts live at
 // different paths), otherwise it keeps the current path. A locale without an equivalent page
-// falls back to that locale's home page.
+// falls back to that locale's home page. Alternates are absolute (production) URLs; the switch
+// keeps only their path, so it stays on the host the page is served from.
+const switchHref = (target: Locale): string => {
+  if (!seo?.alternates) return localePath(target, path);
+  const alternate = seo.alternates.find((alt) => alt.locale === target);
+  return alternate ? new URL(alternate.href, Astro.url).pathname : localePath(target, '/');
+};
 const switchHrefs = Object.fromEntries(
-  locales.map((target) => [
-    target,
-    seo?.alternates
-      ? (seo.alternates.find((alt) => alt.locale === target)?.href ?? localePath(target, '/'))
-      : localePath(target, path),
-  ]),
+  locales.map((target) => [target, switchHref(target)]),
 ) as Record<Locale, string>;
 
 // Above-the-fold fonts: Bricolage (body, names, titles, the home statement) and the mono
@@ -116,6 +117,29 @@ const preloads = [bricolageUrl, geistMonoUrl, ...(isPost ? [serifDisplay400, ser
         };
         applyRootState();
         document.addEventListener('astro:after-swap', applyRootState);
+        // A system change while the page is open is followed when no choice is stored: the
+        // theme at once, reduced motion through the kit (`site:motion`). The theme toggle
+        // and the motion switch show the new state.
+        if (window.__siteRootWatch) return;
+        window.__siteRootWatch = true;
+        const pressed = (selector, value) =>
+          document
+            .querySelectorAll(selector)
+            .forEach((button) => button.setAttribute('aria-pressed', String(value)));
+        matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+          applyRootState();
+          pressed('[data-theme-toggle]', document.documentElement.dataset.theme === 'dark');
+        });
+        matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', () => {
+          const root = document.documentElement;
+          const before = root.dataset.motion;
+          applyRootState();
+          if (root.dataset.motion === before) return;
+          pressed('[data-motion-switch]', root.dataset.motion !== 'reduced');
+          document.dispatchEvent(
+            new CustomEvent('site:motion', { detail: { motion: root.dataset.motion } }),
+          );
+        });
       })();
     </script>
     <ClientRouter />

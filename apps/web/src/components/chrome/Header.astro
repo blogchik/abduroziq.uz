@@ -120,7 +120,8 @@ const links = [
    * off the current DOM; it works after client-side navigation without re-initialising.
    * Open: the rest of the page is inert (focus stays in the header), the page does not
    * scroll (html[data-menu-open]) and `site:menu` tells the motion kit to pause smooth
-   * scrolling. Escape, the button, a menu link or growing past 768px close it.
+   * scrolling. Tab goes round the header. Escape, the button, a menu link or growing past
+   * 768px close it.
    */
   const DESKTOP = window.matchMedia('(min-width: 48rem)');
   let inerted: Element[] = [];
@@ -160,10 +161,37 @@ const links = [
     else if (target?.closest('[data-menu-link]')) setOpen(false, false);
   });
 
+  /** What Tab reaches while the sheet is open: the header's visible links and buttons. */
+  function focusables(): HTMLElement[] {
+    const header = document.querySelector('[data-site-header]');
+    if (!header) return [];
+    return [...header.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')].filter(
+      (el) => el.getClientRects().length > 0,
+    );
+  }
+
+  /**
+   * Tab and Shift+Tab go round the header while the sheet is open, never out to the inert
+   * page. Focus is moved here without scrolling: the locked page must not jump to a target.
+   */
+  function cycleFocus(event: KeyboardEvent): void {
+    const items = focusables();
+    if (items.length === 0) return;
+    event.preventDefault();
+    const step = event.shiftKey ? -1 : 1;
+    let index = items.indexOf(document.activeElement as HTMLElement);
+    // From outside the header, Tab starts at the first item and Shift+Tab at the last.
+    if (index === -1) index = event.shiftKey ? 0 : -1;
+    items[(index + step + items.length) % items.length]?.focus({ preventScroll: true });
+  }
+
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && isOpen()) {
+    if (!isOpen()) return;
+    if (event.key === 'Escape') {
       event.preventDefault();
       setOpen(false);
+    } else if (event.key === 'Tab' && !event.altKey && !event.ctrlKey && !event.metaKey) {
+      cycleFocus(event);
     }
   });
 
@@ -175,6 +203,9 @@ const links = [
   // undoing here.
   document.addEventListener('astro:before-swap', () => {
     if (!isOpen()) return;
+    // Elements that persist across the swap (the kit's cursor and transition panel) must not
+    // stay inert.
+    inerted.forEach((el) => el.removeAttribute('inert'));
     inerted = [];
     document.dispatchEvent(new CustomEvent('site:menu', { detail: { open: false } }));
   });
@@ -235,6 +266,8 @@ const links = [
     border-radius: var(--radius-pill);
     background-color: var(--accent);
     transition: scale var(--dur-2) var(--ease-out);
+    /* Drawn by its background: keep it under forced colours too. */
+    forced-color-adjust: none;
   }
 
   .brand:hover .brand__dot {
