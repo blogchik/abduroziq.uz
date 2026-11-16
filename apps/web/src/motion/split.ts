@@ -7,7 +7,7 @@
  * nothing). The pieces are plain inline wrappers, so the text reads as it is.
  */
 import type { SplitText as SplitTextClass } from 'gsap/SplitText';
-import { gsap } from './core';
+import { currentPage, gsap, inPage, isCurrent } from './core';
 
 type SplitTextCtor = typeof SplitTextClass;
 
@@ -34,25 +34,45 @@ export function getSplitText(): SplitTextCtor | undefined {
   return SplitText;
 }
 
+export interface LineSplit {
+  lines: Element[];
+  revert(): void;
+}
+
 /**
  * Splits an element into masked lines for a page-specific timeline. Call it from an
- * `onPageEnter` callback (the kit has loaded SplitText by then); the split is reverted
- * automatically when the page is left, or earlier with `revert()`.
+ * `onPageEnter` callback: it loads SplitText when needed, then splits the element and calls
+ * `use` with the lines, inside the page's context, so the split and whatever `use` creates
+ * (tweens, ScrollTriggers) are reverted when the page is left (the split earlier with
+ * `revert()`). `use` does not run when the page has been left by then, or when SplitText
+ * cannot be loaded: the text then stays as written.
  */
-export function splitLines(el: Element): { lines: Element[]; revert(): void } {
-  if (!SplitText) {
-    throw new Error('[motion] splitLines() needs SplitText: call it inside onPageEnter().');
-  }
-  const split = SplitText.create(el, {
-    type: 'lines',
-    mask: 'lines',
-    linesClass: 'm-line',
-    aria: 'none',
-  });
-  return {
-    lines: split.lines,
-    revert() {
-      split.revert();
+export function splitLines(el: Element, use: (split: LineSplit) => void): void {
+  const page = currentPage();
+  loadSplitText().then(
+    (SplitTextCtor) => {
+      if (!isCurrent(page)) return;
+      inPage(() => {
+        try {
+          const split = SplitTextCtor.create(el, {
+            type: 'lines',
+            mask: 'lines',
+            linesClass: 'm-line',
+            aria: 'none',
+          });
+          use({
+            lines: split.lines,
+            revert() {
+              split.revert();
+            },
+          });
+        } catch (error) {
+          console.error('[motion] splitLines failed', error);
+        }
+      });
     },
-  };
+    (error: unknown) => {
+      console.error('[motion] SplitText unavailable', error);
+    },
+  );
 }

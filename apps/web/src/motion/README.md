@@ -31,7 +31,10 @@ switch for `localStorage.motion`.
 
 ### `data-reveal="lines|words|chars|rise|fade"`
 
-Plays once when the element enters the viewport (`top 88%`). An element already inside
+Plays once when the element enters the viewport (`top 88%`, clamped: an element that can
+never get that high, near the end of a short viewport, plays when the page reaches its end).
+Scroll triggers are measured again shortly after the page's height changes (lazy images,
+galleries). An element already inside
 the viewport when the kit starts plays at once (after the page transition, without waiting
 for ScrollTrigger); a text reveal there rises as a whole when SplitText or the fonts are
 not ready yet, rather than staying hidden while they load. Elements above the viewport (a
@@ -198,7 +201,10 @@ attribute value), springing back on leave. Fine pointers, full motion.
   hidden) and `data-cursor-native` (native cursor shown again, for text and `hide`).
 - **Smooth scroll**: one Lenis instance (lerp 0.14, native wheel speed, native touch),
   loaded only for fine pointers with full motion. Back/forward keeps its position, new
-  pages start at the top. Use `data-lenis-prevent` on nested scrollers.
+  pages start at the top. Use `data-lenis-prevent` on nested scrollers. It contains their
+  overscroll, except on code blocks (`pre`) and table wrappers (`.table-wrap`), which scroll
+  sideways only: the vertical wheel over them goes on to the page. Lenis follows the kit's
+  `data-motion`, not the system setting (`respectReducedMotion: false`).
   The `site:menu` event (`detail.open`) stops and restarts it.
 - **Same-page anchors** (`#building`, `#top`): the router owns the navigation (history
   entry, address, the browser's own jump to the fragment, so `scroll-padding-top` and
@@ -212,17 +218,22 @@ attribute value), springing back on leave. Fine pointers, full motion.
   No panel under reduced motion. Links to files (an extension other than `.html`, such as
   the RSS feeds) and `data-astro-reload` links never start the panel: the kit marks such
   anchors `data-astro-reload` before the router sees the click. A page restored from the
-  back/forward cache gets the panel, the gate and the cursor back to idle.
+  back/forward cache gets the panel, the gate and the cursor back to idle. When the router
+  cancels a navigation and none takes its place (a same-page anchor, or Back to a hash entry
+  of the same page, while the panel covers), the panel leaves and the gate opens.
 - **Shared-element morphs**: a `transition:name` starting with `post-` gets the
   view-transition class `m-text`: the box morphs, the old and new text keep their natural
-  size and cross-fade in 200ms (no stretched, smeared snapshot).
+  size and cross-fade in 200ms (no stretched, smeared snapshot). With `data-motion="reduced"`
+  no view-transition animation runs (no morph, no cross-fade).
 - **Motion switch**: the footer's `MOTION: ON / OFF` writes `localStorage.motion`, updates
   `data-motion` and dispatches `site:motion`; the kit then leaves the page and enters it
   again in the new mode (cursor, Lenis, marquees, reveals, desks and page callbacks), with
-  `late: true` so nothing on screen replays its entrance.
+  `late: true` so nothing on screen replays its entrance. Without a stored choice, a change
+  of the system's reduced-motion setting does the same (BaseLayout listens for it).
 - **Failsafe**: prepared (hidden) states live in `motion.css`, scoped to
   `html.js[data-motion='full']`, and a CSS animation shows everything after 1s if the kit
-  never takes over (`reveal.failsafeMs`, keep both in sync). Once the kit has an element,
+  never takes over (`reveal.failsafeMs`, keep both in sync). An element the failsafe has
+  shown stays shown when the kit arrives later. Once the kit has an element,
   a watchdog completes its reveal if no animation frame runs (a view that reports itself
   visible but never paints); the page-transition panel has the same watchdog, so a
   navigation never waits on frames that do not come. In a hidden tab reveals jump to
@@ -237,7 +248,8 @@ onPageEnter(
   cb: (ctx: { reduced: boolean; first: boolean; late: boolean }) => void | (() => void),
 ): void;
 prefersReducedMotion(): boolean; // reads <html data-motion>
-splitLines(el: Element): { lines: Element[]; revert(): void }; // masked lines
+// Masked lines, handed to `use` once SplitText has loaded (inside the page's context).
+splitLines(el: Element, use: (split: { lines: Element[]; revert(): void }) => void): void;
 afterGate(fn: () => void): void; // runs once the page-transition panel has left
 export { dur, ease, cssEase }; // motion tokens
 export { gsap, ScrollTrigger };
@@ -247,8 +259,11 @@ export { gsap, ScrollTrigger };
 timelines, ScrollTriggers and splits created in them are reverted automatically when the
 page is left, and a returned function runs then too (remove your own listeners there).
 A page script runs once per session, so its callback stays registered for the whole
-session: **return early when your elements are not on the page.** SplitText is loaded
-before callbacks run, so `splitLines` is safe inside them.
+session: **return early when your elements are not on the page.** Callbacks run as soon as
+the page is entered. SplitText is not part of the kit's first download: `splitLines` loads
+it on demand and hands the lines to its own callback, which runs inside the page's context
+too (the split and whatever it creates are reverted on leave), and not at all when the page
+was left in the meantime.
 
 ```ts
 <script>
@@ -257,20 +272,21 @@ before callbacks run, so `splitLines` is safe inside them.
   onPageEnter(({ reduced }) => {
     const title = document.querySelector('[data-hero-title]');
     if (!title || reduced) return; // not this page, or content stays as written
-    const { lines, revert } = splitLines(title);
-    gsap.from(lines, {
-      yPercent: 110,
-      stagger: 0.08,
-      duration: 0.7,
-      ease: 'motionOut',
-      onComplete: revert,
+    splitLines(title, ({ lines, revert }) => {
+      gsap.from(lines, {
+        yPercent: 110,
+        stagger: 0.08,
+        duration: 0.7,
+        ease: 'motionOut',
+        onComplete: revert,
+      });
     });
   });
 </script>
 ```
 
-A page timeline runs after its page has loaded (and after SplitText), so an element it
-hides was briefly visible before. For above-the-fold choreography prefer the attributes;
+A page timeline runs after its page has loaded (a split one also after SplitText), so an
+element it hides was briefly visible before. For above-the-fold choreography prefer the attributes;
 if you need a custom one, run it on elements that start below the fold or accept that
 the first frame shows the final state.
 

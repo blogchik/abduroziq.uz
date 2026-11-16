@@ -389,7 +389,9 @@ Root state on `<html>`:
   `data-theme="light|dark"`, `data-motion="full|reduced"` and the class `js`.
   `data-motion` is the single source of truth for reduced motion: it follows
   `prefers-reduced-motion`, and `localStorage.motion = 'reduced' | 'full'` overrides it
-  (a testing aid). The kit's `prefersReducedMotion()` reads this attribute.
+  (a testing aid). The kit's `prefersReducedMotion()` reads this attribute. Without a
+  stored choice, the script follows a live change of the system theme (`data-theme`) and of
+  reduced motion (`data-motion`, then `site:motion`).
 - Maintained by the kit while the page is used: `data-scroll-dir="up|down"` and
   `data-scrolled` (present after 80px).
 - The footer's motion switch stores the choice in `localStorage.motion`, updates
@@ -414,7 +416,8 @@ export function onPageEnter(
   cb: (ctx: { reduced: boolean; first: boolean; late: boolean }) => void | (() => void),
 ): void; // the returned function runs on leave
 export function prefersReducedMotion(): boolean;
-export function splitLines(el: Element): { lines: Element[]; revert(): void };
+// Loads SplitText on demand, then calls `use` inside the page's context (not when the page was left).
+export function splitLines(el: Element, use: (split: { lines: Element[]; revert(): void }) => void): void;
 export function afterGate(fn: () => void): void; // runs once the page-transition panel has left
 export { dur, ease, cssEase };                   // motion tokens (DESIGN 2.4)
 export { gsap, ScrollTrigger };

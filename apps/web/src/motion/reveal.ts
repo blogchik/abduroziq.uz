@@ -13,8 +13,9 @@
  * gate), without waiting for ScrollTrigger. A text reveal there that would have to wait
  * for SplitText or for the fonts rises as a whole instead. Elements above the viewport (a
  * restored scroll position) are shown as they are, also when the position is restored
- * after the kit has started. In a hidden tab animations cannot run (no animation frames),
- * so a reveal that starts there jumps to its end.
+ * after the kit has started, and so are elements the CSS failsafe has already shown (a kit
+ * that arrives after it never hides them again). In a hidden tab animations cannot run (no
+ * animation frames), so a reveal that starts there jumps to its end.
  */
 import { dur, ease, reveal } from './config';
 import { afterGate, currentPage, gsap, inPage, isCurrent, num, ScrollTrigger, track } from './core';
@@ -60,14 +61,34 @@ function markDone(el: Element): void {
 
 let lateStart = false;
 
+const FAILSAFE = 'm-failsafe';
+
+function isFailsafe(animation: Animation): boolean {
+  return (
+    animation instanceof CSSAnimation &&
+    animation.animationName === FAILSAFE &&
+    animation.playState === 'finished'
+  );
+}
+
+/** The CSS failsafe (motion.css) has shown prepared elements before the kit arrived. */
+export function failsafeFired(): boolean {
+  return document.getAnimations().some(isFailsafe);
+}
+
 /**
- * Whether to skip the animation and show the element as it is: it was scrolled past
- * already (back/forward restores the scroll position), or the CSS failsafe has shown the
- * page before the kit arrived and the element is on screen.
+ * Whether to skip the animation and show the element as it is: it is not rendered, it was
+ * scrolled past already (back/forward restores the scroll position), the CSS failsafe has
+ * shown it before the kit arrived (on screen or not: it must not vanish again), or the page
+ * is entered late (a switch of the motion mode) and the element is on screen.
  */
 function showNow(el: Element): boolean {
   const rect = el.getBoundingClientRect();
+  // Not rendered in this layout (display: none): nothing to play, and a clamped trigger at
+  // the top of the page would wait for a scroll.
+  if (rect.width + rect.height === 0) return true;
   if (rect.bottom < 0) return true;
+  if (el.getAnimations().some(isFailsafe)) return true;
   return lateStart && rect.top < window.innerHeight;
 }
 
@@ -300,7 +321,9 @@ export function initReveals(reduced: boolean, late: boolean): void {
     if (el.hasAttribute('data-revealed')) continue;
     const mode = modeOf(el);
     if (needsSplit(el)) {
-      if (!splitNow && inView(el)) guarded(el, () => setupSimple(el, 'rise'));
+      // Shown as it is without SplitText (not rendered, scrolled past, shown by the failsafe).
+      if (showNow(el)) markDone(el);
+      else if (!splitNow && inView(el)) guarded(el, () => setupSimple(el, 'rise'));
       else textEls.push(el);
     } else if (mode === 'chars') guarded(el, () => setupPresplit(el));
     else guarded(el, () => setupSimple(el, mode === 'fade' ? 'fade' : 'rise'));

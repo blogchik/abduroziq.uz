@@ -321,15 +321,16 @@ const rows = [
   onPageEnter(({ reduced }) => {
     const title = document.querySelector('[data-lab-timeline]');
     if (!title || reduced) return;
-    const { lines, revert } = splitLines(title);
-    gsap.from(lines, {
-      xPercent: -8,
-      yPercent: 100,
-      stagger: 0.1,
-      duration: 0.7,
-      ease: 'motionOut',
-      scrollTrigger: { trigger: title, start: 'top 85%', once: true },
-      onComplete: revert,
+    splitLines(title, ({ lines, revert }) => {
+      gsap.from(lines, {
+        xPercent: -8,
+        yPercent: 100,
+        stagger: 0.1,
+        duration: 0.7,
+        ease: 'motionOut',
+        scrollTrigger: { trigger: title, start: 'top 85%', once: true },
+        onComplete: revert,
+      });
     });
   });
 

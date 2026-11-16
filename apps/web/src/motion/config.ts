@@ -38,8 +38,14 @@ export const reveal = {
   /** Rise and group items: offset in px. */
   rise: 16,
   itemStagger: 0.06,
-  /** ScrollTrigger start for reveals. */
-  start: 'top 88%',
+  /**
+   * ScrollTrigger start for reveals. Clamped: an element that cannot reach 88% of the
+   * viewport (the footer's name at the end of a page on a phone) starts at the bottom of the
+   * page instead of never.
+   */
+  start: 'clamp(top 88%)',
+  /** After the page's height changes (lazy media), triggers are measured again this much later (ms). */
+  refreshAfterMs: 150,
   /** After this long without the kit, CSS shows everything (keep in sync with motion.css). */
   failsafeMs: 1000,
 } as const;

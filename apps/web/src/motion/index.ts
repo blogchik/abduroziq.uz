@@ -34,7 +34,7 @@ import { initFollowers } from './follower';
 import { initMagnetic } from './magnetic';
 import { initMarquees } from './marquee';
 import { initProgress } from './progress';
-import { initReveals } from './reveal';
+import { failsafeFired, initReveals } from './reveal';
 import { applyScrollState } from './root-state';
 import {
   destroySmoothScroll,
@@ -44,7 +44,7 @@ import {
   resumeSmoothScroll,
   syncSmoothScroll,
 } from './smooth-scroll';
-import { loadSplitText, splitLines } from './split';
+import { splitLines } from './split';
 import { finishTransition, installTransitions, restorePanel } from './transition';
 
 type Cleanup = () => void;
@@ -63,29 +63,36 @@ let firstLoad = true;
 let pageFirst = false;
 let pageLate = false;
 
-/** SplitText is ready before page callbacks run, so they can call `splitLines`. */
-async function callbacksReady(): Promise<void> {
+/** Runs a page callback at once, inside the page's context. */
+function run(cb: PageEnterCallback): void {
+  if (!isCurrent(currentPage())) return;
   try {
-    await loadSplitText();
+    // Keep the cleanup out of gsap.context's own revert list, or it would run twice.
+    let cleanup: void | Cleanup = undefined;
+    inPage(() => {
+      cleanup = cb({ reduced: prefersReducedMotion(), first: pageFirst, late: pageLate });
+    });
+    if (typeof cleanup === 'function') track(cleanup);
   } catch (error) {
-    console.error('[motion] SplitText unavailable', error);
+    console.error('[motion] onPageEnter callback failed', error);
   }
 }
 
-function run(cb: PageEnterCallback): void {
-  const page = currentPage();
-  void callbacksReady().then(() => {
-    if (!isCurrent(page)) return;
-    try {
-      // Keep the cleanup out of gsap.context's own revert list, or it would run twice.
-      let cleanup: void | Cleanup = undefined;
-      inPage(() => {
-        cleanup = cb({ reduced: prefersReducedMotion(), first: pageFirst, late: pageLate });
-      });
-      if (typeof cleanup === 'function') track(cleanup);
-    } catch (error) {
-      console.error('[motion] onPageEnter callback failed', error);
-    }
+/**
+ * Measures the scroll triggers again once the page's height has settled after a change
+ * (lazy images, galleries, late fonts): a trigger measured on the first layout could
+ * otherwise sit beyond the end of the page and never fire.
+ */
+function watchLayout(): void {
+  let timer: number | undefined;
+  const observer = new ResizeObserver(() => {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => ScrollTrigger.refresh(), reveal.refreshAfterMs);
+  });
+  observer.observe(document.body);
+  track(() => {
+    observer.disconnect();
+    window.clearTimeout(timer);
   });
 }
 
@@ -115,7 +122,7 @@ function enter(again = false): void {
   const reduced = prefersReducedMotion();
   // On a very slow first load the CSS failsafe has already shown the page; after a switch of
   // the motion mode the visitor is in the middle of the page and nothing should replay.
-  const late = again || (firstLoad && performance.now() > reveal.failsafeMs - 150);
+  const late = again || (firstLoad && failsafeFired());
   pageFirst = firstLoad;
   pageLate = late;
   firstLoad = false;
@@ -136,6 +143,7 @@ function enter(again = false): void {
   });
   for (const cb of callbacks) run(cb);
   ScrollTrigger.refresh();
+  step('layout', watchLayout);
   finishTransition();
 }
 
