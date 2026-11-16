@@ -197,8 +197,9 @@ attribute value), springing back on leave. Fine pointers, full motion.
 
 - **Root state** on `<html>`: `data-scroll-dir="up|down"` and `data-scrolled` (after 80px),
   re-applied after every swap. `data-motion`, `data-theme` and `js` come from BaseLayout.
-  While the custom cursor is active the kit adds `data-cursor-active` (native cursor
-  hidden) and `data-cursor-native` (native cursor shown again, for text and `hide`).
+  While the custom cursor is shown (from the first pointer move on) the kit adds
+  `data-cursor-active` (native cursor hidden) and `data-cursor-native` (native cursor shown
+  again, for text and `hide`).
 - **Smooth scroll**: one Lenis instance (lerp 0.14, native wheel speed, native touch),
   loaded only for fine pointers with full motion. Back/forward keeps its position, new
   pages start at the top. Use `data-lenis-prevent` on nested scrollers. It contains their

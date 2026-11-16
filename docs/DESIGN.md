@@ -442,8 +442,9 @@ Like the home page, a project opens with a statement and an object.
 4. **Gallery.** Every picture in its frame at the full content width, one under the other,
    40 → 80px apart, each with its caption under it in the mono caption style of the blog's
    figures. Contained pictures stand on their matte (6.1). A video sits in the same frame
-   with the browser's own controls and never starts by itself. Each figure rises once as it
-   is scrolled to.
+   with the browser's own controls and never starts by itself; it follows the picture rules
+   by the width and height stated for it (a landscape clip fills the frame, a phone
+   recording stands on the matte). Each figure rises once as it is scrolled to.
 5. **End.** One link to follow, between two ink hairlines: `NEXT PROJECT` in `label` and the
    next project's name in the `statement` style, an arrow in `accent-text` opposite it
    (hover as in 6.2). Under it, quiet and mono: `← ALL PROJECTS` on the left and
