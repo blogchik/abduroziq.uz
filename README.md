@@ -21,17 +21,22 @@ Start with [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the layout and contr
 
 Requires Node 24 (see `.nvmrc`) and pnpm 10 (`corepack enable` picks the right version).
 
-| Command          | What it does                                                             |
-| ---------------- | ------------------------------------------------------------------------ |
-| `pnpm install`   | install the workspace                                                    |
-| `pnpm dev`       | dev server at http://localhost:4321, drafts visible                      |
-| `pnpm build`     | production build into `apps/web/dist`                                    |
-| `pnpm preview`   | serve the production build                                               |
-| `pnpm lint`      | ESLint                                                                   |
-| `pnpm typecheck` | `astro check` and `tsc`                                                  |
-| `pnpm format`    | Prettier (`pnpm format:check` only checks)                               |
-| `pnpm test`      | unit checks (sitemap parsing, code-theme contrast)                       |
-| `pnpm check`     | format check, lint, typecheck, tests and build; must pass before merging |
+| Command          | What it does                                                              |
+| ---------------- | ------------------------------------------------------------------------- |
+| `pnpm install`   | install the workspace                                                     |
+| `pnpm dev`       | dev server at http://localhost:4321, drafts visible                       |
+| `pnpm build`     | production build into `apps/web/dist`                                     |
+| `pnpm preview`   | serve the production build                                                |
+| `pnpm lint`      | ESLint                                                                    |
+| `pnpm typecheck` | `astro check` and `tsc`                                                   |
+| `pnpm format`    | Prettier (`pnpm format:check` only checks)                                |
+| `pnpm test`      | unit checks (sitemap parsing, code-theme contrast)                        |
+| `pnpm check`     | format check, lint, typecheck, tests and build; must pass before merging  |
+| `pnpm test:e2e`  | browser smoke suite on the built site (run `pnpm build` first, see below) |
+
+`pnpm test:e2e` serves `apps/web/dist` and drives Chromium (desktop and phone) through every page,
+the motion modes and the page transition. It builds nothing and needs a browser once:
+`pnpm exec playwright install chromium`. It is not part of `pnpm check`; CI runs it after the build.
 
 ## Branches
 

@@ -12,7 +12,7 @@
   "scripts": {
     "lint": "eslint ."
   },
-  "dependencies": {
+  "devDependencies": {
     "@eslint/js": "10.0.1",
     "eslint": "10.14.0",
     "eslint-plugin-astro": "3.2.1",

@@ -6,7 +6,7 @@ The site is static. GitHub Actions builds it and Cloudflare Workers (static asse
 
 | Branch | Environment | On push |
 |---|---|---|
-| `dev` | local development | CI only (lint, typecheck, build, Lighthouse) |
+| `dev` | local development | CI only (lint, typecheck, build, Lighthouse, end-to-end suite) |
 | `main` | production | CI, then `Deploy` workflow |
 
 Releasing = merging `dev` into `main` and pushing. The `Deploy` workflow rebuilds,
@@ -117,7 +117,16 @@ to commit). Workers metrics (requests, errors) are under Workers & Pages -> `abd
 
 - CI builds in production mode (indexing allowed) so Lighthouse SEO can pass. Lighthouse
   asserts accessibility 1.0, best practices 0.95 and SEO 1.0 as errors, performance 0.95
-  as a warning, on `/`, `/uz/` and `/blog/`.
+  as a warning, on `/`, `/uz/`, `/blog/`, the project list and three project pages in English
+  and Uzbek (see `lighthouserc.json`). The 404 pages are not audited: their status and
+  `noindex` fail SEO by design.
+- The `CI` workflow has three jobs: `check` (`pnpm check`, then uploads `dist`), `lighthouse` and
+  `e2e`, the last two on the uploaded `dist`. `e2e` is the Playwright suite in `e2e/`
+  (`pnpm test:e2e`): every page, reduced motion, no JavaScript, the page transition and the
+  wheel over code blocks, Chromium only. It does not gate the deploy; `Deploy` runs its own checks.
+- Third-party actions are pinned to commit SHAs (the tag is in a trailing comment), above all
+  `cloudflare/wrangler-action`, which receives the API token. Dependabot's `github-actions`
+  updates keep the SHAs and the comments current.
 - Dependabot opens weekly grouped PRs against `dev`; TypeScript stays below 7 and pnpm on 10.
 - `_headers` limits: 100 rules, 2000 characters per line. Headers apply to static assets
   only, and are not applied to Worker-generated responses (there is no Worker code here).

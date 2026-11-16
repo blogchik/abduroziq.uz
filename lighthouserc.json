@@ -2,7 +2,17 @@
   "ci": {
     "collect": {
       "staticDistDir": "./apps/web/dist",
-      "url": ["/", "/uz/", "/blog/", "/projects/", "/projects/payzone/"],
+      "url": [
+        "/",
+        "/uz/",
+        "/blog/",
+        "/projects/",
+        "/projects/payzone/",
+        "/uz/projects/",
+        "/uz/projects/payzone/",
+        "/projects/subagent-monitor/",
+        "/projects/tavryn/"
+      ],
       "numberOfRuns": 3,
       "settings": {
         "chromeFlags": "--no-sandbox --headless=new"

@@ -21,6 +21,7 @@ monorepo. Public repository, MIT.
 | `pnpm preview` | serve the production build |
 | `pnpm lint` / `pnpm typecheck` / `pnpm format` | quality tools |
 | `pnpm check` | format check, image metadata check, lint, typecheck, tests and build; must pass before merging |
+| `pnpm test:e2e` | Playwright smoke suite (Chromium, desktop and phone) against the built `apps/web/dist`; run `pnpm build` first, and `pnpm exec playwright install chromium` once. Not part of `pnpm check`; CI runs it after the build |
 | `pnpm check:media` | fail on images under `packages/content` that carry metadata: EXIF (GPS), XMP, IPTC, PNG text chunks, SVG editor data or local paths |
 
 ## Branches
