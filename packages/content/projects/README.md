@@ -43,7 +43,9 @@ gallery: # optional; images and videos in order
     alt: { en: …, uz: … }
     caption: { en: …, uz: … } # optional
   - video: ./media/demo.mp4 # .mp4 or .webm, inside this folder
-    poster: ./media/demo.jpg # optional still shown before playing
+    width: 1600 # the video's own size in pixels: required
+    height: 1000
+    poster: ./media/demo.jpg # optional still shown before playing, same shape as the video
     alt: { en: …, uz: … }
     caption: { en: …, uz: … }
 ```
@@ -65,7 +67,7 @@ out and that language shows the facts, the stack and the media only.
 
 The repository is public. Images must carry no metadata: `pnpm check` runs
 `apps/web/scripts/check-media.mjs` and fails on any raster image under `packages/content`
-with EXIF (which holds the GPS position), XMP, IPTC or text chunks (where some tools put
+(and in the site's `src/assets` and `public` folders) with EXIF (which holds the GPS position), XMP, IPTC or text chunks (where some tools put
 EXIF in a PNG), and on any SVG with an editor `<metadata>` block, `sodipodi:` / `inkscape:`
 attributes or a path from your machine. Export screenshots without metadata, or strip it
 with `sharp(input).rotate().toFile(output)`.
@@ -81,3 +83,17 @@ after its opening `<svg>` tag (the two subagent-monitor pictures do).
 
 Keep videos short and small (they are committed and served as files): H.264 `.mp4`, no
 sound track unless it matters, and a poster. They are never played automatically.
+
+A video follows the same rules as a picture, by the `width` and `height` you write in the
+yaml (read them from the file, for example `ffprobe -v error -show_entries stream=width,height
+demo.mp4`; use the displayed size of a rotated phone recording). A landscape clip fills the
+frame; a phone recording or a square clip stands at its own size on the matte. The two numbers
+also reserve the space, so the page does not jump when the clip starts. Export the poster in
+the same shape as the clip.
+
+A video carries metadata too, and a phone recording often has the GPS position in it.
+`check-media` reads the boxes of every `.mp4`, `.mov`, `.m4v` and `.webm` file and fails on a
+location (3GPP `loci`, `©xyz`), the device make and model, Apple `com.apple.quicktime.*` keys
+and any creation time (in a WebM: a `DateUTC`, a title or a tag other than the encoder and
+the duration). Strip a reported clip without re-encoding it:
+`ffmpeg -i in.mp4 -map_metadata -1 -c copy out.mp4` (for WebM add `-fflags +bitexact`).
