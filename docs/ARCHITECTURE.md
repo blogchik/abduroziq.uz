@@ -166,7 +166,8 @@ translationKey: "…"   # optional; the same value on the en and uz versions lin
 ---
 ```
 
-The locale comes from the folder, the slug from the file name.
+The locale comes from the folder, the slug from the file name. The schema is strict: a key
+it does not know (a typo such as `draf: true`) fails the build instead of being ignored.
 
 ### Posts contract (`apps/web/src/lib/posts.ts`)
 
@@ -213,7 +214,7 @@ cover: ./media/cover.png       # optional image(), relative to the yaml
 coverAlt: { en, uz }           # required with a cover
 gallery:                       # optional
   - { image: ./media/x.png, alt: { en, uz }, caption?: { en, uz } }
-  - { video: ./media/x.mp4, poster?: ./media/x.jpg, alt: { en, uz }, caption?: { en, uz } }
+  - { video: ./media/x.mp4, width: 1600, height: 1000, poster?: ./media/x.jpg, alt: { en, uz }, caption?: { en, uz } }
 ```
 
 The bodies are a second collection, `projectBodies` (glob `*/*.mdx`, id `<slug>/<locale>`).
@@ -237,7 +238,7 @@ export interface ProjectSummary {
 }
 export type ProjectMedia =
   | { kind: 'image'; src: ImageMetadata; alt: string; caption?: string }
-  | { kind: 'video'; src: string; poster?: ImageMetadata; alt: string; caption?: string };
+  | { kind: 'video'; src: string; width: number; height: number; poster?: ImageMetadata; alt: string; caption?: string };
 export type ProjectBodyEntry = CollectionEntry<'projectBodies'>;
 export interface ProjectDetail extends ProjectSummary { gallery: ProjectMedia[]; body?: ProjectBodyEntry }
 
@@ -268,6 +269,10 @@ the text, `ProjectGallery` and `ProjectEnd` (DESIGN 6.2, 6.3).
 
 No field describes how a picture is presented: a phone screenshot or an SVG is recognised
 from the file (`stageOf`). A new picture needs nothing but `alt` (and a caption if wanted).
+A video cannot be read at build time, so its entry states `width` and `height` (required);
+`ProjectGallery` puts it in a `ProjectShot` slot with that shape, so it fills the frame or
+stands on the matte exactly like a picture of that shape, and the `<video>` carries the
+attributes that reserve its space.
 
 ### 5.3 Site data (`packages/content/src`)
 

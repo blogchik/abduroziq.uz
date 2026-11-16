@@ -49,3 +49,11 @@ test('srcset widths never exceed the file and always end with it', () => {
   assert.deepEqual(widthsFor(phone, true), [360, 540, 720, 960, 1170]);
   assert.deepEqual(widthsFor({ width: 600, height: 400, format: 'png' }, false), [480, 600]);
 });
+
+test('a video is shaped by its stated size: landscape fills, a phone recording is contained', () => {
+  assert.equal(stageOf({ width: 1600, height: 1000 }), undefined);
+  assert.equal(stageOf({ width: 1920, height: 1080 }), undefined);
+  const stage = stageOf({ width: 540, height: 1170 });
+  assert.ok(stage);
+  assert.equal(stage.ratioNarrow, 0.8);
+});

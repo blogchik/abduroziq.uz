@@ -49,7 +49,16 @@ export interface ProjectSummary {
 
 export type ProjectMedia =
   | { kind: 'image'; src: ImageMetadata; alt: string; caption?: string }
-  | { kind: 'video'; src: string; poster?: ImageMetadata; alt: string; caption?: string };
+  | {
+      kind: 'video';
+      src: string;
+      /** The file's own size in pixels, from the yaml. */
+      width: number;
+      height: number;
+      poster?: ImageMetadata;
+      alt: string;
+      caption?: string;
+    };
 
 export type ProjectBodyEntry = CollectionEntry<'projectBodies'>;
 
@@ -121,6 +130,8 @@ function toMedia(
   return {
     kind: 'video',
     src: resolveVideo(slug, item.video, videoFiles, VIDEO_EXTENSIONS),
+    width: item.width,
+    height: item.height,
     ...(item.poster ? { poster: item.poster } : {}),
     alt: item.alt[locale],
     ...caption,

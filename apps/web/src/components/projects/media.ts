@@ -1,8 +1,7 @@
-import type { ImageMetadata } from 'astro';
-
 /**
- * How a project picture sits in its frame (DESIGN 6.1), decided from the file itself so the
- * content needs no extra field.
+ * How a project picture or video sits in its frame (DESIGN 6.1), decided from its shape so
+ * the content needs no extra field (a picture's shape is read from the file; a video states
+ * its `width` and `height` in the yaml).
  *
  * A landscape screenshot fills its frame. Everything else (a phone screenshot, a square
  * panel, an illustration) is "contained": it is shown at a size of its own on a matte in the
@@ -20,7 +19,12 @@ export interface Stage {
   fitNarrow: number;
 }
 
-type Shape = Pick<ImageMetadata, 'width' | 'height' | 'format'>;
+/** The size of a picture or a video; `format` only matters for `svg`, which is always contained. */
+export interface Shape {
+  width: number;
+  height: number;
+  format?: string;
+}
 
 /** The shape of a desktop screenshot, and of every picture slot in the list. */
 export const FRAME_RATIO = 16 / 10;

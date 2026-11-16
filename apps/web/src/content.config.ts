@@ -11,7 +11,7 @@ import { locales, type Locale } from '@abduroziq/content';
 const posts = defineCollection({
   loader: glob({ base: '../../packages/content/posts', pattern: '**/*.mdx' }),
   schema: ({ image }) =>
-    z.object({
+    z.strictObject({
       title: z.string().min(1),
       description: z.string().min(70).max(160),
       date: z.coerce.date(),
@@ -42,6 +42,7 @@ const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/, { error: 'Colours are #RRGGBB'
  * every fact in both languages. The entry id is the folder name (the slug). Relative paths
  * (cover, gallery images, posters) resolve from the yaml file. Videos are plain paths here,
  * because `image()` handles images only; `src/lib/projects.ts` resolves them to built URLs.
+ * A video states its `width` and `height`, because nothing reads them from the file.
  * See packages/content/projects/README.md.
  */
 const projects = defineCollection({
@@ -56,6 +57,10 @@ const projects = defineCollection({
       z.strictObject({ image: image(), alt: localized(text), caption }),
       z.strictObject({
         video: z.string().min(1),
+        // The video's own size in pixels: the page reserves its space and decides from it
+        // how it sits in the frame (like a picture) before the file has loaded.
+        width: z.number().int().positive(),
+        height: z.number().int().positive(),
         poster: image().optional(),
         alt: localized(text),
         caption,

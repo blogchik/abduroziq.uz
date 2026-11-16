@@ -3,7 +3,7 @@ import { getImage } from 'astro:assets';
 import { t, type Locale } from '@/i18n';
 import type { ProjectDetail } from '@/lib/projects';
 import ProjectShot from './ProjectShot.astro';
-import { PAGE_AREA } from './media';
+import { PAGE_AREA, stageOf } from './media';
 import './frame.css';
 import '@/styles/prose.css';
 
@@ -11,7 +11,8 @@ import '@/styles/prose.css';
  * The gallery of a project page (DESIGN 6.3): every picture at the full content width, one
  * under the other, each with its caption in the mono caption style of the blog's figures.
  * A phone screenshot or an illustration keeps its own size on a matte (ProjectShot). Videos
- * are framed the same way and never play by themselves.
+ * follow the same rules by the width and height stated in the yaml, and never play by
+ * themselves.
  *
  * The section's heading is for assistive technology and the document outline only: the
  * pictures need no title to be understood. Each figure rises once as it is scrolled to.
@@ -31,6 +32,17 @@ const posters = await Promise.all(
       : undefined,
   ),
 );
+
+// The shape of each figure's picture, for the placeholder height below: a contained picture
+// is as tall as its stage, a filling one as its own shape.
+const shapes = project.gallery.map((item) => {
+  const shape = item.kind === 'image' ? item.src : item;
+  const stage = stageOf(shape);
+  return {
+    ratio: stage?.ratio ?? shape.width / shape.height,
+    ratioNarrow: stage?.ratioNarrow ?? shape.width / shape.height,
+  };
+});
 ---
 
 <section class="pgallery shell" aria-labelledby="project-gallery">
@@ -40,24 +52,32 @@ const posters = await Promise.all(
   <ul class="pgallery__list">
     {project.gallery.map((item, index) => (
       <li>
-        <figure class="pgallery__item" data-reveal="rise">
+        <figure
+          class="pgallery__item"
+          data-reveal="rise"
+          style={{
+            '--pg-ratio': shapes[index]?.ratio,
+            '--pg-ratio-narrow': shapes[index]?.ratioNarrow,
+          }}
+        >
           {item.kind === 'image' ? (
             <ProjectShot src={item.src} alt={item.alt} area={PAGE_AREA} colors={project.colors} />
           ) : (
-            <div class="pframe">
+            <ProjectShot shape={item} colors={project.colors}>
               <video
                 src={item.src}
                 poster={posters[index]}
-                width={item.poster?.width}
-                height={item.poster?.height}
+                width={item.width}
+                height={item.height}
                 aria-label={item.alt}
+                data-cursor="hide"
                 controls
                 preload="none"
                 playsinline
               >
                 <a href={item.src}>{t(locale, 'projects.video')}</a>
               </video>
-            </div>
+            </ProjectShot>
           )}
           {item.caption && <figcaption class="figure__caption">{item.caption}</figcaption>}
         </figure>
@@ -68,6 +88,9 @@ const posters = await Promise.all(
 
 <style>
   .pgallery__list {
+    /* The figures' placeholder height is measured against the list's width, not the
+       viewport's (see below). */
+    container-type: inline-size;
     display: grid;
     gap: clamp(2.5rem, 1.9rem + 2.8vw, 5rem);
   }
@@ -75,10 +98,18 @@ const posters = await Promise.all(
   /* The gallery is always below the first screen. Until a figure comes near the viewport the
      browser skips its rendering, and with it the download of its lazy image, which would
      otherwise compete with the cover (the page's largest paint) on a slow connection. The
-     placeholder height is a 16:10 picture at the full width plus its caption; once shown, the
-     real height is remembered. */
+     placeholder height is the picture's frame at the list's width (its own shape, or its
+     matte's stage; a phone's stage is taller than a tablet's) plus the caption; once shown,
+     the real height is remembered. */
   .pgallery__item {
     content-visibility: auto;
-    contain-intrinsic-block-size: auto calc(62.5vw + 2.5rem);
+    contain-intrinsic-block-size: auto
+      calc(100cqi / var(--pg-ratio-narrow) + 2rem + 2 * var(--hairline));
+  }
+
+  @media (width >= 48rem) {
+    .pgallery__item {
+      contain-intrinsic-block-size: auto calc(100cqi / var(--pg-ratio) + 2rem + 2 * var(--hairline));
+    }
   }
 </style>

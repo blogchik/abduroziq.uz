@@ -2,7 +2,7 @@
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 import { ticketColors } from '@/components/home/lib';
-import { sizesFor, stageOf, widthsFor, type Area } from './media';
+import { sizesFor, stageOf, widthsFor, type Area, type Shape } from './media';
 import './frame.css';
 
 /**
@@ -11,25 +11,40 @@ import './frame.css';
  * the project's background colour (`stageOf` decides from the file). The frame is the shared
  * hairline of `frame.css`.
  *
- * The space is reserved before the file arrives: a filling picture by its own width and
- * height, a contained one by the stage's aspect ratio. SVGs go through untouched, so an
- * animated illustration keeps playing.
+ * A video takes the same frame: pass its `shape` (the width and height from the yaml) and put
+ * the `<video>` in the slot. It follows the rules of a picture of that shape, so a phone
+ * recording stands on the matte instead of being stretched to the full width.
+ *
+ * The space is reserved before the file arrives: a filling picture or video by its own width
+ * and height (set them on the `<video>`), a contained one by the stage's aspect ratio. SVGs go
+ * through untouched, so an animated illustration keeps playing.
  */
-interface Props {
+interface Common {
+  /** The project's two colours: the first is the matte under a contained picture. */
+  colors: [background: string, foreground: string];
+  class?: string;
+}
+interface PictureProps extends Common {
   src: ImageMetadata;
   alt: string;
   /** The width of the frame at each breakpoint, for `sizes`. */
   area: Area;
-  /** The project's two colours: the first is the matte under a contained picture. */
-  colors: [background: string, foreground: string];
   /** Above the fold: loaded eagerly and first. Never combine with a reveal. */
   priority?: boolean;
-  class?: string;
+  shape?: never;
 }
+interface SlotProps extends Common {
+  shape: Shape;
+  src?: never;
+  alt?: never;
+  area?: never;
+  priority?: never;
+}
+type Props = PictureProps | SlotProps;
 
-const { src, alt, area, colors, priority = false, class: className } = Astro.props;
-const stage = stageOf(src);
-const vector = src.format === 'svg';
+const { src, alt, area, shape, colors, priority = false, class: className } = Astro.props;
+const stage = stageOf(src ?? shape);
+const vector = src?.format === 'svg';
 const matte = ticketColors(colors);
 const loading = priority
   ? ({ loading: 'eager', fetchpriority: 'high' } as const)
@@ -53,7 +68,9 @@ const loading = priority
     }
   }
 >
-  {vector ? (
+  {!src ? (
+    <slot />
+  ) : vector ? (
     <Image src={src} alt={alt} {...loading} />
   ) : (
     <Image
@@ -67,7 +84,7 @@ const loading = priority
 </div>
 
 <style>
-  .shot :global(img) {
+  .shot :global(:is(img, video)) {
     display: block;
     width: 100%;
     height: auto;
@@ -80,7 +97,7 @@ const loading = priority
     background-color: var(--shot-matte);
   }
 
-  .shot--contained :global(img) {
+  .shot--contained :global(:is(img, video)) {
     width: var(--shot-fit-narrow);
   }
 
@@ -95,7 +112,7 @@ const loading = priority
       aspect-ratio: var(--shot-ratio);
     }
 
-    .shot--contained :global(img) {
+    .shot--contained :global(:is(img, video)) {
       width: var(--shot-fit);
     }
   }

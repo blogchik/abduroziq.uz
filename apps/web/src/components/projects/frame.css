@@ -22,13 +22,6 @@
   }
 }
 
-/* A video in a frame is as wide as the frame; until it plays the frame shows its poster. */
-.pframe > video {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
 /*
  * The picture of a followed list row grows into the cover of its page (picture-morph.ts
  * names the two; the class comes from ProjectCover). It moves with the weight of the other

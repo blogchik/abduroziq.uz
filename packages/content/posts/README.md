@@ -20,6 +20,8 @@ translationKey: "…"   # same value on the en and uz versions
 ---
 ```
 
+A key not listed here (a typo such as `draf: true`) fails the build.
+
 ## Drafts and publishing
 
 `draft: true` posts, their tag pages, feed items and sitemap entries exist only in
