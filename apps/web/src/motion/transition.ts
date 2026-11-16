@@ -10,7 +10,9 @@
  *    new page's entrances run.
  *
  * Rapid clicks re-use the running cover, back/forward goes through the same events, and
- * reduced motion gets no panel.
+ * reduced motion gets no panel. A navigation the router cancels without starting another
+ * one (a same-page anchor or Back to a hash entry while the panel covers) has no swap and no
+ * page load: the panel leaves when its navigation is aborted.
  *
  * Links the router must not handle (a target with a file extension other than .html, such
  * as the RSS feeds, or `data-astro-reload`) never start the panel: such anchors are marked
@@ -32,6 +34,7 @@ interface PreparationEvent extends Event {
   loader: () => Promise<void>;
   to?: URL;
   sourceElement?: Element;
+  signal?: AbortSignal;
 }
 
 type PanelState = 'idle' | 'covering' | 'covered' | 'leaving';
@@ -145,6 +148,11 @@ function onClickCapture(event: MouseEvent): void {
   if (url.origin === location.origin && isFile(url)) anchor.setAttribute('data-astro-reload', '');
 }
 
+/** Navigations that started the panel; the last one is the one the panel waits for. */
+let navigations = 0;
+/** The navigation that reached its swap: from then on `astro:page-load` lets the panel go. */
+let swapped = 0;
+
 function onBeforePreparation(event: Event): void {
   if (prefersReducedMotion()) return;
   const prep = event as PreparationEvent;
@@ -156,6 +164,24 @@ function onBeforePreparation(event: Event): void {
   prep.loader = async () => {
     await Promise.all([load(), cover()]);
   };
+  // The router cancels this navigation when another one starts. A newer navigation that
+  // swaps announces itself in the same task, so a microtask later it has started the panel
+  // again; when none did (a same-page anchor or Back to a hash entry of this document: no
+  // swap, no page load follows), the panel leaves and the gate opens here.
+  const id = ++navigations;
+  prep.signal?.addEventListener(
+    'abort',
+    () => {
+      queueMicrotask(() => {
+        if (id === navigations && swapped !== id) finishTransition();
+      });
+    },
+    { once: true },
+  );
+}
+
+function onBeforeSwap(): void {
+  swapped = navigations;
 }
 
 /** After the swap the new <body> needs the panel (still covering). */
@@ -205,6 +231,7 @@ export function installTransitions(): void {
   installed = true;
   document.addEventListener('click', onClickCapture, { capture: true });
   document.addEventListener('astro:before-preparation', onBeforePreparation);
+  document.addEventListener('astro:before-swap', onBeforeSwap);
   // The old state is captured right after preparation, the new one right after the swap.
   document.addEventListener('astro:after-preparation', markTextMorphs);
   document.addEventListener('astro:after-swap', markTextMorphs);

@@ -6,7 +6,9 @@
  * pages would be covered by the panel and then pop back on top of it. So the picture is
  * held instead: when a row is followed, a copy of its picture is fixed above the panel at
  * the same place, and that copy carries the view-transition name. It stays while the page
- * is wiped away, then moves and grows into the cover, and the panel lifts off the rest.
+ * is wiped away, then moves and grows into the cover, and the panel lifts off the rest. A
+ * navigation the router cancels without a swap, and a page restored from the back/forward
+ * cache, drop the copy.
  *
  * Only the followed row takes part, and only on a link click (`sourceElement`): the cover of
  * a page reached any other way is not a shared element and arrives with its page. Without
@@ -24,13 +26,22 @@ const HELD = 'data-project-picture-held';
 
 /** The project whose picture is being held, between the click and the swap. */
 let slug: string | undefined;
+/** The copy on screen, if any. */
+let current: HTMLElement | undefined;
+
+function drop(): void {
+  slug = undefined;
+  current?.remove();
+  current = undefined;
+  document.querySelector(`[${HELD}]`)?.remove();
+}
 
 function hold(event: Event): void {
-  slug = undefined;
-  document.querySelector(`[${HELD}]`)?.remove();
+  drop();
   if (prefersReducedMotion() || !('startViewTransition' in document)) return;
 
-  const source = (event as TransitionBeforePreparationEvent).sourceElement;
+  const prep = event as TransitionBeforePreparationEvent;
+  const source = prep.sourceElement;
   const picture = source?.querySelector<HTMLElement>(`[${PICTURE}]`);
   if (!picture) return;
 
@@ -51,7 +62,19 @@ function hold(event: Event): void {
   });
   // The old body leaves with the swap, and the copy with it.
   document.body.append(held);
+  current = held;
   slug = picture.getAttribute(PICTURE) ?? undefined;
+  // Cancelled by the router (a same-page anchor, Back to a hash entry): no swap takes the copy
+  // away. A newer navigation has already called `hold` by the microtask, and then wins.
+  prep.signal.addEventListener(
+    'abort',
+    () => {
+      queueMicrotask(() => {
+        if (current === held) drop();
+      });
+    },
+    { once: true },
+  );
 }
 
 /** Names the cover of the new page, and takes the name back when the move is over. */
@@ -77,3 +100,7 @@ function receive(event: Event): void {
 
 document.addEventListener('astro:before-preparation', hold);
 document.addEventListener('astro:before-swap', receive);
+// Back/forward cache: the page comes back as it was left, a held copy included.
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) drop();
+});
