@@ -89,6 +89,17 @@ export async function getPosts(
   return [...own, ...foreign].sort(newestFirst);
 }
 
+/**
+ * The post with this `translationKey` for a reader of `locale`: its version in `locale` if
+ * one is published there, otherwise the other locale's version, otherwise `undefined`.
+ * Built on `getPosts(…, { includeOtherLocale })`, so drafts are excluded in production and
+ * visible in `astro dev` exactly as for every other reader.
+ */
+export async function getPostByKey(locale: Locale, key: string): Promise<PostSummary | undefined> {
+  const posts = await getPosts(locale, { includeOtherLocale: true });
+  return posts.find((post) => post.translationKey === key);
+}
+
 /** Tags used by posts written in `locale`, most used first, then alphabetical. */
 export async function getAllTags(locale: Locale): Promise<{ tag: string; count: number }[]> {
   const counts = new Map<string, number>();

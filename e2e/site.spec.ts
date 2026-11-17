@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { expect, test } from '@playwright/test';
 import { NOT_FOUND_PAGES, builtPages, localeOf, scrollToBottom, settled } from './helpers';
 
@@ -40,5 +42,60 @@ for (const url of [...builtPages(), ...NOT_FOUND_PAGES]) {
       client: document.documentElement.clientWidth,
     }));
     expect(width.scroll, 'horizontal overflow').toBeLessThanOrEqual(width.client);
+  });
+}
+
+// About: two paragraphs, and one link to the post about building the site, present exactly
+// when that post's page is in the build (drafts are not built). The post is found the way the
+// site finds it: its `translationKey` is `profile.aboutPost`; its version in the page's
+// language wins, otherwise the other language's.
+const root = path.join(__dirname, '..');
+const aboutKey = /aboutPost:\s*'([^']+)'/.exec(
+  fs.readFileSync(path.join(root, 'packages', 'content', 'src', 'site.ts'), 'utf8'),
+)?.[1];
+
+/** URL paths of the posts that carry `translationKey: key`, by locale (published or not). */
+function postUrlsByKey(key: string): Record<'en' | 'uz', string[]> {
+  const urls: Record<'en' | 'uz', string[]> = { en: [], uz: [] };
+  for (const locale of ['en', 'uz'] as const) {
+    const dir = path.join(root, 'packages', 'content', 'posts', locale);
+    for (const file of fs.readdirSync(dir).filter((name) => name.endsWith('.mdx'))) {
+      const head = fs.readFileSync(path.join(dir, file), 'utf8').split(/^---\s*$/m)[1] ?? '';
+      if (new RegExp(`^translationKey:\\s*["']?${key}["']?\\s*$`, 'm').test(head)) {
+        const slug = file.replace(/\.mdx$/, '');
+        urls[locale].push(locale === 'uz' ? `/uz/blog/${slug}/` : `/blog/${slug}/`);
+      }
+    }
+  }
+  return urls;
+}
+
+for (const url of ['/', '/uz/']) {
+  test(`about on ${url}: two paragraphs, the post link only when the post is built`, async ({
+    page,
+  }) => {
+    expect(aboutKey, 'profile.aboutPost not found in packages/content/src/site.ts').toBeTruthy();
+    const locale = localeOf(url);
+    const other = locale === 'uz' ? 'en' : 'uz';
+    const built = new Set(builtPages());
+    const own = postUrlsByKey(aboutKey as string)[locale].find((u) => built.has(u));
+    const foreign = postUrlsByKey(aboutKey as string)[other].find((u) => built.has(u));
+    const expected = own ?? foreign;
+
+    await page.goto(url);
+    await settled(page);
+
+    // The count only: the wording is copy, and editing copy must not break a test.
+    await expect(page.locator('#about .about__text')).toHaveCount(2);
+
+    const link = page.locator('#about .about__more a');
+    if (!expected) {
+      await expect(link).toHaveCount(0);
+      return;
+    }
+    await expect(link).toHaveCount(1);
+    await expect(link).toHaveAttribute('href', expected);
+    if (own) await expect(link).not.toHaveAttribute('hreflang', /./);
+    else await expect(link).toHaveAttribute('hreflang', other);
   });
 }

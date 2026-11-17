@@ -28,6 +28,7 @@ export interface Profile {
   sentence: Localized<SentencePart[]>;
   summary: Localized; // one line about him, for structured data
   about: Localized<{ text: string; strong?: boolean }[][]>; // paragraphs of spans
+  aboutPost: string; // translationKey of the post About links to, once it is published
   facts: { id: string; label: Localized; value: Localized }[];
   agentTag: string; // "AI agent": the name tag of the second cursor in the hero
   desk: { stickyNote: string; polaroidCaption: string; pialaNote: Localized };

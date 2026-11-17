@@ -271,10 +271,15 @@ named by a sentence.
 ### 4.3 `01 — About`
 
 - Label in the left three columns; content in columns 4–11.
-- One paragraph in `lead`: key phrases in ink, connecting words in `ink-soft`.
-- Under it a small facts table, hairline rows, mono labels left and `body` values right:
+- Two paragraphs in `lead`: key phrases in ink, connecting words in `ink-soft`. The first
+  says who he is and what he builds; the second, how he works with AI agents.
+- Under them one quiet action: a mono arrow link, `HOW THIS SITE WAS BUILT →`, to the post
+  about building the site. It is there only once that post is published (in the other
+  language when there is no version in the reader's); the text reads complete without it,
+  and the layout does not change when it is absent.
+- Below that a small facts table, hairline rows, mono labels left and `body` values right:
   `ROLE`, `BASED IN`, `FOCUS`, `STACK`, `NOW`.
-- **The collage** (the desk): next to the paragraph, in the column under the label, three
+- **The collage** (the desk): next to the paragraphs, in the column under the label, three
   physical objects lie tilted and overlapping, each draggable with inertia inside the
   collage's box. They never cover the text in their resting positions.
 
@@ -287,7 +292,7 @@ named by a sentence.
 While dragged an object lifts (stronger shadow, +3% scale), tilts with its velocity and
 comes to rest with a small settle. Double-click resets the collage to its start layout.
 
-Below 1024px the collage is a band of its own under the paragraph (310px high, at most
+Below 1024px the collage is a band of its own under the paragraphs (310px high, at most
 23rem wide), still draggable by touch.
 
 The desk is decoration: hidden from assistive technology, and nothing essential is

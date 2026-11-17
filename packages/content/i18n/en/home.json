@@ -9,7 +9,8 @@
     "refill": "Refill"
   },
   "about": {
-    "title": "About"
+    "title": "About",
+    "post": "How this site was built"
   },
   "tape": "What I'm building",
   "building": {

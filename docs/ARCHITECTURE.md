@@ -180,6 +180,7 @@ export interface PostSummary {
 export function getPosts(locale: Locale, opts?: { includeOtherLocale?: boolean }): Promise<PostSummary[]>; // newest first, drafts excluded in production
 export function getAllTags(locale: Locale): Promise<{ tag: string; count: number }[]>;
 export function getAdjacentPosts(post: PostSummary): Promise<{ prev?: PostSummary; next?: PostSummary }>;
+export function getPostByKey(locale: Locale, key: string): Promise<PostSummary | undefined>; // by translationKey: the locale's version, else the other locale's, else undefined
 ```
 
 `getAdjacentPosts` works within the post's own locale: `prev` is the next older post,
@@ -295,6 +296,7 @@ export interface Profile {
   sentence: Localized<SentencePart[]>;
   summary: Localized;           // one line about him, for structured data
   about: Localized<{ text: string; strong?: boolean }[][]>;   // paragraphs of spans
+  aboutPost: string;            // translationKey of the post About links to, once it is published
   facts: { id: string; label: Localized; value: Localized }[];
   agentTag: string;             // "AI agent": the name tag of the second cursor in the hero
   desk: { stickyNote: string; polaroidCaption: string; pialaNote: Localized };

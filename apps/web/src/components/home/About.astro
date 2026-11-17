@@ -1,18 +1,25 @@
 ---
 import { profile } from '@abduroziq/content';
+import ArrowLink from '@/components/ui/ArrowLink.astro';
 import Container from '@/components/ui/Container.astro';
 import SectionLabel from '@/components/ui/SectionLabel.astro';
 import { t, type Locale } from '@/i18n';
+import { getPostByKey } from '@/lib/posts';
 import Desk from './desk/Desk.astro';
 
 /**
- * `01 — About` (DESIGN 4.3): the label in the left columns, one paragraph in `lead` (key
- * phrases in ink, connecting words in ink-soft) and the facts as a hairline list of mono
- * labels and body values.
+ * `01 — About` (DESIGN 4.3): the label in the left columns, two paragraphs in `lead` (key
+ * phrases in ink, connecting words in ink-soft: who he is and what he builds, then how he
+ * works with AI agents) and the facts as a hairline list of mono labels and body values.
  *
- * Next to the paragraph lies the collage: the polaroid, the sticky note and the piala,
+ * Under the paragraphs sits one quiet arrow link to the post about building the site
+ * (`profile.aboutPost`, a `translationKey`). It exists only while that post is published,
+ * in the page's language or else in the other one (then marked with `hreflang`). The text
+ * reads complete without it and nothing else in the layout depends on it.
+ *
+ * Next to the paragraphs lies the collage: the polaroid, the sticky note and the piala,
  * tilted and overlapping, to pick up and throw (the motion kit's desk). On wide screens it
- * fills the column under the label; on smaller ones it is a band under the paragraph. Both
+ * fills the column under the label; on smaller ones it is a band under the paragraphs. Both
  * are in the markup and CSS shows one.
  */
 interface Props {
@@ -20,6 +27,7 @@ interface Props {
 }
 
 const { locale } = Astro.props;
+const post = await getPostByKey(locale, profile.aboutPost);
 ---
 
 <Container as="section" grid class="about" id="about" aria-labelledby="about-title">
@@ -38,6 +46,16 @@ const { locale } = Astro.props;
         {paragraph.map((span) => (span.strong ? <strong>{span.text}</strong> : span.text))}
       </p>
     ))}
+
+    {post && (
+      <p class="about__more" data-reveal="fade">
+        <ArrowLink
+          href={post.url}
+          label={t(locale, 'home.about.post')}
+          {...(post.locale === locale ? {} : { hreflang: post.locale })}
+        />
+      </p>
+    )}
 
     <Desk locale={locale} variant="about-band" entrance={0.2} class="about__band" />
 
@@ -84,6 +102,11 @@ const { locale } = Astro.props;
   .about__text strong {
     color: var(--ink);
     font-weight: inherit;
+  }
+
+  /* The same air as the hero's action link. */
+  .about__more {
+    margin: clamp(1.5rem, 1.25rem + 1.1vw, 2.25rem) 0 0;
   }
 
   .about :global(.about__band) {
