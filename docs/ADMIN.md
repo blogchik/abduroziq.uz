@@ -57,7 +57,9 @@ never reaches the site: the previous version stays up.
 - A new entry starts with **Draft** on. A draft is committed but left out of the site. Turn
   Draft off and save to publish.
 - A failed run is visible in the repository's Actions tab only; the panel does not show the
-  reason. The usual causes are below.
+  reason. The usual causes are below. Once the two Telegram secrets exist (DEPLOY.md, "Telegram
+  notification"), the result of every save also arrives as a Telegram message: published, or
+  not published with the step that failed and a link to the run.
 - `main` now moves without `dev`. Before the next piece of work on `dev`, bring those commits
   in: `git fetch origin && git merge origin/main`.
 

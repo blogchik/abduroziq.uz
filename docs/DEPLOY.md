@@ -16,8 +16,11 @@ runs `pnpm check` (format, lint, typecheck, tests, build) and the Lighthouse ass
 is never published. The job only runs on `main`: starting it by hand from the Actions tab
 (`Deploy` -> `Run workflow`) on another branch does nothing.
 
-Until the two secrets below exist, the workflow still succeeds: it builds, then writes
+Until the two Cloudflare secrets below exist, the workflow still succeeds: it builds, then writes
 "Deploy skipped: secrets not configured" to the job summary and publishes nothing.
+
+The result of every run can arrive as a Telegram message: see
+[Telegram notification](#telegram-notification).
 
 ## One-time Cloudflare setup
 
@@ -98,6 +101,52 @@ Not verified, ordered by simplicity:
 
 Until this is solved the site works on the workers.dev URL, but the canonical URL and
 sitemap say `https://abduroziq.uz`.
+
+## Telegram notification
+
+The last step of `Deploy` sends one Telegram message for every run on `main` (a save in the
+content panel, a merge of `dev`, a manual run), so the result is known without opening GitHub:
+
+- `✅ Published`, the commit (subject and short SHA) and the site address;
+- `❌ Not published`, the commit and the step that failed: `pnpm check`, the Lighthouse
+  assertions or the deploy to Cloudflare;
+- `⚠️ Not published` when the run was cancelled or the Cloudflare secrets are missing.
+
+Every message ends with a link to the run. The step reads two secrets, `TELEGRAM_BOT_TOKEN` and
+`TELEGRAM_CHAT_ID`; until both exist it does nothing and the workflow runs as before.
+
+1. Create the bot. In Telegram open [@BotFather](https://t.me/BotFather), send `/newbot` and
+   give the bot a name and a username that ends in `bot`. BotFather answers with the token (it
+   looks like `110201543:AAHdq...`).
+2. Open the chat with the new bot and press **Start**: a bot cannot write to someone who has
+   not written to it first.
+3. Find your chat id. In a terminal (`read -rs` takes the pasted token without showing it or
+   keeping it in the shell history):
+
+   ```bash
+   read -rs TOKEN
+   curl -s "https://api.telegram.org/bot$TOKEN/getUpdates"
+   ```
+
+   The chat id is the number in `"chat":{"id":123456789,`. An empty `"result":[]` means the bot
+   has received nothing in the last 24 hours: send it any message and ask again.
+4. Add both values as secrets in GitHub, next to the Cloudflare ones: repository -> Settings ->
+   Secrets and variables -> Actions -> New repository secret, or from a terminal
+   `gh secret set TELEGRAM_BOT_TOKEN` and `gh secret set TELEGRAM_CHAT_ID` (each asks for the
+   value).
+5. Try it: Actions -> `Deploy` -> Run workflow, on `main`. The message arrives when the run ends.
+
+The token is the bot's password: whoever has it can write as the bot and read what is sent to
+it. It belongs in the secret and nowhere else; if it leaks, replace it in @BotFather (`/revoke`)
+and update the secret. The chat id is the number of your Telegram account, which is why it is a
+secret too and not a line in this public repository.
+
+The message is a courtesy: it never changes the result of a run. When it cannot be sent, the
+"Notify on Telegram" step ends with a warning that gives the HTTP status of Telegram's answer
+and nothing else, because the run log is public and the answer names the chat. 401 is a wrong
+token (checked with a made-up one). **Not verified:** that 400 means a wrong chat id and 403 a
+bot that was never started or has been blocked; and the message itself, until step 5 has been
+done once with the real secrets.
 
 ## Rollback
 

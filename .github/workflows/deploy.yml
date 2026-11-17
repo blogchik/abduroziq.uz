@@ -41,12 +41,14 @@ jobs:
           restore-keys: turbo-${{ runner.os }}-
 
       # Formatting, lint, typecheck, unit checks and the production build of this exact commit.
-      - run: pnpm check
+      - id: check
+        run: pnpm check
 
       # The same Lighthouse assertions as the CI workflow (lighthouserc.json), run here so that
       # a deploy never depends on a separate workflow finishing first: if the checks fail on
       # this commit, nothing below runs and nothing is published.
       - name: Lighthouse assertions
+        id: lighthouse
         run: pnpm exec lhci autorun --config=./lighthouserc.json
 
       - name: Keep Lighthouse reports
@@ -100,3 +102,85 @@ jobs:
             echo "- URL: ${DEPLOY_URL:-see the wrangler output above}"
             echo "- Production domain: https://abduroziq.uz (after the routes in wrangler.jsonc are enabled)"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      # One Telegram message per run saying whether this commit was published, so that a save
+      # in the content panel does not need a visit to the Actions tab (docs/DEPLOY.md,
+      # "Telegram notification"). It is a courtesy: without the two secrets it does nothing,
+      # and it can never fail the job. The commit subject is text that whoever pushed wrote, so
+      # it is read with git and sent as form data, never pasted into the script. Nothing
+      # Telegram answers is printed: these logs are public and the answer names the chat.
+      - name: Notify on Telegram
+        if: always() && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        timeout-minutes: 2
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          JOB_STATUS: ${{ job.status }}
+          CHECK_OUTCOME: ${{ steps.check.outcome }}
+          LIGHTHOUSE_OUTCOME: ${{ steps.lighthouse.outcome }}
+          DEPLOY_OUTCOME: ${{ steps.deploy.outcome }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Telegram secrets are not configured: no notification. See docs/DEPLOY.md."
+            exit 0
+          fi
+
+          if [ "$DEPLOY_OUTCOME" = "success" ]; then
+            headline="✅ Published"
+            detail="https://abduroziq.uz"
+          elif [ "$JOB_STATUS" = "success" ]; then
+            headline="⚠️ Not published"
+            detail="The checks passed, but the Cloudflare secrets are missing"
+          elif [ "$JOB_STATUS" = "cancelled" ]; then
+            headline="⚠️ Not published"
+            detail="The run was cancelled"
+          elif [ "$CHECK_OUTCOME" = "failure" ]; then
+            headline="❌ Not published"
+            detail="Failed step: pnpm check"
+          elif [ "$LIGHTHOUSE_OUTCOME" = "failure" ]; then
+            headline="❌ Not published"
+            detail="Failed step: Lighthouse assertions"
+          elif [ "$DEPLOY_OUTCOME" = "failure" ]; then
+            headline="❌ Not published"
+            detail="Failed step: deploy to Cloudflare"
+          else
+            headline="❌ Not published"
+            detail="Failed step: not one of the checks, see the run"
+          fi
+
+          commit="${GITHUB_SHA::7}"
+          subject="$(git log -1 --format=%s "$GITHUB_SHA" 2>/dev/null || true)"
+          if [ -n "$subject" ]; then
+            commit="$subject ($commit)"
+          fi
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          text="$(printf '%s\n%s\n%s\n%s' "$headline" "$commit" "$detail" "$run_url")"
+
+          # sendMessage, parameters as application/x-www-form-urlencoded. No parse_mode: the
+          # text is plain, so nothing in a commit subject needs escaping. Up to three tries,
+          # in a loop: curl's own --retry gives up with "failed to truncate" when the output
+          # is /dev/null (seen with curl 8.5, the one in Ubuntu 24.04).
+          status=""
+          for attempt in 1 2 3; do
+            if [ "$attempt" -gt 1 ]; then
+              sleep 5
+            fi
+            status="$(
+              curl --silent --output /dev/null --write-out '%{http_code}' --max-time 20 \
+                --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
+                --data-urlencode "text=$text" \
+                --data-urlencode 'link_preview_options={"is_disabled":true}' \
+                "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage"
+            )" || true
+            # Another try only helps after no answer (000), a rate limit or a server error.
+            case "$status" in
+              000 | 429 | 5??) ;;
+              *) break ;;
+            esac
+          done
+          if [ "$status" = "200" ]; then
+            echo "Notification sent."
+          else
+            echo "::warning title=Telegram notification not sent::HTTP status ${status:-000} from Telegram (000 means no answer). See docs/DEPLOY.md."
+          fi

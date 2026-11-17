@@ -93,7 +93,8 @@ Only the exact string `true` enables indexing.
 
 Drafts (`draft: true`) are rendered in development and excluded from production builds.
 Deploy credentials exist only as GitHub Actions secrets (`CLOUDFLARE_API_TOKEN`,
-`CLOUDFLARE_ACCOUNT_ID`).
+`CLOUDFLARE_ACCOUNT_ID`), and so do the two of the optional Telegram notification
+(`TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`; DEPLOY.md).
 
 ## 4. Routing and languages
 
