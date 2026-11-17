@@ -41,12 +41,13 @@ const names = (collection: Collection) => collection.fields.map((field) => field
 
 test('the panel script is pinned to one exact version and checked against its hash', () => {
   const html = readFileSync(path.join(admin, 'index.html'), 'utf8');
-  const script = /<script\b[^>]*>/.exec(html)?.[0] ?? '';
+  const script = /<script\b[^>]*>/i.exec(html)?.[0] ?? '';
   const version = /@sveltia\/cms@(\d+\.\d+\.\d+)\/dist\/sveltia-cms\.js"/.exec(script)?.[1];
   assert.ok(version, 'the script URL names an exact version');
   assert.match(script, /integrity="sha384-[A-Za-z0-9+/]{64}"/);
   assert.match(script, /crossorigin="anonymous"/);
-  assert.equal(html.match(/<script\b/g)?.length, 1, 'no second script on the page');
+  // Tag names are case-insensitive: `<SCRIPT>` is a script too.
+  assert.equal(html.match(/<script\b/gi)?.length, 1, 'no second script on the page');
   // The editor schema in config.yml describes the same version as the script.
   assert.ok(source.includes(`@sveltia/cms@${version}/schema/sveltia-cms.json`));
 });
