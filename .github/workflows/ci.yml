@@ -1,13 +1,35 @@
 name: CI
 
+# One pipeline for every branch: check -> (Lighthouse and the end-to-end suite, side by side)
+# -> deploy, the last only on `main`. The deploy publishes the `dist` that the other jobs
+# tested; nothing is built again after the tests (docs/DEPLOY.md).
 on:
   push:
     branches: [dev, main]
+    # Files the site is not built from. A change to these alone runs nothing: no check and, on
+    # `main`, no deploy. `*.md` is the repository root only; posts are `.mdx` anyway.
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - 'LICENSE'
+      - '.github/assets/**'
+      - '.github/dependabot.yml'
   pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - 'LICENSE'
+      - '.github/assets/**'
+      - '.github/dependabot.yml'
+  # A manual run on `main` checks and deploys that commit again; on another branch it only checks.
+  workflow_dispatch:
 
+# On `dev` and in pull requests a newer push cancels the older run. On `main` nothing is
+# cancelled, so a deploy never stops halfway: runs wait for each other, and while one runs only
+# the newest waiting push is kept.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read
@@ -19,6 +41,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       # Version comes from "packageManager" in package.json.
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
@@ -39,7 +63,7 @@ jobs:
 
       # Format check first (a clear Prettier message when a file is not formatted), then media
       # metadata, lint, typecheck, unit checks and the production-mode build (indexing
-      # allowed), which is also what Lighthouse and the end-to-end suite need.
+      # allowed): the `dist` that Lighthouse, the end-to-end suite and the deploy use.
       - run: pnpm check
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -56,6 +80,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -87,6 +113,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -99,22 +127,12 @@ jobs:
           name: dist
           path: apps/web/dist
 
-      # The browser build is tied to the Playwright version, so the lockfile is the cache key.
-      - name: Cache Chromium
-        id: browser
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-
-      - name: Install Chromium and its system libraries
-        if: steps.browser.outputs.cache-hit != 'true'
-        run: pnpm exec playwright install --with-deps chromium
-
-      # The system libraries are not part of the cache: install them when the browser is cached.
-      - name: Install Chromium system libraries
-        if: steps.browser.outputs.cache-hit == 'true'
-        run: pnpm exec playwright install-deps chromium
+      # The suite runs headless without a `channel` (playwright.config.ts), so the Chromium
+      # headless shell is all it needs. Not cached: Playwright's CI guide says restoring the
+      # browser takes about as long as downloading it, and the system libraries are installed
+      # either way.
+      - name: Install the Chromium headless shell and its system libraries
+        run: pnpm exec playwright install --with-deps --only-shell chromium
 
       - name: Run the end-to-end suite
         run: pnpm test:e2e
@@ -129,3 +147,152 @@ jobs:
             test-results
           if-no-files-found: ignore
           retention-days: 7
+
+  deploy:
+    name: Deploy to Cloudflare
+    needs: [check, lighthouse, e2e]
+    # Production is `main` only. The `production` environment accepts `main` only as well
+    # (Settings -> Environments), so a run on another branch could not read its secrets even if
+    # this line changed.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: production
+      url: https://abduroziq.uz
+    steps:
+      # wrangler.jsonc and the lockfile.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      # Only for the wrangler version locked in pnpm-lock.yaml. Nothing is built in this job,
+      # so no build code ever runs next to the Cloudflare token.
+      - run: pnpm install --frozen-lockfile
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: apps/web/dist
+
+      - name: Deploy to Cloudflare Workers
+        id: deploy
+        uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+
+      - name: Summary
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.deployment-url }}
+        run: |
+          {
+            echo "### Deployed"
+            echo
+            echo "- Commit: ${GITHUB_SHA::7}"
+            echo "- Site: https://abduroziq.uz"
+            if [ -n "$DEPLOY_URL" ]; then
+              echo "- Wrangler: $DEPLOY_URL"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # One Telegram message per run on `main` saying whether this commit was published, so that a
+  # save in the content panel does not need a visit to the Actions tab (docs/DEPLOY.md,
+  # "Telegram notification"). It is a courtesy: without the two secrets it does nothing, and it
+  # never fails the run. The commit message is text that whoever pushed wrote, so it reaches the
+  # script through an environment variable and is sent as form data, never pasted into the
+  # script. Nothing Telegram answers is printed: these logs are public and the answer names the
+  # chat.
+  notify:
+    name: Notify on Telegram
+    needs: [check, lighthouse, e2e, deploy]
+    if: always() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    # The bot token and chat id live in the `production` environment; `deployment: false` reads
+    # them without recording another deployment.
+    environment:
+      name: production
+      deployment: false
+    steps:
+      - name: Send the result
+        continue-on-error: true
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          CHECK_RESULT: ${{ needs.check.result }}
+          LIGHTHOUSE_RESULT: ${{ needs.lighthouse.result }}
+          E2E_RESULT: ${{ needs.e2e.result }}
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Telegram secrets are not configured: no notification. See docs/DEPLOY.md."
+            exit 0
+          fi
+
+          # Every job that failed, by name. A job after a failed one is skipped, not failed.
+          failed=""
+          if [ "$CHECK_RESULT" = "failure" ]; then failed="$failed, pnpm check"; fi
+          if [ "$LIGHTHOUSE_RESULT" = "failure" ]; then failed="$failed, Lighthouse assertions"; fi
+          if [ "$E2E_RESULT" = "failure" ]; then failed="$failed, end-to-end suite"; fi
+          if [ "$DEPLOY_RESULT" = "failure" ]; then failed="$failed, deploy to Cloudflare"; fi
+          failed="${failed#, }"
+
+          if [ "$DEPLOY_RESULT" = "success" ]; then
+            headline="✅ Published"
+            detail="https://abduroziq.uz"
+          elif [ -n "$failed" ]; then
+            headline="❌ Not published"
+            detail="Failed: $failed"
+          elif [ "$CHECK_RESULT" = "cancelled" ] || [ "$LIGHTHOUSE_RESULT" = "cancelled" ] \
+            || [ "$E2E_RESULT" = "cancelled" ] || [ "$DEPLOY_RESULT" = "cancelled" ]; then
+            headline="⚠️ Not published"
+            detail="The run was cancelled"
+          else
+            headline="❌ Not published"
+            detail="See the run"
+          fi
+
+          # First line of the commit message (empty for a manual run), then the short SHA.
+          commit="${GITHUB_SHA::7}"
+          subject="${COMMIT_MESSAGE%%$'\n'*}"
+          if [ -n "$subject" ]; then
+            commit="$subject ($commit)"
+          fi
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          text="$(printf '%s\n%s\n%s\n%s' "$headline" "$commit" "$detail" "$run_url")"
+
+          # sendMessage, parameters as application/x-www-form-urlencoded. No parse_mode: the
+          # text is plain, so nothing in a commit subject needs escaping. Up to three tries,
+          # in a loop: curl's own --retry gives up with "failed to truncate" when the output
+          # is /dev/null (seen with curl 8.5, the one in Ubuntu 24.04).
+          status=""
+          for attempt in 1 2 3; do
+            if [ "$attempt" -gt 1 ]; then
+              sleep 5
+            fi
+            status="$(
+              curl --silent --output /dev/null --write-out '%{http_code}' --max-time 20 \
+                --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
+                --data-urlencode "text=$text" \
+                --data-urlencode 'link_preview_options={"is_disabled":true}' \
+                "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage"
+            )" || true
+            # Another try only helps after no answer (000), a rate limit or a server error.
+            case "$status" in
+              000 | 429 | 5??) ;;
+              *) break ;;
+            esac
+          done
+          if [ "$status" = "200" ]; then
+            echo "Notification sent."
+          else
+            echo "::warning title=Telegram notification not sent::HTTP status ${status:-000} from Telegram (000 means no answer). See docs/DEPLOY.md."
+          fi

@@ -7,6 +7,11 @@ onlyBuiltDependencies:
   - esbuild
   - workerd
 
+# Supply chain: never resolve a version published less than a day ago (pnpm 10.16+; pnpm 11 makes
+# this the default). Malicious releases are usually found and pulled within hours. For an urgent
+# fix that is younger, list it under minimumReleaseAgeExclude (for example `pkg@1.2.3`).
+minimumReleaseAge: 1440
+
 # GHSA-px8p-9vwx-vf98 (fflate < 0.7.5). satori pins fflate 0.7.3 exactly, so no update can move it.
 # Remove once satori ships a release that depends on a patched fflate.
 overrides:

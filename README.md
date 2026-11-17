@@ -15,7 +15,6 @@ Static, bilingual (English and Uzbek), type-first. Ink on paper, hairlines, one 
 [**abduroziq.uz**](https://abduroziq.uz) · [Design](docs/DESIGN.md) · [Architecture](docs/ARCHITECTURE.md) · [Stack notes](docs/STACK-NOTES.md) · [Deploy](docs/DEPLOY.md) · [Security](SECURITY.md)
 
 [![CI](https://github.com/blogchik/abduroziq.uz/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/blogchik/abduroziq.uz/actions/workflows/ci.yml)
-[![Deploy](https://github.com/blogchik/abduroziq.uz/actions/workflows/deploy.yml/badge.svg)](https://github.com/blogchik/abduroziq.uz/actions/workflows/deploy.yml)
 [![Astro 7](https://img.shields.io/badge/Astro-7-141310?logo=astro&logoColor=E28413)](https://astro.build)
 [![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4-141310?logo=tailwindcss&logoColor=E28413)](https://tailwindcss.com)
 [![Node 24](https://img.shields.io/badge/Node-24-141310?logo=nodedotjs&logoColor=E28413)](.nvmrc)
@@ -154,11 +153,12 @@ images and video.
 flowchart LR
     A["dev<br/>all work"] -->|merge| B["main<br/>production"]
     A -. push .-> C["CI<br/>check · e2e · Lighthouse"]
-    B -->|push| D["Deploy<br/>pnpm check · Lighthouse"]
+    B -->|push| D["CI<br/>check · e2e · Lighthouse · deploy"]
     D --> E["Cloudflare<br/>abduroziq.uz"]
 ```
 
-A commit that fails any check is never published. Lighthouse CI fails a build below 100 for
+A commit that fails any check is never published, and what is published is the build that
+passed them. Lighthouse CI fails a build below 100 for
 accessibility and below 95 for best practices. Setup and secrets: [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Licence

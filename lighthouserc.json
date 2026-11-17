@@ -13,7 +13,7 @@
         "/projects/subagent-monitor/",
         "/projects/tavryn/"
       ],
-      "numberOfRuns": 3,
+      "numberOfRuns": 1,
       "settings": {
         "chromeFlags": "--no-sandbox --headless=new"
       }

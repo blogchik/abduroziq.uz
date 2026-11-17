@@ -50,9 +50,9 @@ Authenticator on a Cloudflare Worker): set its address as `backend.base_url` and
 
 ## Saving is publishing
 
-Saving an entry commits it to `main`. The `Deploy` workflow then runs `pnpm check` and the
-Lighthouse assertions, and publishes only if everything passes (DEPLOY.md), so a broken entry
-never reaches the site: the previous version stays up.
+Saving an entry commits it to `main`. The `CI` workflow then runs `pnpm check`, the Lighthouse
+assertions and the end-to-end suite, and publishes only if everything passes (DEPLOY.md), so a
+broken entry never reaches the site: the previous version stays up.
 
 - A new entry starts with **Draft** on. A draft is committed but left out of the site. Turn
   Draft off and save to publish.

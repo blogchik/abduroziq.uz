@@ -7,7 +7,7 @@
 backend:
   name: github
   repo: blogchik/abduroziq.uz
-  # A save is a commit to `main`, which the Deploy workflow checks, builds and publishes.
+  # A save is a commit to `main`, which the CI workflow checks, builds and publishes.
   branch: main
   root_dir: packages/content
   # A fine-grained personal access token, pasted once per browser. See docs/ADMIN.md.
