@@ -1,5 +1,8 @@
 # Writing a post
 
+Posts and notes can also be written in the browser, in the content panel at `/admin/`
+(`docs/ADMIN.md`). It writes the same files with the same rules; this page describes them.
+
 A post is one MDX file: `posts/en/<slug>.mdx` or `posts/uz/<slug>.mdx`. The folder is the
 language, the file name is the URL (`/blog/<slug>/` or `/uz/blog/<slug>/`). Never rename a
 published slug. `hello-world.mdx` and `salom-dunyo.mdx` are drafts that show every element.

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>abduroziq.uz admin</title>
+  </head>
+  <body>
+    <!--
+      The content panel (Sveltia CMS): a static page, configured by config.yml next to it.
+      It edits the files in packages/content through the GitHub API with the token of the
+      person signed in; nothing here is secret. See docs/ADMIN.md.
+
+      The script holds a token that can write to the repository, so it is pinned to an exact
+      version and checked against its hash. To update it, change the version in the URL (and
+      in the schema line of config.yml) and replace the hash; docs/ADMIN.md has the command.
+    -->
+    <script
+      src="https://unpkg.com/@sveltia/cms@0.265.2/dist/sveltia-cms.js"
+      integrity="sha384-3sX+CEbzGmrZkO4W96cXrSz3A22o6qqeT+pZiWYbyMQDPPTlX/KBZX7dmGwGQpA5"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>

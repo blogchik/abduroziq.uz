@@ -45,6 +45,22 @@ for (const url of [...builtPages(), ...NOT_FOUND_PAGES]) {
   });
 }
 
+// The content panel (docs/ADMIN.md) is left out of the page checks above: it is a tool whose
+// script comes from a CDN. Here: it is in the build with its configuration, kept out of search
+// engines, and its one script is pinned to an exact version with a hash. It is fetched, not
+// opened, so the suite never depends on the CDN.
+test('the content panel is in the build', async ({ request }) => {
+  const response = await request.get('/admin/');
+  expect(response.status()).toBe(200);
+  const html = await response.text();
+  expect(html).toContain('<meta name="robots" content="noindex" />');
+  expect(html).toMatch(
+    /src="https:\/\/unpkg\.com\/@sveltia\/cms@\d+\.\d+\.\d+\/dist\/sveltia-cms\.js"/,
+  );
+  expect(html).toMatch(/integrity="sha384-[A-Za-z0-9+/]{64}"/);
+  expect((await request.get('/admin/config.yml')).status()).toBe(200);
+});
+
 // About: two paragraphs, and one link to the post about building the site, present exactly
 // when that post's page is in the build (drafts are not built). The post is found the way the
 // site finds it: its `translationKey` is `profile.aboutPost`; its version in the page's

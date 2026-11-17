@@ -6,6 +6,12 @@ const dist = path.resolve(
   process.env.E2E_DIST ?? path.join(__dirname, '..', 'apps', 'web', 'dist'),
 );
 
+/**
+ * Top-level folders of the build that hold a tool, not pages of the site: the content panel
+ * (docs/ADMIN.md) is a third-party app that loads its script from a CDN.
+ */
+const NOT_PAGES = new Set(['admin']);
+
 /** Every production page, as a URL path with a trailing slash, read from the build. */
 export function builtPages(): string[] {
   if (!fs.existsSync(path.join(dist, 'index.html'))) {
@@ -15,8 +21,9 @@ export function builtPages(): string[] {
   const walk = (dir: string): void => {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) walk(full);
-      else if (entry.name === 'index.html') {
+      if (entry.isDirectory()) {
+        if (dir !== dist || !NOT_PAGES.has(entry.name)) walk(full);
+      } else if (entry.name === 'index.html') {
         const rel = path.relative(dist, dir).split(path.sep).join('/');
         found.push(rel ? `/${rel}/` : '/');
       }

@@ -13,6 +13,10 @@
 https://:subdomain.workers.dev/*
   X-Robots-Tag: noindex
 
+# The content panel (docs/ADMIN.md) is a tool, not a page of the site.
+/admin/*
+  X-Robots-Tag: noindex
+
 # Fingerprinted build output (scripts, styles, fonts, images).
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable

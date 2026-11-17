@@ -12,3 +12,4 @@ docs
 CLAUDE.md
 LICENSE
 packages/content/projects/**/*.mdx
+packages/content/projects/*/project.yaml

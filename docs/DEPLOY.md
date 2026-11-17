@@ -9,7 +9,8 @@ The site is static. GitHub Actions builds it and Cloudflare Workers (static asse
 | `dev` | local development | CI only (lint, typecheck, build, Lighthouse, end-to-end suite) |
 | `main` | production | CI, then `Deploy` workflow |
 
-Releasing = merging `dev` into `main` and pushing. The `Deploy` workflow rebuilds,
+Releasing = merging `dev` into `main` and pushing. A save in the content panel
+([ADMIN.md](ADMIN.md)) is a commit to `main` too and goes through the same workflow. The `Deploy` workflow rebuilds,
 runs `pnpm check` (format, lint, typecheck, tests, build) and the Lighthouse assertions of
 `lighthouserc.json`, and only then runs `wrangler deploy`, so a commit that fails any check
 is never published. The job only runs on `main`: starting it by hand from the Actions tab

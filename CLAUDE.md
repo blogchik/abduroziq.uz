@@ -27,7 +27,9 @@ monorepo. Public repository, MIT.
 ## Branches
 
 - `dev`: all work happens here. Local development environment.
-- `main`: production. Updated only by merging `dev`; a push deploys to https://abduroziq.uz.
+- `main`: production; a push deploys to https://abduroziq.uz. Updated by merging `dev`, and by
+  the content panel, which commits content (`packages/content`) straight to it. Bring those
+  commits into `dev` before working on it: `git fetch origin && git merge origin/main`.
 
 ## Conventions
 
@@ -43,6 +45,13 @@ monorepo. Public repository, MIT.
 - This repository is public: commit only information that is already public.
 - Add a dependency only when it clearly earns its weight, and say why in the commit.
 - Commit messages: imperative mood, a short subject, a body that explains why.
+
+## The content panel
+
+Posts, notes and projects can be edited at https://abduroziq.uz/admin/ (Sveltia CMS, two static
+files in `apps/web/public/admin/`). Saving there commits to `main`, and that deploys. Its
+`config.yml` mirrors the schemas in `apps/web/src/content.config.ts`: change both together.
+See [docs/ADMIN.md](docs/ADMIN.md).
 
 ## Adding a post
 

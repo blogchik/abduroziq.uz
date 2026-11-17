@@ -5,6 +5,11 @@ them, and Cloudflare Workers serves them as static assets. There is no server co
 no accounts and no forms, so a problem is most likely in what the build ships or in how the site
 is built and deployed.
 
+One page is a tool instead of content: the content panel at `/admin/` (`docs/ADMIN.md`). It is
+static too. It runs Sveltia CMS in the maintainer's browser and writes to this repository
+through the GitHub API with the maintainer's own access token, which stays in that browser.
+Without a token with write access to the repository it can do nothing.
+
 ## Supported versions
 
 Only the current `main` branch is supported: it is what runs at https://abduroziq.uz. There are
@@ -38,6 +43,9 @@ In scope:
   site, including metadata left in images and video;
 - the build and deploy pipeline: the workflows in `.github/workflows`, their permissions and
   their use of secrets, and anything that would let an outsider publish to the site;
+- the content panel at `/admin/`: anything that would let someone write to the repository
+  through it without a token of their own, or that would expose the token of a signed-in
+  maintainer;
 - a vulnerable or malicious dependency that really affects the built site or the pipeline.
 
 Out of scope:
@@ -88,3 +96,6 @@ to it.
   metadata (location, device, editor data, local paths).
 - Response headers in `apps/web/public/_headers`: HSTS, `X-Content-Type-Options`,
   `X-Frame-Options`, `Referrer-Policy` and `Permissions-Policy`.
+- The content panel loads one script, pinned to an exact version and checked against its hash
+  (Subresource Integrity), sees `packages/content` only, and re-encodes every uploaded picture
+  in the browser, which drops its metadata before the file is committed.

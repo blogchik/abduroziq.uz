@@ -1,5 +1,8 @@
 # Adding a project
 
+A project's facts, text and pictures can also be edited in the browser, in the content panel at
+`/admin/` (`docs/ADMIN.md`). It writes the same files; this page describes them.
+
 A project is one folder: `projects/<slug>/`. The folder name is the URL in every language
 (`/projects/<slug>/` and `/uz/projects/<slug>/`): short, lowercase, hyphenated. Never rename
 a published slug. Every project gets a page in both languages, because `project.yaml` holds

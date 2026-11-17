@@ -28,6 +28,7 @@ abduroziq.uz/
 │     ├─ astro.config.ts
 │     ├─ .env.development, .env.production   public values only (section 3)
 │     ├─ public/                 static files copied as is (favicons, _headers)
+│     │  └─ admin/               the content panel: index.html, config.yml (ADMIN.md)
 │     └─ src/
 │        ├─ pages/               routes, one file per route for both locales ([...locale]/ folder)
 │        ├─ dev-pages/           development-only routes (styleguide, lab); never built
@@ -54,7 +55,7 @@ abduroziq.uz/
 │  │  └─ src/                    types.ts, site.ts (profile), locales.ts, index.ts
 │  └─ config/                    @abduroziq/config: shared tsconfig, ESLint, Prettier
 ├─ apps/web/scripts/             icons, fonts, check-media.mjs (metadata guard, part of `pnpm check`)
-├─ docs/                         DESIGN.md, ARCHITECTURE.md, STACK-NOTES.md
+├─ docs/                         DESIGN.md, ARCHITECTURE.md, STACK-NOTES.md, ADMIN.md, DEPLOY.md, SEO.md
 ├─ .github/workflows/            ci.yml, deploy.yml
 ├─ turbo.json, pnpm-workspace.yaml, package.json
 └─ LICENSE, README.md, SECURITY.md, CLAUDE.md
@@ -63,12 +64,16 @@ abduroziq.uz/
 Writing a post touches only `packages/content/posts/`. Changing copy touches only
 `packages/content/`. Changing how things look or move touches only `apps/web/`.
 
+Posts, notes and projects can also be edited in a browser: the content panel at `/admin/`
+(Sveltia CMS, two static files in `apps/web/public/admin/`) writes the same files through the
+GitHub API. Its field lists mirror the schemas in `content.config.ts`. See [ADMIN.md](ADMIN.md).
+
 ## 3. Branches and environments
 
 | Branch | Environment | What happens on push |
 |---|---|---|
 | `dev` | local development | CI: lint, typecheck, build. No deploy. |
-| `main` | production (`https://abduroziq.uz`) | CI, then deploy. Only updated by merging `dev`. |
+| `main` | production (`https://abduroziq.uz`) | CI, then deploy. Updated by merging `dev`, and by the content panel, which commits content straight to it. |
 
 Environment values are plain files committed to the repo, because nothing in them is
 secret: `apps/web/.env.development` and `apps/web/.env.production`.
@@ -495,6 +500,7 @@ orchestrator.
 | Projects | `components/projects/`, `pages/[...locale]/projects/`, `lib/projects.ts`, `lib/project-data.ts`, `i18n/*/projects.json`, `packages/content/projects/` |
 | Content | `packages/content/src/`, `packages/content/assets/` |
 | CI and deploy | `.github/`, `wrangler.*`, `lighthouserc.*`, `apps/web/public/_headers`, `SECURITY.md` |
+| Content panel | `apps/web/public/admin/`, `lib/admin-config.test.ts`, `docs/ADMIN.md` |
 
 ## 9. Quality bars
 

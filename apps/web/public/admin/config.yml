@@ -1,0 +1,441 @@
+# yaml-language-server: $schema=https://unpkg.com/@sveltia/cms@0.265.2/schema/sveltia-cms.json
+#
+# The content panel at /admin/ (Sveltia CMS). It edits packages/content only (`root_dir`), so
+# every path below is relative to that folder. The fields mirror the schemas in
+# apps/web/src/content.config.ts: change both together. See docs/ADMIN.md.
+
+backend:
+  name: github
+  repo: blogchik/abduroziq.uz
+  # A save is a commit to `main`, which the Deploy workflow checks, builds and publishes.
+  branch: main
+  root_dir: packages/content
+  # A fine-grained personal access token, pasted once per browser. See docs/ADMIN.md.
+  auth_methods: [token]
+  commit_messages:
+    create: 'Add {{collection}} "{{slug}}"'
+    update: 'Update {{collection}} "{{slug}}"'
+    delete: 'Delete {{collection}} "{{slug}}"'
+    uploadMedia: 'Upload "{{path}}"'
+    deleteMedia: 'Delete "{{path}}"'
+
+site_url: https://abduroziq.uz
+app_title: abduroziq.uz
+
+# Slugs are URLs: plain ASCII, lowercase, hyphens.
+slug:
+  encoding: ascii
+  clean_accents: true
+
+# The schemas are strict: an optional field left empty must be absent, not an empty string.
+output:
+  omit_empty_optional_fields: true
+
+# The repository is public. Every uploaded raster image is re-encoded as WebP in the browser,
+# which drops its EXIF block (GPS position, device, time) before the file is committed, and
+# SVGs lose their editor metadata. `pnpm check:media` still checks every file in CI.
+media_folder: /assets
+public_folder: /assets
+media_libraries:
+  default:
+    config:
+      slugify_filename: true
+      max_file_size: 10000000
+      transformations:
+        raster_image:
+          format: webp
+          quality: 85
+          width: 2880
+          height: 2880
+        svg:
+          optimize: true
+
+collections:
+  # ---------------------------------------------------------------------------------------
+  # English
+  # ---------------------------------------------------------------------------------------
+  - name: posts-en
+    label: Posts (EN)
+    label_singular: post
+    icon: article
+    description: 'Articles in English: `posts/en/<slug>.mdx`, published at `/blog/<slug>/`.'
+    folder: posts/en
+    extension: mdx
+    # A post is every file that is not a note: `kind: post` or no `kind` at all.
+    filter: { field: kind, value: [post, null] }
+    slug: &entry_slug
+      template: '{{title}}'
+      # The slug is the URL: free to choose while creating, fixed once the entry is saved.
+      editable: [create]
+      hint: The last part of the URL. Lowercase letters, digits and hyphens. It cannot be changed later.
+      pattern: ['^[a-z0-9]+(-[a-z0-9]+)*$', 'Use lowercase letters, digits and single hyphens']
+    preview_path: /blog/{{slug}}/
+    media_folder: &post_media ../../assets/posts
+    public_folder: *post_media
+    summary: &entry_summary "{{title}} {{draft | ternary('· draft', '')}}"
+    sortable_fields: &entry_sort
+      fields: [date, title]
+      default: { field: date, direction: descending }
+    view_filters: &entry_filters
+      filters:
+        - { name: drafts, label: Drafts, field: draft, pattern: true }
+        - { name: published, label: Published, field: draft, pattern: false }
+    fields: &post_fields
+      - { name: kind, widget: hidden, default: post }
+      - name: title
+        label: Title
+        widget: string
+        hint: 30 to 60 characters, main phrase first.
+      - name: description
+        label: Description
+        widget: text
+        minlength: 70
+        maxlength: 160
+        hint: 'The search snippet and share text: 70 to 160 characters. Do not repeat the title.'
+      - name: date
+        label: Date
+        widget: datetime
+        type: date
+        default: '{{now}}'
+        hint: Publication date.
+      - name: updated
+        label: Updated
+        widget: datetime
+        type: date
+        required: false
+        hint: Only for a real change to a published post.
+      - name: tags
+        label: Tags
+        widget: list
+        required: false
+        hint: 2 to 4 tags. Reuse existing ones; every tag gets a page of its own.
+        field:
+          name: tag
+          label: Tag
+          widget: string
+          pattern: ['^[a-z0-9]+(-[a-z0-9]+)*$', 'Lowercase letters, digits and hyphens']
+      - name: draft
+        label: Draft
+        widget: boolean
+        default: true
+        hint: A draft is saved but not published. Turn this off to publish.
+      - name: cover
+        label: Cover
+        widget: image
+        required: false
+        hint: Optional. Shown 16:9 under the title.
+      - name: coverAlt
+        label: Cover alt text
+        widget: string
+        required: false
+        hint: What the cover shows. Leave empty when it is decorative.
+      - name: translationKey
+        label: Translation key
+        widget: string
+        required: false
+        pattern: ['^[a-z0-9]+(-[a-z0-9]+)*$', 'Lowercase letters, digits and hyphens']
+        hint: The same value on the English and the Uzbek version links them as translations.
+      - name: body
+        label: Text
+        widget: richtext
+        hint: Start with a paragraph, not a heading. Use headings 2 and 3 only; the title is heading 1.
+        buttons:
+          [bold, italic, strikethrough, code, link, heading-two, heading-three, bulleted-list, numbered-list, quote]
+        editor_components: [code-block, image, table]
+        linked_images: false
+
+  - name: notes-en
+    label: Notes (EN)
+    label_singular: note
+    icon: sticky_note_2
+    description: 'Short entries in English: text only, at most 300 words. Same folder and URLs as posts.'
+    folder: posts/en
+    extension: mdx
+    filter: { field: kind, value: note }
+    slug: *entry_slug
+    preview_path: /blog/{{slug}}/
+    summary: *entry_summary
+    sortable_fields: *entry_sort
+    view_filters: *entry_filters
+    fields: &note_fields
+      - { name: kind, widget: hidden, default: note }
+      - name: title
+        label: Title
+        widget: string
+      - name: description
+        label: Description
+        widget: text
+        required: false
+        minlength: 70
+        maxlength: 160
+        hint: Optional. Without it the snippet is taken from the first words of the text.
+      - name: date
+        label: Date
+        widget: datetime
+        type: date
+        default: '{{now}}'
+      - name: updated
+        label: Updated
+        widget: datetime
+        type: date
+        required: false
+      - name: tags
+        label: Tags
+        widget: list
+        required: false
+        field:
+          name: tag
+          label: Tag
+          widget: string
+          pattern: ['^[a-z0-9]+(-[a-z0-9]+)*$', 'Lowercase letters, digits and hyphens']
+      - name: draft
+        label: Draft
+        widget: boolean
+        default: true
+        hint: A draft is saved but not published. Turn this off to publish.
+      - name: translationKey
+        label: Translation key
+        widget: string
+        required: false
+        pattern: ['^[a-z0-9]+(-[a-z0-9]+)*$', 'Lowercase letters, digits and hyphens']
+        hint: The same value on the English and the Uzbek version links them as translations.
+      - name: body
+        label: Text
+        widget: richtext
+        hint: 'At most 300 words: paragraphs, emphasis, links, code and lists. No headings, quotes, tables or images.'
+        buttons: [bold, italic, code, link, bulleted-list, numbered-list]
+        editor_components: [code-block]
+
+  - name: project-text-en
+    label: Project text (EN)
+    label_singular: project text
+    icon: notes
+    description: 'The long text of a project page in English: `projects/<slug>/en.mdx`. Optional.'
+    folder: projects
+    path: '{{slug}}/en'
+    extension: mdx
+    # The text shares the project's folder and its media: deleting it here would take the
+    # media along. Remove a project or its text outside the panel.
+    delete: false
+    slug: &project_text_slug
+      editable: [create]
+      hint: The folder name of the project this text belongs to, for example payzone.
+      pattern: ['^[a-z0-9]+(-[a-z0-9]+)*$', 'Use the project slug: lowercase letters, digits and hyphens']
+    preview_path: /projects/{{dirname}}/
+    media_folder: &project_media media
+    public_folder: &project_public ./media
+    # The file has no title of its own: list it by the folder it sits in.
+    summary: &project_text_summary '{{dirname}}'
+    fields: &project_text_fields
+      - name: body
+        label: Text
+        widget: richtext
+        hint: Start with a paragraph. Use headings 2 and 3 only; the project name is heading 1.
+        buttons:
+          [bold, italic, strikethrough, code, link, heading-two, heading-three, bulleted-list, numbered-list, quote]
+        editor_components: [code-block, image, table]
+        linked_images: false
+
+  - divider: true
+
+  # ---------------------------------------------------------------------------------------
+  # Uzbek
+  # ---------------------------------------------------------------------------------------
+  - name: posts-uz
+    label: Posts (UZ)
+    label_singular: post
+    icon: article
+    description: 'Articles in Uzbek: `posts/uz/<slug>.mdx`, published at `/uz/blog/<slug>/`.'
+    folder: posts/uz
+    extension: mdx
+    filter: { field: kind, value: [post, null] }
+    slug: *entry_slug
+    preview_path: /uz/blog/{{slug}}/
+    media_folder: *post_media
+    public_folder: *post_media
+    summary: *entry_summary
+    sortable_fields: *entry_sort
+    view_filters: *entry_filters
+    fields: *post_fields
+
+  - name: notes-uz
+    label: Notes (UZ)
+    label_singular: note
+    icon: sticky_note_2
+    description: 'Short entries in Uzbek: text only, at most 300 words. Same folder and URLs as posts.'
+    folder: posts/uz
+    extension: mdx
+    filter: { field: kind, value: note }
+    slug: *entry_slug
+    preview_path: /uz/blog/{{slug}}/
+    summary: *entry_summary
+    sortable_fields: *entry_sort
+    view_filters: *entry_filters
+    fields: *note_fields
+
+  - name: project-text-uz
+    label: Project text (UZ)
+    label_singular: project text
+    icon: notes
+    description: 'The long text of a project page in Uzbek: `projects/<slug>/uz.mdx`. Optional.'
+    folder: projects
+    path: '{{slug}}/uz'
+    extension: mdx
+    delete: false
+    slug: *project_text_slug
+    preview_path: /uz/projects/{{dirname}}/
+    media_folder: *project_media
+    public_folder: *project_public
+    summary: *project_text_summary
+    fields: *project_text_fields
+
+  - divider: true
+
+  # ---------------------------------------------------------------------------------------
+  # Projects: one folder each, the facts of both languages in project.yaml
+  # ---------------------------------------------------------------------------------------
+  - name: projects
+    label: Projects
+    label_singular: project
+    icon: work
+    description: 'The facts of a project in both languages: `projects/<slug>/project.yaml`.'
+    folder: projects
+    path: '{{slug}}/project'
+    extension: yaml
+    delete: false
+    identifier_field: name
+    slug:
+      template: '{{name}}'
+      editable: [create]
+      hint: The folder name and the URL in every language. It cannot be changed later.
+      pattern: ['^[a-z0-9]+(-[a-z0-9]+)*$', 'Use lowercase letters, digits and single hyphens']
+    preview_path: /projects/{{dirname}}/
+    media_folder: *project_media
+    public_folder: *project_public
+    summary: '{{order}}. {{name}} · {{status}}'
+    sortable_fields:
+      fields: [order, name]
+      default: { field: order, direction: ascending }
+    thumbnail: cover
+    fields:
+      - name: name
+        label: Name
+        widget: string
+      - name: order
+        label: Order
+        widget: number
+        value_type: int
+        min: 1
+        unique: true
+        hint: Position in every list, ascending. Must be unique.
+      - name: year
+        label: Year
+        widget: string
+        pattern: ['^\d{4}$', 'A four-digit year, for example 2026']
+        hint: The current build year, not a launch date.
+      - name: status
+        label: Status
+        widget: select
+        options:
+          - { label: Live, value: live }
+          - { label: Design, value: design }
+          - { label: Planned, value: planned }
+      - name: url
+        label: Live address
+        widget: string
+        type: url
+        required: false
+      - name: repo
+        label: Public repository
+        widget: string
+        type: url
+        required: false
+      - name: role
+        label: Role
+        widget: object
+        fields: &localized_line
+          - { name: en, label: English, widget: string }
+          - { name: uz, label: "O'zbekcha", widget: string }
+      - name: summary
+        label: Summary
+        widget: object
+        hint: One sentence, shown in lists and under the title.
+        fields: *localized_line
+      - name: description
+        label: Description
+        widget: object
+        hint: 'The search snippet: 70 to 160 characters in each language.'
+        fields:
+          - { name: en, label: English, widget: text, minlength: 70, maxlength: 160 }
+          - { name: uz, label: "O'zbekcha", widget: text, minlength: 70, maxlength: 160 }
+      - name: stack
+        label: Stack
+        widget: list
+        required: false
+        hint: Technology names in display order.
+        field: { name: item, label: Technology, widget: string }
+      - name: colors
+        label: Colours
+        widget: list
+        min: 2
+        max: 2
+        hint: 'Exactly two: background, then foreground. They draw the ticket, the plate and the matte.'
+        field: { name: color, label: Colour, widget: color, allowInput: true }
+      - name: glyph
+        label: Glyph
+        widget: string
+        minlength: 1
+        maxlength: 2
+        hint: One or two characters drawn on the ticket and the plate.
+      - name: cover
+        label: Cover
+        widget: image
+        required: false
+        hint: Optional. Without it the page shows a plate drawn from the colours and the glyph.
+      - name: coverAlt
+        label: Cover alt text
+        widget: object
+        required: false
+        hint: Required when there is a cover.
+        fields: *localized_line
+      - name: gallery
+        label: Gallery
+        widget: list
+        required: false
+        label_singular: item
+        summary: '{{image}}{{video}}'
+        thumbnail: image
+        hint: Images and videos in order. An item is an image, or a video with its size.
+        fields:
+          - name: image
+            label: Image
+            widget: image
+            required: false
+          - name: video
+            label: Video path
+            widget: string
+            required: false
+            hint: 'Instead of an image: the path of an .mp4 or .webm file in the media folder, starting with ./media/. Add the video file itself outside the panel, with its metadata stripped.'
+          - name: width
+            label: Video width
+            widget: number
+            value_type: int
+            required: false
+          - name: height
+            label: Video height
+            widget: number
+            value_type: int
+            required: false
+          - name: poster
+            label: Video poster
+            widget: image
+            required: false
+          - name: alt
+            label: Alt text
+            widget: object
+            fields: *localized_line
+          - name: caption
+            label: Caption
+            widget: object
+            required: false
+            fields: *localized_line
