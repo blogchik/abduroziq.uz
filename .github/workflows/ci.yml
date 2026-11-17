@@ -1,8 +1,8 @@
 name: CI
 
 # One pipeline for every branch: check -> (Lighthouse and the end-to-end suite, side by side)
-# -> deploy, the last only on `main`. The deploy publishes the `dist` that the other jobs
-# tested; nothing is built again after the tests (docs/DEPLOY.md).
+# -> deploy -> a check of the live site, the last two only on `main`. The deploy publishes the
+# `dist` that the other jobs tested; nothing is built again after the tests (docs/DEPLOY.md).
 on:
   push:
     branches: [dev, main]
@@ -43,28 +43,30 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: ./.github/actions/setup
 
-      # Version comes from "packageManager" in package.json.
-      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
+      # One cache family per month. Each run restores the newest entry and saves it again with
+      # what it added, so without a reset the cache would only grow; a new month starts empty.
+      - name: Name this month's Turborepo cache
+        id: turbo
+        run: echo "month=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
 
       - name: Restore local Turborepo cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .turbo
-          key: turbo-${{ runner.os }}-${{ github.sha }}
-          restore-keys: turbo-${{ runner.os }}-
+          key: turbo-${{ runner.os }}-${{ steps.turbo.outputs.month }}-${{ github.sha }}
+          restore-keys: turbo-${{ runner.os }}-${{ steps.turbo.outputs.month }}-
 
       # Format check first (a clear Prettier message when a file is not formatted), then media
       # metadata, lint, typecheck, unit checks and the production-mode build (indexing
       # allowed): the `dist` that Lighthouse, the end-to-end suite and the deploy use.
       - run: pnpm check
+
+      # The commit of this build, served at /version.txt, so that the check after the deploy can
+      # tell that the live site serves this build and not an older one.
+      - name: Stamp the build with its commit
+        run: echo "$GITHUB_SHA" > apps/web/dist/version.txt
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -82,12 +84,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -115,12 +112,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -165,15 +157,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-
       # Only for the wrangler version locked in pnpm-lock.yaml. Nothing is built in this job,
       # so no build code ever runs next to the Cloudflare token.
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
 
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -202,16 +188,63 @@ jobs:
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
+  verify:
+    name: Check the live site
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # /version.txt names this commit, the pages answer 200, a missing page 404, and www and
+      # http redirect to https://abduroziq.uz.
+      - run: bash .github/scripts/check-live-site.sh "$GITHUB_SHA"
+
+  # A commit that reaches `main` without `dev` (a save in the content panel) is brought into
+  # `dev` here, so work on `dev` starts from it. Only a fast-forward: when `dev` has commits of
+  # its own, it is left alone and the run says so (merge `main` into `dev` by hand then).
+  # Independent of the checks, so that `dev` gets the commit even when it fails and the fix can
+  # be made on `dev` as usual. A move made with the workflow token starts no new run.
+  sync-dev:
+    name: Fast-forward dev to main
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      contents: write
+    steps:
+      - name: Move dev to this commit if dev is behind
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          status="$(gh api "repos/$GITHUB_REPOSITORY/compare/dev...$GITHUB_SHA" --jq .status)"
+          case "$status" in
+            identical)
+              echo "dev is already at ${GITHUB_SHA::7}."
+              ;;
+            ahead)
+              # force=false: GitHub refuses anything but a fast-forward.
+              if gh api --method PATCH "repos/$GITHUB_REPOSITORY/git/refs/heads/dev" \
+                -f sha="$GITHUB_SHA" -F force=false > /dev/null; then
+                echo "dev fast-forwarded to ${GITHUB_SHA::7}."
+              else
+                echo "::warning title=dev not moved::GitHub refused to move dev to ${GITHUB_SHA::7} (a commit that changes a workflow cannot be pushed with the workflow token). Run: git fetch origin && git merge origin/main"
+              fi
+              ;;
+            *)
+              echo "::notice title=dev not moved::dev has commits that main does not ($status). Bring main in by hand: git fetch origin && git merge origin/main"
+              ;;
+          esac
+
   # One Telegram message per run on `main` saying whether this commit was published, so that a
   # save in the content panel does not need a visit to the Actions tab (docs/DEPLOY.md,
-  # "Telegram notification"). It is a courtesy: without the two secrets it does nothing, and it
-  # never fails the run. The commit message is text that whoever pushed wrote, so it reaches the
-  # script through an environment variable and is sent as form data, never pasted into the
-  # script. Nothing Telegram answers is printed: these logs are public and the answer names the
-  # chat.
+  # "Telegram notification"). It never fails the run. The commit message is text that whoever
+  # pushed wrote, so it reaches the script through an environment variable, never pasted into
+  # it.
   notify:
     name: Notify on Telegram
-    needs: [check, lighthouse, e2e, deploy]
+    needs: [check, lighthouse, e2e, deploy, verify]
     if: always() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 3
@@ -221,6 +254,10 @@ jobs:
       name: production
       deployment: false
     steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
       - name: Send the result
         continue-on-error: true
         env:
@@ -230,14 +267,11 @@ jobs:
           LIGHTHOUSE_RESULT: ${{ needs.lighthouse.result }}
           E2E_RESULT: ${{ needs.e2e.result }}
           DEPLOY_RESULT: ${{ needs.deploy.result }}
+          VERIFY_RESULT: ${{ needs.verify.result }}
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
-            echo "Telegram secrets are not configured: no notification. See docs/DEPLOY.md."
-            exit 0
-          fi
-
-          # Every job that failed, by name. A job after a failed one is skipped, not failed.
+          # Every job before the deploy that failed, by name. A job after a failed one is
+          # skipped, not failed.
           failed=""
           if [ "$CHECK_RESULT" = "failure" ]; then failed="$failed, pnpm check"; fi
           if [ "$LIGHTHOUSE_RESULT" = "failure" ]; then failed="$failed, Lighthouse assertions"; fi
@@ -245,7 +279,10 @@ jobs:
           if [ "$DEPLOY_RESULT" = "failure" ]; then failed="$failed, deploy to Cloudflare"; fi
           failed="${failed#, }"
 
-          if [ "$DEPLOY_RESULT" = "success" ]; then
+          if [ "$DEPLOY_RESULT" = "success" ] && [ "$VERIFY_RESULT" = "failure" ]; then
+            headline="⚠️ Published, but the live site check failed"
+            detail="Open https://abduroziq.uz; to roll back see docs/DEPLOY.md"
+          elif [ "$DEPLOY_RESULT" = "success" ]; then
             headline="✅ Published"
             detail="https://abduroziq.uz"
           elif [ -n "$failed" ]; then
@@ -267,32 +304,6 @@ jobs:
             commit="$subject ($commit)"
           fi
           run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          text="$(printf '%s\n%s\n%s\n%s' "$headline" "$commit" "$detail" "$run_url")"
 
-          # sendMessage, parameters as application/x-www-form-urlencoded. No parse_mode: the
-          # text is plain, so nothing in a commit subject needs escaping. Up to three tries,
-          # in a loop: curl's own --retry gives up with "failed to truncate" when the output
-          # is /dev/null (seen with curl 8.5, the one in Ubuntu 24.04).
-          status=""
-          for attempt in 1 2 3; do
-            if [ "$attempt" -gt 1 ]; then
-              sleep 5
-            fi
-            status="$(
-              curl --silent --output /dev/null --write-out '%{http_code}' --max-time 20 \
-                --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" \
-                --data-urlencode "text=$text" \
-                --data-urlencode 'link_preview_options={"is_disabled":true}' \
-                "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage"
-            )" || true
-            # Another try only helps after no answer (000), a rate limit or a server error.
-            case "$status" in
-              000 | 429 | 5??) ;;
-              *) break ;;
-            esac
-          done
-          if [ "$status" = "200" ]; then
-            echo "Notification sent."
-          else
-            echo "::warning title=Telegram notification not sent::HTTP status ${status:-000} from Telegram (000 means no answer). See docs/DEPLOY.md."
-          fi
+          bash .github/scripts/telegram.sh \
+            "$(printf '%s\n%s\n%s\n%s' "$headline" "$commit" "$detail" "$run_url")"

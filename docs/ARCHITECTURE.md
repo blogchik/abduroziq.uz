@@ -56,7 +56,8 @@ abduroziq.uz/
 │  └─ config/                    @abduroziq/config: shared tsconfig, ESLint, Prettier
 ├─ apps/web/scripts/             icons, fonts, check-media.mjs (metadata guard, part of `pnpm check`)
 ├─ docs/                         DESIGN.md, ARCHITECTURE.md, STACK-NOTES.md, ADMIN.md, DEPLOY.md, SEO.md
-├─ .github/workflows/            ci.yml (checks on every branch, deploy on main)
+├─ .github/workflows/            ci.yml (checks on every branch, deploy on main), live.yml (weekly)
+├─ .github/actions/, scripts/    shared setup step; Telegram message, live-site check
 ├─ turbo.json, pnpm-workspace.yaml, package.json
 └─ LICENSE, README.md, SECURITY.md, CLAUDE.md
 ```

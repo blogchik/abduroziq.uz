@@ -28,8 +28,11 @@ updates:
       - dependency-name: pnpm
         update-types: [version-update:semver-major]
 
+  # `/` covers .github/workflows only; the shared setup step is a local composite action.
   - package-ecosystem: github-actions
-    directory: /
+    directories:
+      - /
+      - /.github/actions/*
     schedule:
       interval: weekly
     target-branch: dev

@@ -1,0 +1,111 @@
+name: Live site
+
+# Once a week, the things that can break on the live site without a commit (docs/DEPLOY.md):
+# a Cloudflare setting (redirects, HTTPS), the speed of the real site, and links to other sites.
+# A Telegram message arrives only when something failed.
+on:
+  schedule:
+    # Mondays 05:00 UTC, 10:00 in Tashkent.
+    - cron: '0 5 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: live-site
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  site:
+    name: Pages, 404 and redirects
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: bash .github/scripts/check-live-site.sh
+
+  lighthouse:
+    name: Lighthouse on the live site
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+
+      - name: Run Lighthouse CI on https://abduroziq.uz
+        run: pnpm exec lhci autorun --config=./lighthouserc.live.cjs
+
+      - name: Keep Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: lighthouse-live-report
+          path: .lighthouseci
+          if-no-files-found: ignore
+          retention-days: 30
+
+  links:
+    name: Links
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+
+      # The same build as production; links in it that start with `/` are looked up in it.
+      - run: pnpm build
+
+      # Every link in every page: inside the site (in the build) and to other sites (on the
+      # network). 429 is a rate limit and 999 LinkedIn's answer to robots, not broken links.
+      # The action runs `eval lychee <args>`, so the glob is quoted for lychee to expand, not
+      # bash (whose `**` would only go one folder deep).
+      - name: Check the links
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          args: >-
+            --no-progress
+            --root-dir '${{ github.workspace }}/apps/web/dist'
+            --accept '100..=103,200..=299,429,999'
+            --max-concurrency 8
+            'apps/web/dist/**/*.html'
+          fail: true
+
+  notify:
+    name: Notify on Telegram
+    needs: [site, lighthouse, links]
+    if: always() && github.ref == 'refs/heads/main' && contains(needs.*.result, 'failure')
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    environment:
+      name: production
+      deployment: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Send the result
+        continue-on-error: true
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SITE_RESULT: ${{ needs.site.result }}
+          LIGHTHOUSE_RESULT: ${{ needs.lighthouse.result }}
+          LINKS_RESULT: ${{ needs.links.result }}
+        run: |
+          failed=""
+          if [ "$SITE_RESULT" = "failure" ]; then failed="$failed, pages, 404 or redirects"; fi
+          if [ "$LIGHTHOUSE_RESULT" = "failure" ]; then failed="$failed, Lighthouse"; fi
+          if [ "$LINKS_RESULT" = "failure" ]; then failed="$failed, links"; fi
+          failed="${failed#, }"
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+
+          bash .github/scripts/telegram.sh \
+            "$(printf '%s\n%s\n%s' "⚠️ Weekly check of abduroziq.uz" "Failed: $failed" "$run_url")"

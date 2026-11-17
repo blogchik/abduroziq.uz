@@ -14,18 +14,31 @@ Releasing = merging `dev` into `main` and pushing. A save in the content panel
 one workflow, `CI` (`.github/workflows/ci.yml`), and on `main` it ends in the deploy:
 
 ```
-check ──┬── lighthouse ──┬── deploy (main only) ── notify (main only)
+check ──┬── lighthouse ──┬── deploy ── verify ── notify     (deploy, verify, notify: main only)
         └── e2e ─────────┘
+sync-dev                                                    (main only, on its own)
 ```
 
-1. `check` runs `pnpm check` (format, media metadata, lint, typecheck, tests, production build)
-   and uploads `apps/web/dist` as the `dist` artifact.
+1. `check` runs `pnpm check` (format, media metadata, lint, typecheck, tests, production build),
+   writes the commit SHA into `dist/version.txt` and uploads `apps/web/dist` as the `dist`
+   artifact.
 2. `lighthouse` (the assertions of `lighthouserc.json`) and `e2e` (the Playwright suite) test
    that `dist`, side by side.
 3. `deploy` runs only when all three passed, and publishes that same `dist` with
    `wrangler deploy`: nothing is built again after the tests, and no build code runs in the job
    that holds the Cloudflare token. A commit that fails any check is never published.
-4. `notify` sends the result to Telegram ([Telegram notification](#telegram-notification)).
+4. `verify` checks the live site with `.github/scripts/check-live-site.sh`:
+   `https://abduroziq.uz/version.txt` names this commit (so the new build is the one being
+   served), the main pages, feeds, sitemap and `robots.txt` answer 200, a missing page answers
+   404, and `www` and `http://` redirect (301) to `https://abduroziq.uz`.
+5. `notify` sends the result to Telegram ([Telegram notification](#telegram-notification)).
+6. `sync-dev` brings a commit that reached `main` without `dev` (a save in the content panel)
+   into `dev`, by a fast-forward, whether or not the checks pass. When `dev` has commits of its
+   own it is left alone, and the run shows a notice: merge `main` into `dev` by hand then
+   (`git fetch origin && git merge origin/main`). A move made with the workflow token starts no
+   run of its own; the commit was just checked on `main`. GitHub does not let the workflow
+   token move `dev` past a commit that changes a workflow file: the run warns, and the merge by
+   hand applies again.
 
 On `dev` and in pull requests the run stops after step 2. A manual run (Actions -> `CI` ->
 `Run workflow`) on `main` checks and deploys that commit again; on another branch it only
@@ -124,9 +137,14 @@ the content panel, a merge of `dev`, a manual run), so the result is known witho
 GitHub:
 
 - `✅ Published`, the commit (subject and short SHA) and the site address;
+- `⚠️ Published, but the live site check failed`: the deploy went through, but the site does
+  not answer as `verify` expects (see the run, and [Rollback](#rollback) if the site is broken);
 - `❌ Not published`, the commit and what failed: `pnpm check`, the Lighthouse assertions, the
   end-to-end suite or the deploy to Cloudflare (a missing Cloudflare secret fails the deploy);
 - `⚠️ Not published` when the run was cancelled.
+
+The weekly `Live site` workflow ([below](#weekly-check-of-the-live-site)) writes to the same chat,
+only when something failed. Both send through `.github/scripts/telegram.sh`.
 
 Every message ends with a link to the run. The job reads two secrets, `TELEGRAM_BOT_TOKEN` and
 `TELEGRAM_CHAT_ID`, from the `production` environment (with `deployment: false`, so it does not
@@ -167,6 +185,26 @@ token (checked with a made-up one). **Not verified:** that 400 means a wrong cha
 bot that was never started or has been blocked; and the message itself, until step 5 has been
 done once with the real secrets.
 
+## Weekly check of the live site
+
+`.github/workflows/live.yml` (`Live site`) runs every Monday at 05:00 UTC (10:00 in Tashkent),
+and by hand from Actions -> `Live site` -> Run workflow. It looks for what can break without a
+commit:
+
+- `site`: the same `check-live-site.sh` as after a deploy, without the commit check: pages,
+  feeds, 404, and the `www` and `http://` redirects, which live in the Cloudflare dashboard.
+- `lighthouse`: the pages and assertions of `lighthouserc.json`, on `https://abduroziq.uz`
+  itself, three runs each (`lighthouserc.live.cjs`). The reports are kept for 30 days as the
+  `lighthouse-live-report` artifact.
+- `links`: builds the site and checks every link in every page with
+  [lychee](https://github.com/lycheeverse/lychee): links inside the site against the build,
+  links to other sites over the network. 429 (rate limit) and 999 (LinkedIn's answer to
+  robots) count as working.
+
+When any of them fails, a `⚠️ Weekly check of abduroziq.uz` message names it. GitHub switches a
+scheduled workflow off after 60 days without activity in a public repository; Actions ->
+`Live site` -> Enable workflow turns it back on.
+
 ## Rollback
 
 - Fast: Cloudflare dashboard -> Workers & Pages -> `abduroziq-uz` -> Deployments ->
@@ -200,8 +238,17 @@ to commit). Workers metrics (requests, errors) are under Workers & Pages -> `abd
 - Third-party actions are pinned to commit SHAs (the tag is in a trailing comment), above all
   `cloudflare/wrangler-action`, which receives the API token. The repository requires it:
   Settings -> Actions -> General -> "Require actions to be pinned to a full-length commit SHA".
-  Dependabot's `github-actions` updates keep the SHAs and the comments current. Every checkout
-  sets `persist-credentials: false`, so the workflow token is not left in `.git/config`.
+  Dependabot's `github-actions` updates keep the SHAs and the comments current, in the workflows
+  and in `.github/actions/` (listed in `dependabot.yml`, which does not look there by itself).
+  Every checkout sets `persist-credentials: false`, so the workflow token is not left in
+  `.git/config`.
+- Shared pieces: `.github/actions/setup` (pnpm, Node from `.nvmrc`, the pnpm store cache and
+  `pnpm install --frozen-lockfile`, used by every job that needs dependencies),
+  `.github/scripts/telegram.sh` and `.github/scripts/check-live-site.sh`.
+- The Turborepo cache of the `check` job (`.turbo`) starts empty every month: each run restores
+  the newest entry and saves it again with what it added, so it would otherwise only grow.
+- `/version.txt` on the live site is the commit SHA of the build, written by CI (it is not in a
+  local build). `_headers` keeps it out of search results and out of caches.
 - Dependabot opens weekly grouped PRs against `dev`; TypeScript stays below 7 and pnpm on 10.
   It waits three days after a release before proposing it (seven for a major npm release), and
   `minimumReleaseAge` in `pnpm-workspace.yaml` stops pnpm from resolving any version younger

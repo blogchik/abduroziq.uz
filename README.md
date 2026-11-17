@@ -155,10 +155,11 @@ flowchart LR
     A -. push .-> C["CI<br/>check · e2e · Lighthouse"]
     B -->|push| D["CI<br/>check · e2e · Lighthouse · deploy"]
     D --> E["Cloudflare<br/>abduroziq.uz"]
+    E -. checked after every deploy and weekly .-> D
 ```
 
 A commit that fails any check is never published, and what is published is the build that
-passed them. Lighthouse CI fails a build below 100 for
+passed them. After the deploy, CI checks that the live site serves that build. Lighthouse CI fails a build below 100 for
 accessibility and below 95 for best practices. Setup and secrets: [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Licence

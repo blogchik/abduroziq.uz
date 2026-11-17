@@ -17,6 +17,12 @@ https://:subdomain.workers.dev/*
 /admin/*
   X-Robots-Tag: noindex
 
+# The commit of the live build, written by CI and read by its check after every deploy
+# (docs/DEPLOY.md): not a page, and never cached, so the check sees a new deploy at once.
+/version.txt
+  X-Robots-Tag: noindex
+  Cache-Control: no-store
+
 # Fingerprinted build output (scripts, styles, fonts, images).
 /_astro/*
   Cache-Control: public, max-age=31536000, immutable

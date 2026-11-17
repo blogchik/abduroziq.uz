@@ -28,8 +28,11 @@ monorepo. Public repository, MIT.
 
 - `dev`: all work happens here. Local development environment.
 - `main`: production; a push deploys to https://abduroziq.uz. Updated by merging `dev`, and by
-  the content panel, which commits content (`packages/content`) straight to it. Bring those
-  commits into `dev` before working on it: `git fetch origin && git merge origin/main`.
+  the content panel, which commits content (`packages/content`) straight to it. CI fast-forwards
+  `dev` on GitHub to such a commit when `dev` has nothing of its own, so `git pull` on `dev`
+  brings it in. Otherwise (the run shows a notice) merge it by hand before working on `dev`:
+  `git fetch origin && git merge origin/main`.
+- Force pushes to `main` and `dev` and their deletion are blocked by a ruleset on GitHub.
 
 ## Conventions
 

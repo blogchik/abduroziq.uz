@@ -60,8 +60,10 @@ broken entry never reaches the site: the previous version stays up.
   reason. The usual causes are below. Once the two Telegram secrets exist (DEPLOY.md, "Telegram
   notification"), the result of every save also arrives as a Telegram message: published, or
   not published with the step that failed and a link to the run.
-- `main` now moves without `dev`. Before the next piece of work on `dev`, bring those commits
-  in: `git fetch origin && git merge origin/main`.
+- `main` now moves without `dev`. CI fast-forwards `dev` on GitHub to the saved commit when
+  `dev` has nothing of its own (DEPLOY.md, `sync-dev`), so `git pull` on `dev` brings it in.
+  If `dev` has its own commits, merge by hand before the next piece of work:
+  `git fetch origin && git merge origin/main`.
 
 What the checks reject after a save:
 
