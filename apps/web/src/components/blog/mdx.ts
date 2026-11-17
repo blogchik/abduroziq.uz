@@ -27,3 +27,13 @@ export const mdxComponents = {
   Note,
   PullQuote,
 };
+
+/**
+ * The mapping for notes (`kind: note`), on the note's page and in a note row: a note is text
+ * only (the build rejects headings, images, tables and components), so only its links and
+ * code blocks are shaped, by the same components as in a post.
+ */
+export const noteMdxComponents = {
+  a: Link,
+  pre: Pre,
+};

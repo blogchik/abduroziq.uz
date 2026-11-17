@@ -54,6 +54,21 @@ test('a missing or invalid date fails loudly, naming the file', () => {
   assert.throws(() => parsePostMeta(post('date: not-a-date'), 'en/broken.mdx'), /valid "date"/);
 });
 
+test('a note without a description still yields its lastmod and its fields', () => {
+  const meta = parsePostMeta(
+    post('kind: note\ntitle: "A short one"\ndate: 2026-11-17 # a note\ntags: [meta]'),
+    'en/short-one.mdx',
+  );
+  assert.equal(meta.lastmod.toISOString(), '2026-11-17T00:00:00.000Z');
+  assert.equal(meta.draft, false);
+  assert.deepEqual(meta.tags, ['meta']);
+  const updated = parsePostMeta(
+    post('kind: note\ndate: 2026-11-17\nupdated: 2026-11-18'),
+    'en/short-one.mdx',
+  );
+  assert.equal(updated.lastmod.toISOString(), '2026-11-18T00:00:00.000Z');
+});
+
 const metas = [
   parsePostMeta(
     post('date: 2026-11-12  # publication date\ntags:\n  - meta\ntranslationKey: hi'),

@@ -1,7 +1,7 @@
 ---
 import ArrowLink from '@/components/ui/ArrowLink.astro';
 import Container from '@/components/ui/Container.astro';
-import PostRow from '@/components/ui/PostRow.astro';
+import EntryRow from '@/components/ui/EntryRow.astro';
 import SectionLabel from '@/components/ui/SectionLabel.astro';
 import StatusDot from '@/components/ui/StatusDot.astro';
 import { monthShort, year } from '@/components/ui/date-parts';
@@ -9,7 +9,8 @@ import { localePath, t, type Locale } from '@/i18n';
 import type { PostSummary } from '@/lib/posts';
 
 /**
- * `03 — Writing` (DESIGN 4.6): the latest posts as post rows and a link to all of them.
+ * `03 — Writing` (DESIGN 4.6): the latest entries (posts and notes) as their rows and a link
+ * to all of them.
  * With nothing published yet the section shows one quiet row built like a post row (date
  * block, title, note) that says the first post is being written, and offers the feed.
  * Its month is the build's in the HTML and is set to the visitor's current month (in
@@ -40,7 +41,7 @@ const soonMonth = `${monthShort(now, locale)} ${year(now, locale)}`;
       <ul class="writing__list" data-reveal-group>
         {posts.map((post) => (
           <li class="writing__item" data-reveal-item>
-            <PostRow post={post} locale={locale} as="div" />
+            <EntryRow post={post} locale={locale} as="div" />
           </li>
         ))}
       </ul>

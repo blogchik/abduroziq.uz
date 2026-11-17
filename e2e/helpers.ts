@@ -114,3 +114,8 @@ export function panelAway(page: Page): Promise<boolean> {
     return rect.top >= window.innerHeight - 1 || rect.bottom <= 1;
   });
 }
+
+/** The built HTML of one production page (`url` as returned by `builtPages()`). */
+export function builtHtml(url: string): string {
+  return fs.readFileSync(path.join(dist, url.replace(/^\//, ''), 'index.html'), 'utf8');
+}

@@ -1,13 +1,14 @@
 ---
 import EmptyState from './EmptyState.astro';
+import EntryRow from '@/components/ui/EntryRow.astro';
 import MonthTab from '@/components/ui/MonthTab.astro';
-import PostRow from '@/components/ui/PostRow.astro';
 import type { Locale } from '@/i18n';
 import { groupPostsByMonth, type PostSummary } from '@/lib/posts';
 
 /**
- * Posts grouped by month (DESIGN 5.2): an ink tab per month, then one `PostRow` per post
- * inside a list. Rows below the first two reveal in a staggered rise. With no posts it renders the empty state.
+ * Entries grouped by month (DESIGN 5.2): an ink tab per month, then one row per entry inside
+ * a list (`EntryRow`: a post row or a note row, in one chronology). Rows below the first two
+ * reveal in a staggered rise. With no entries it renders the empty state.
  */
 interface Props {
   posts: PostSummary[];
@@ -39,7 +40,7 @@ const revealFlags = groups.map((group) => group.posts.map(() => rowIndex++ >= RE
               class="post-list__item"
               data-reveal-item={revealFlags[groupIndex]![postIndex] ? '' : undefined}
             >
-              <PostRow post={post} locale={locale} as="div" />
+              <EntryRow post={post} locale={locale} as="div" />
             </li>
           ))}
         </ul>
@@ -64,18 +65,18 @@ const revealFlags = groups.map((group) => group.posts.map(() => rowIndex++ >= RE
     list-style: none;
   }
 
-  /* PostRow draws a hairline above itself and, as the last child, below itself. Each row sits
+  /* A row draws a hairline above itself and, as the last child, below itself. Each row sits
      in its own <li> here, so only the last row of a group keeps the closing hairline. */
-  .post-list__item :global(.post-row) {
+  .post-list__item :global(:is(.post-row, .note-row)) {
     border-block-end: 0;
   }
 
-  .post-list__item:last-child :global(.post-row) {
+  .post-list__item:last-child :global(:is(.post-row, .note-row)) {
     border-block-end: var(--hairline) solid var(--rule);
   }
 
   /* The month tab already sits on a 2px ink rule: the first row needs no hairline of its own. */
-  .post-list__item:first-child :global(.post-row) {
+  .post-list__item:first-child :global(:is(.post-row, .note-row)) {
     border-block-start: 0;
   }
 </style>

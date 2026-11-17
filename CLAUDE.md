@@ -50,6 +50,14 @@ Create `packages/content/posts/<en|uz>/<slug>.mdx` with the frontmatter describe
 ARCHITECTURE.md section 5.1. `draft: true` keeps it out of production. Merge `dev` into
 `main` to publish.
 
+## Adding a note
+
+A note is a short post: `kind: note`, `title`, `date` and the text (at most 300 words,
+enforced; usually 50 or more) in `packages/content/posts/<en|uz>/<slug>.mdx`. It needs no
+description (one in the frontmatter is used as written) and has no cover, heading, rule, table,
+image, footnote or component. The build fails with a message naming the file when a note is not
+a note. See `packages/content/posts/README.md`.
+
 ## Adding a project
 
 Create `packages/content/projects/<slug>/project.yaml` (fields in

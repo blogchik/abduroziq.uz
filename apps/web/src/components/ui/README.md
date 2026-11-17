@@ -16,6 +16,8 @@ Tokens and utilities live in `src/styles/` (see the header of each file).
 | `Capsule`      | `width?` (em, 1.5), `tone?` (`raised` `paper` `ink` `accent`), `label?` (else decorative), `id?`; slot = image or SVG                                                                                                                     | `<Capsule label="Portrait"><Image src={portrait} alt="" /></Capsule>`                     |
 | `MonthTab`     | `date`, `locale`, `as?` (`h2` default, `h3`, `div`), `id?`                                                                                                                                                                                | `<MonthTab date={group[0].date} locale={locale} />`                                       |
 | `PostRow`      | `post` (`PostSummary`), `locale` (page locale), `headingLevel?` (3), `as?` (`article` default, `li`, `div`), `transitionName?` (`postTransitionName(post)`, `false` to disable), any other HTML attribute on the root (`data-*`, `id`, …) | `<ul>{posts.map((post) => <PostRow post={post} locale={locale} as="li" />)}</ul>`         |
+| `NoteRow`      | the props of `PostRow` (`post` is a note); renders the note itself, only its title is a link                                                                                                                                              | `<ul>{notes.map((post) => <NoteRow post={post} locale={locale} as="li" />)}</ul>`         |
+| `EntryRow`     | the props of `PostRow`; a `NoteRow` when `post.kind` is `note`, a `PostRow` otherwise                                                                                                                                                     | `<ul>{entries.map((post) => <EntryRow post={post} locale={locale} as="li" />)}</ul>`      |
 | `Tape`         | `text`, `angle?` (−4), `repeat?` (10), `speed?`, `scroll?` (true)                                                                                                                                                                         | `<Tape text={t(locale, 'home.tape')} />`                                                  |
 | `GiantName`    | `text?` (profile name), `as?` (`p` default, `h1`, `h2`, `div`), `reveal?` (→ `data-reveal`), `revealDelay?`, `decorative?` (aria-hidden), `thin?` (the hairline cut: weight 250, looser tracking), any HTML attribute on the root         | `<GiantName as="h1" reveal="chars" />`                                                    |
 
@@ -23,6 +25,8 @@ Tokens and utilities live in `src/styles/` (see the header of each file).
 `data-surface="accent"` and lets it take the pointer, so the marquee pauses on hover.
 `PostRow` names its link by the title and describes it by the date and the description;
 below 30rem its date is one mono line above a full-width title.
+`NoteRow` shows the whole note in the list, from its MDX body: only the title is a link, the
+note's own links stay beside it. `EntryRow` is what lists use: it picks the row from `post.kind`.
 
 Chrome: `Footer` takes `flush?` (no section gap above it); BaseLayout passes its own
 `flush?` prop through, and the gap is also dropped automatically when <main> ends with a

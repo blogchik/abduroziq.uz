@@ -78,7 +78,11 @@ export const getStaticPaths = (async () => {
         card: {
           locale,
           title: post.title,
-          labels: [t(locale, 'common.nav.writing'), formatDate(post.date, locale)],
+          // A note's card says so where a post's card says "Writing".
+          labels: [
+            t(locale, post.kind === 'note' ? 'blog.note.label' : 'common.nav.writing'),
+            formatDate(post.date, locale),
+          ],
           tags: post.tags.slice(0, 4),
         },
       },

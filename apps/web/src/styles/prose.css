@@ -2,7 +2,9 @@
  * Article typography (docs/DESIGN.md 5.3). Everything inside `.prose` is the body of a post:
  * paragraphs, numbered headings, lists, quotes, figures, code, tables and footnotes. The
  * wrapper also carries `type-article-body` (Newsreader, 19 -> 21px) and `data-cursor-text`
- * territory for the cursor (see the motion README).
+ * territory for the cursor (see the motion README). A note's text (DESIGN 5.1, 5.3) uses the
+ * same rules with the modifier `prose--note`: no drop cap. Its list row (ui/NoteRow.astro)
+ * sets it in `body` and adjusts measure and rhythm there.
  *
  * Imported by the blog components (not by global.css). Plain CSS on design tokens only: no raw
  * hex values, font sizes or easings. The MDX elements it styles are produced by the mapping
@@ -50,7 +52,8 @@
 
 /* ------------------------------------------------------------- drop cap */
 
-.prose > p:first-child::first-letter {
+/* A note (`prose--note`, on its page and in its list row) has none. */
+.prose:not(.prose--note) > p:first-child::first-letter {
   font-family: var(--font-display);
   font-weight: 700;
   font-stretch: 100%;
@@ -60,14 +63,14 @@
 }
 
 @supports (initial-letter: 3) {
-  .prose > p:first-child::first-letter {
+  .prose:not(.prose--note) > p:first-child::first-letter {
     initial-letter: 3;
     margin-inline-end: 0.12em;
   }
 }
 
 @supports not (initial-letter: 3) {
-  .prose > p:first-child::first-letter {
+  .prose:not(.prose--note) > p:first-child::first-letter {
     float: left;
     font-size: 4.65em;
     line-height: 0.74;

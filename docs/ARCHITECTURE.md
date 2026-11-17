@@ -42,7 +42,7 @@ abduroziq.uz/
 │        ├─ motion/              client motion kit (cursor, reveal, marquee, desk, scroll, transitions)
 │        ├─ styles/              global.css (tokens), fonts, prose.css
 │        ├─ i18n/                locale config, t(), path helpers
-│        ├─ lib/                 posts.ts, projects.ts, dates.ts, seo/, markdown/
+│        ├─ lib/                 posts.ts, post-data.ts, projects.ts, dates.ts, seo/, markdown/
 │        └─ content.config.ts    content collections
 ├─ packages/
 │  ├─ content/                   @abduroziq/content: everything that is words or data
@@ -154,8 +154,9 @@ Namespaces: `common` (header, footer, accessibility labels), `home`, `blog`, `pr
 
 ```yaml
 ---
+kind: post            # optional: post (default) or note, the short kind (see below)
 title: "…"            # required
-description: "…"      # required, 70 to 160 characters, used for meta description
+description: "…"      # required for a post, optional for a note; 70 to 160 characters, used for meta description
 date: 2026-11-12      # required, publication date
 updated: 2026-11-20   # optional
 tags: [design, astro] # lowercase kebab-case
@@ -169,12 +170,23 @@ translationKey: "…"   # optional; the same value on the en and uz versions lin
 The locale comes from the folder, the slug from the file name. The schema is strict: a key
 it does not know (a typo such as `draf: true`) fails the build instead of being ignored.
 
+A note (`kind: note`) is a short post: text only, at most 300 words, in the same collection,
+folder, URL space (`/blog/<slug>/`), feed and sitemap, and in the same chronology as posts.
+It may leave out `description` (a post may not: the schema fails with a message saying so)
+and may not have a `cover`. Its description is then derived from the text
+(`deriveDescription`). The body is checked in `toPostSummary` (`noteProblems`): an empty
+body, a heading, a rule, a blockquote, a table, an image, a footnote, an `import`/`export` line, a
+JSX or HTML tag (also inside a list item), or more than 300 words throws an error that names
+the file. A production build drops drafts before it gets there, so a published note fails the
+build, while a draft note fails in `pnpm dev` and on the day it is published.
+
 ### Posts contract (`apps/web/src/lib/posts.ts`)
 
 ```ts
 export interface PostSummary {
   id: string; slug: string; locale: Locale; url: string;        // url is locale-correct and absolute-path
-  title: string; description: string; date: Date; updated?: Date;
+  kind: 'post' | 'note';                                        // PostKind, from lib/post-data.ts
+  title: string; description: string; date: Date; updated?: Date; // description: the frontmatter one, or derived from the text of a note without one
   tags: string[]; readingMinutes: number; translationKey?: string;
 }
 export function getPosts(locale: Locale, opts?: { includeOtherLocale?: boolean }): Promise<PostSummary[]>; // newest first, drafts excluded in production
@@ -189,6 +201,11 @@ excluded in production), `toPostSummary(entry)`, `parsePostId(id)`,
 `getTranslations(post)` (the same post in the other locale, via `translationKey`) and
 `readingMinutes(body)`. `includeOtherLocale` adds posts of the other locale that have no
 translation in the requested locale.
+
+The pure helpers live in `lib/post-data.ts` (no `astro:` imports, tested by
+`post-data.test.ts`): `deriveDescription(body)` (the plain text of a body cut to 160
+characters) and `noteProblems(body)` (why a body cannot be a note), with `PostKind` and
+`NOTE_MAX_WORDS`.
 
 ### 5.2 Projects (`packages/content/projects/<slug>/`)
 

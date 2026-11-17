@@ -21,6 +21,9 @@
       "other": "{count} posts"
     }
   },
+  "note": {
+    "label": "Note"
+  },
   "post": {
     "more": "More entries",
     "previousShort": "Previous",

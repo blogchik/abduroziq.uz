@@ -21,6 +21,9 @@
       "other": "{count} ta yozuv"
     }
   },
+  "note": {
+    "label": "Qayd"
+  },
   "post": {
     "more": "Yana yozuvlar",
     "previousShort": "Oldingi",

@@ -10,13 +10,15 @@ import Capsule from '@/components/ui/Capsule.astro';
 import Container from '@/components/ui/Container.astro';
 import GiantName from '@/components/ui/GiantName.astro';
 import MonthTab from '@/components/ui/MonthTab.astro';
+import NoteRow from '@/components/ui/NoteRow.astro';
 import PostRow from '@/components/ui/PostRow.astro';
 import SectionLabel from '@/components/ui/SectionLabel.astro';
 import StatusDot from '@/components/ui/StatusDot.astro';
 import Tag from '@/components/ui/Tag.astro';
 import Tape from '@/components/ui/Tape.astro';
+import { type Locale } from '@/i18n';
 import BaseLayout from '@/layouts/BaseLayout.astro';
-import type { PostSummary } from '@/lib/posts';
+import { getPosts, type PostSummary } from '@/lib/posts';
 
 const colours = [
   { token: 'paper', light: '#ECEAE5', dark: '#121110', use: 'page background' },
@@ -104,6 +106,7 @@ const posts: PostSummary[] = [
     id: 'en/label-and-desk',
     slug: 'label-and-desk',
     locale: 'en',
+    kind: 'post',
     url: '/blog/label-and-desk/',
     title: 'Label and desk: designing a quiet personal site',
     description: 'How one accent, three loud ideas and a lot of hairlines became a design system.',
@@ -115,6 +118,7 @@ const posts: PostSummary[] = [
     id: 'uz/salom-dunyo',
     slug: 'salom-dunyo',
     locale: 'uz',
+    kind: 'post',
     url: '/uz/blog/salom-dunyo/',
     title: 'Salom, dunyo: birinchi yozuv va oʻzbekcha harflar',
     description: "Nega sayt ikki tilda va bu dizaynga qanday ta'sir qildi.",
@@ -123,6 +127,12 @@ const posts: PostSummary[] = [
     readingMinutes: 4,
   },
 ];
+
+// A note row renders the note's own text, so it needs a real entry: the newest note in each
+// language (drafts are visible here, in development).
+const firstNote = async (locale: Locale) =>
+  (await getPosts(locale)).find((entry) => entry.kind === 'note');
+const notes = { en: await firstNote('en'), uz: await firstNote('uz') };
 ---
 
 <BaseLayout
@@ -409,10 +419,13 @@ const posts: PostSummary[] = [
     </div>
 
     <div class="sg-demo">
-      <p class="sg-demo__name type-label">MonthTab · PostRow</p>
+      <p class="sg-demo__name type-label">MonthTab · NoteRow · PostRow</p>
       <div class="sg-demo__body">
         <MonthTab date={day('2026-11-12')} locale="en" as="h3" />
         <ul class="sg-list">
+          {notes.en && (
+            <NoteRow post={notes.en} locale="en" as="li" headingLevel={4} transitionName={false} />
+          )}
           {posts.map((post) => (
             <PostRow post={post} locale="en" as="li" headingLevel={4} transitionName={false} />
           ))}
@@ -420,10 +433,19 @@ const posts: PostSummary[] = [
         <div class="sg-gap"></div>
         <MonthTab date={day('2026-11-12')} locale="uz" as="h3" />
         <ul class="sg-list" lang="uz">
+          {notes.uz && (
+            <NoteRow post={notes.uz} locale="uz" as="li" headingLevel={4} transitionName={false} />
+          )}
           {posts.map((post) => (
             <PostRow post={post} locale="uz" as="li" headingLevel={4} transitionName={false} />
           ))}
         </ul>
+        {!(notes.en && notes.uz) && (
+          <p class="sg-note type-body">
+            The note row renders a real note: add one (<code>kind: note</code>) in each language to
+            see it here.
+          </p>
+        )}
       </div>
     </div>
 

@@ -5,7 +5,7 @@ import type { GetStaticPaths } from 'astro';
 import ArticleEnd from '@/components/blog/ArticleEnd.astro';
 import ArticleHeader from '@/components/blog/ArticleHeader.astro';
 import ProgressRail from '@/components/blog/ProgressRail.astro';
-import { mdxComponents } from '@/components/blog/mdx';
+import { mdxComponents, noteMdxComponents } from '@/components/blog/mdx';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { localeParam, resolveLocale, t } from '@/i18n';
 import {
@@ -31,6 +31,9 @@ const locale = resolveLocale(Astro.params.locale);
 const post = toPostSummary(entry);
 const { Content } = await render(entry);
 const { cover, coverAlt, tags, draft } = entry.data;
+// A note uses this page with less (DESIGN 5.3): no cover (the schema forbids one), no
+// progress line, no drop cap, only its own small element mapping.
+const isNote = post.kind === 'note';
 
 // The cover joins the generated card in the structured data, as an absolute URL.
 const coverImage = cover
@@ -73,10 +76,10 @@ const alternates = [
     ],
   }}
 >
-  <article class="post">
+  <article class="post" data-kind={post.kind}>
     <ArticleHeader post={post} locale={locale} draft={draft} translation={translations[0]} />
 
-    {cover && (
+    {cover && !isNote && (
       <figure class="post-cover shell">
         <Image
           src={cover}
@@ -90,10 +93,10 @@ const alternates = [
     )}
 
     <div class="post-body">
-      <ProgressRail title={post.title} target="#post-body" />
+      {!isNote && <ProgressRail title={post.title} target="#post-body" />}
       <div class="post-body__inner shell">
-        <div class="prose type-article-body" id="post-body">
-          <Content components={mdxComponents} />
+        <div class:list={['prose type-article-body', { 'prose--note': isNote }]} id="post-body">
+          <Content components={isNote ? noteMdxComponents : mdxComponents} />
         </div>
       </div>
     </div>

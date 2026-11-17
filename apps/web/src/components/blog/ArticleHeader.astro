@@ -9,10 +9,10 @@ import { authorName } from '@/lib/seo/site';
 import { keepShortWordsTogether } from '@/lib/typography';
 
 /**
- * Centred article header (DESIGN 5.3): a mono meta line (date, reading time, language), a link
- * to the other-language version when there is one, the title in `article-title` (it carries
- * the same `view-transition-name` as its row in the lists, so it morphs), and the author row
- * with the small round portrait.
+ * Centred article header (DESIGN 5.3): a mono meta line (date, then reading time or, for a
+ * note, the label `NOTE`, then language), a link to the other-language version when there is
+ * one, the title in `article-title` (it carries the same `view-transition-name` as its row in
+ * the lists, so it morphs), and the author row with the small round portrait.
  *
  * Nothing in the header is revealed by the motion kit: the title is the target of the
  * shared-element transition and must be in its final state in the first frame, and the rest is
@@ -37,7 +37,9 @@ const { post, locale, draft = false, translation } = Astro.props;
       <time datetime={isoDate(post.date)}>{formatDate(post.date, locale)}</time>
     </span>
     <span class="article-head__item">
-      {t(locale, 'blog.readingTime', { minutes: post.readingMinutes })}
+      {post.kind === 'note'
+        ? t(locale, 'blog.note.label')
+        : t(locale, 'blog.readingTime', { minutes: post.readingMinutes })}
     </span>
     <span class="article-head__item">{t(locale, `blog.language.${post.locale}`)}</span>
     {post.updated && (

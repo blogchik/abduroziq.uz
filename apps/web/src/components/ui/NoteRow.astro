@@ -1,0 +1,297 @@
+---
+import { getEntry, render } from 'astro:content';
+import type { ComponentProps } from 'astro/types';
+import type PostRow from '@/components/ui/PostRow.astro';
+import Tag from '@/components/ui/Tag.astro';
+import { noteMdxComponents } from '@/components/blog/mdx';
+import { monthShort, year } from '@/components/ui/date-parts';
+import { t } from '@/i18n';
+import { formatDate, formatDay, formatWeekdayShort, isoDate } from '@/lib/dates';
+import { postTransitionName } from '@/lib/posts';
+import '@/styles/prose.css';
+
+/**
+ * One note in a list (DESIGN 5.1): a note is read where it stands. The same grid, hairline
+ * and date block as a post row (PostRow.astro), then the title, the whole note in `body` at
+ * full ink, and the tags; where a post row has its arrow, the mono label `NOTE`. Only the
+ * title is a link (to the note's own page); the note's own links are its siblings, never its
+ * descendants. Takes the same props as PostRow, so `EntryRow` can pick either.
+ *
+ * The text is the note's MDX body, rendered with the note mapping (`noteMdxComponents`) and
+ * the article rules of `prose.css` (`prose prose--note`: links, inline code, lists with
+ * hanging markers, code blocks), set here in `body` at a 36em measure. Over the text the
+ * cursor gives way to the native I-beam (`data-cursor-text`).
+ *
+ * The date reads as one phrase and the label as a word (`Note`), in that order, before the
+ * heading; the title link is described by both. Below 30rem the label joins the date line
+ * (`THU · 12 NOV 2026 · NOTE`). The date block's markup and CSS mirror PostRow's on purpose:
+ * the two rows sit in one list and must line up to the pixel. They are not shared because
+ * sharing them would change PostRow's markup.
+ */
+type Props = ComponentProps<typeof PostRow>;
+
+const {
+  post,
+  locale,
+  headingLevel = 3,
+  as: Root = 'article',
+  transitionName = postTransitionName(post),
+  class: className,
+  ...rest
+} = Astro.props;
+
+const entry = await getEntry('posts', post.id);
+if (!entry) throw new Error(`NoteRow: no entry "${post.id}" in the posts collection.`);
+const { Content } = await render(entry);
+
+const Heading = `h${headingLevel}` as 'h2' | 'h3' | 'h4';
+const foreign = post.locale !== locale;
+const weekday = formatWeekdayShort(post.date, locale);
+const day = formatDay(post.date, locale);
+const month = `${monthShort(post.date, locale)} ${year(post.date, locale)}`;
+// Unique per page, as in PostRow (an entry appears once per list).
+const id = `note-row-${locale}-${postTransitionName(post)}`;
+const describedBy = `${id}-date ${id}-kind`;
+---
+
+<Root class:list={['note-row', className]} {...rest}>
+  <div class="note-row__grid">
+    <time class="note-row__date" datetime={isoDate(post.date)} id={`${id}-date`}>
+      <span class="sr-only">{`${weekday}, ${formatDate(post.date, locale)}`}</span>
+      <span class="type-label note-row__weekday" aria-hidden="true">
+        {weekday}
+      </span>
+      <span class="type-numeral note-row__day" aria-hidden="true">
+        {day}
+      </span>
+      <span class="type-label note-row__month" aria-hidden="true">
+        {month}
+      </span>
+    </time>
+
+    <p class="type-label note-row__kind" id={`${id}-kind`}>
+      {t(locale, 'blog.note.label')}
+    </p>
+
+    <div class="note-row__body" lang={foreign ? post.locale : undefined}>
+      {transitionName ? (
+        <Heading class="type-title note-row__title" transition:name={transitionName}>
+          <a
+            class="note-row__link"
+            href={post.url}
+            hreflang={post.locale}
+            aria-describedby={describedBy}
+          >
+            <span class="note-row__title-text">{post.title}</span>
+          </a>
+        </Heading>
+      ) : (
+        <Heading class="type-title note-row__title">
+          <a
+            class="note-row__link"
+            href={post.url}
+            hreflang={post.locale}
+            aria-describedby={describedBy}
+          >
+            <span class="note-row__title-text">{post.title}</span>
+          </a>
+        </Heading>
+      )}
+      <div class="prose prose--note type-body note-row__text" data-cursor-text>
+        <Content components={noteMdxComponents} />
+      </div>
+      {(post.tags.length > 0 || foreign) && (
+        <div class="note-row__meta">
+          {foreign && (
+            <span class="note-row__lang type-label">
+              <span aria-hidden="true">{t(locale, `common.lang.${post.locale}`)}</span>
+              <span class="sr-only">{t(locale, `common.lang.writtenIn.${post.locale}`)}</span>
+            </span>
+          )}
+          {post.tags.map((tag) => (
+            <Tag label={tag} />
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+</Root>
+
+<style>
+  .note-row {
+    list-style: none;
+    border-block-start: var(--hairline) solid var(--rule);
+  }
+
+  .note-row:last-child {
+    border-block-end: var(--hairline) solid var(--rule);
+  }
+
+  /* The grid of a post row: date block, body, and the label where the arrow would be. */
+  .note-row__grid {
+    display: grid;
+    grid-template-columns: 4rem minmax(0, 1fr) auto;
+    align-items: start;
+    column-gap: var(--col-gap);
+    padding-block: clamp(1.5rem, 1.1rem + 1.2vw, 2.25rem);
+    color: var(--ink);
+  }
+
+  @media (width >= 40rem) {
+    .note-row__grid {
+      grid-template-columns: 6rem minmax(0, 1fr) auto;
+    }
+  }
+
+  .note-row__date {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.45rem;
+  }
+
+  .note-row__weekday,
+  .note-row__month {
+    color: var(--ink-soft);
+  }
+
+  .note-row__day {
+    transition: color var(--dur-1) var(--ease-out);
+  }
+
+  /* Level with the first line of the title, centred on it like a post row's arrow. */
+  .note-row__kind {
+    grid-column: 3;
+    grid-row: 1;
+    display: flex;
+    align-items: center;
+    height: calc(var(--fs-title) * 1.08);
+    margin: calc(var(--fs-label) * 1.3 + 0.45rem) 0 0;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+
+  .note-row__body {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    min-width: 0;
+  }
+
+  /* The title starts level with the day numeral, under the weekday label. */
+  .note-row__title {
+    margin: calc(var(--fs-label) * 1.3 + 0.45rem) 0 0;
+  }
+
+  /* The link fills the title's box and stays put while the text inside it shifts, so the
+     pointer never slips off its left edge. */
+  .note-row__link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* The text keeps room on its right for the shift, so a title that fills the line is still
+     inside the link box, and so inside its focus ring, once it has moved. PostRow pulls its
+     ring inside the row (outline-offset -2px) because there the link is the whole row; here
+     the link is only the title, so the ring keeps the shared 3px offset around it. */
+  .note-row__title-text {
+    --title-shift: 12px;
+    display: block;
+    padding-inline-end: var(--title-shift);
+    transition: translate var(--dur-2) var(--ease-out);
+  }
+
+  .note-row__link:is(:hover, :focus-visible) .note-row__title-text {
+    translate: var(--title-shift) 0;
+  }
+
+  .note-row:has(.note-row__link:is(:hover, :focus-visible)) .note-row__day {
+    color: var(--accent-text);
+  }
+
+  /* The note itself: article rules (prose.css) in `body`, a post row's measure, a tighter
+     rhythm. Markers hang outside the text where prose.css lets them (48rem and up). */
+  .note-row__text {
+    --prose-gap: 0.8em;
+    max-width: 36em; /* em, not ch: ch changes when the font swaps */
+    margin-inline: 0;
+  }
+
+  .note-row__text :global(.code-block) {
+    margin-block: var(--prose-gap) 0;
+  }
+
+  .note-row__text > :global(:first-child) {
+    margin-block-start: 0;
+  }
+
+  .note-row__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-block-start: 0.4rem;
+  }
+
+  /* Language badge: square-cornered, unlike the pill tags. */
+  .note-row__lang {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.25em;
+    padding: 0.38em 0.6em 0.34em;
+    border: var(--hairline) solid var(--ink);
+  }
+
+  /* Narrow screens: one mono date line, the label joins it (`THU · 12 NOV 2026 · NOTE`),
+     and the body takes the whole width below. */
+  @media (width < 30rem) {
+    .note-row__grid {
+      grid-template-columns: auto minmax(0, 1fr);
+      column-gap: 0.6em;
+      row-gap: 0.75rem;
+    }
+
+    .note-row__date {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0 0.6em;
+    }
+
+    .note-row__weekday::after,
+    .note-row__month::after {
+      content: '·' / '';
+      margin-inline-start: 0.6em;
+    }
+
+    /* The day numeral takes the label style of its neighbours. */
+    .note-row__day {
+      font-family: var(--font-mono);
+      font-size: var(--fs-label);
+      font-weight: 500;
+      font-stretch: normal;
+      line-height: 1.3;
+      letter-spacing: 0.08em;
+      color: var(--ink-soft);
+    }
+
+    .note-row__kind {
+      grid-column: 2;
+      height: auto;
+      margin-block-start: 0;
+    }
+
+    .note-row__body {
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
+
+    .note-row__title {
+      margin-block-start: 0;
+    }
+  }
+</style>

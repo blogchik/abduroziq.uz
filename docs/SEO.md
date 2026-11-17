@@ -65,7 +65,8 @@ yourself if you want them.
   adds 12 characters; the build warns above 70 in total. Write the title the way a person
   would search for it (in the post's own language).
 - **Description**: 70 to 160 characters (enforced by the content schema). Say what the reader
-  gets; do not repeat the title. It is the snippet in Google and Yandex.
+  gets; do not repeat the title. It is the snippet in Google and Yandex. A note
+  (`kind: note`, see below) has none of its own: it is derived from the text.
 - **Slug** (file name): short, lowercase, hyphenated, in the post's language
   (`astro-seo-guide.mdx`, `seo-boyicha-qollanma.mdx`). Never rename a published slug.
 - **Tags**: 2 to 4 lowercase kebab-case tags, reused across posts. Each tag has its own page.
@@ -79,6 +80,19 @@ yourself if you want them.
   your other posts, write descriptive link text, add `alt` to every image.
 - Use a plain `'` in Uzbek copy (`o'zbek`, `g'oya`): Bricolage Grotesque has no `ʻ` (U+02BB),
   and one spelling is easier to search for.
+
+## Notes
+
+A note is a short post (`kind: note` in the frontmatter, 300 words at most) and is indexed
+exactly like one: same `/blog/<slug>/` URL space, same canonical, hreflang, `article` type,
+BlogPosting JSON-LD, sitemap entry (`lastmod = updated ?? date`; the sitemap reads only the
+frontmatter, so a note without a description is no different there), RSS item and generated
+Open Graph card (labelled "Note" / "Qayd" instead of "Writing"). Its description is derived
+from the text: the plain text of the body from its start, cut at a word to at most 160
+characters, ending in an ellipsis when cut (`deriveDescription` in `lib/post-data.ts`).
+Because the text is the snippet, open a note with a sentence that works on its own. The
+build-time hint in `Seo.astro` still warns for a description under 70 characters, which for
+a derived one means a note shorter than about a dozen words.
 
 ## Adding a project that ranks
 

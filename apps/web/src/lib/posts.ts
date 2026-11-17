@@ -3,14 +3,16 @@ import getReadingTime from 'reading-time';
 import { localePath, locales, type Locale } from '@/i18n';
 import { bodyText } from '@/lib/body-text';
 import { monthKey } from '@/lib/dates';
+import { deriveDescription, noteErrorMessage, noteProblems, type PostKind } from '@/lib/post-data';
 
 export interface PostSummary {
   id: string;
   slug: string;
   locale: Locale;
+  kind: PostKind;
   url: string; // locale-correct, absolute path ("/uz/blog/salom-dunyo/")
   title: string;
-  description: string;
+  description: string; // the frontmatter one; for a note without one, derived from its text
   date: Date;
   updated?: Date;
   tags: string[];
@@ -38,16 +40,28 @@ export function readingMinutes(body: string | undefined): number {
   return Math.max(1, Math.ceil(getReadingTime(bodyText(body)).minutes));
 }
 
+/**
+ * Summary of one entry. Throws, naming the file, when a note is not a note (too long, or
+ * more than text). Drafts are dropped before this runs in a production build, so a draft note
+ * fails in `astro dev` and when it is published, and a published note fails the build.
+ */
 export function toPostSummary(entry: PostEntry): PostSummary {
   const { locale, slug } = parsePostId(entry.id);
-  const { title, description, date, updated, tags, translationKey } = entry.data;
+  const { kind, title, description, date, updated, tags, translationKey } = entry.data;
+  if (kind === 'note') {
+    const problems = noteProblems(entry.body);
+    if (problems.length > 0) {
+      throw new Error(noteErrorMessage(`packages/content/posts/${entry.id}.mdx`, problems));
+    }
+  }
   return {
     id: entry.id,
     slug,
     locale,
+    kind,
     url: localePath(locale, `/blog/${slug}/`),
     title,
-    description,
+    description: description ?? deriveDescription(entry.body),
     date,
     ...(updated ? { updated } : {}),
     tags,

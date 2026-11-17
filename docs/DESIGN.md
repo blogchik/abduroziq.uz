@@ -325,7 +325,8 @@ A table, one project per row, hairlines between rows:
 
 ### 4.6 `03 — Writing`
 
-The latest three posts as **post rows** (section 5.1) and a link `ALL POSTS →`.
+The latest three entries, posts and notes alike, as their rows (**post rows** and **note
+rows**, section 5.1) and a link `ALL POSTS →`.
 If there are no published posts yet the section shows one quiet row:
 `The first post is being written.`
 
@@ -335,7 +336,7 @@ The footer described in 3.3.
 
 ## 5. Blog
 
-### 5.1 Post row (shared by home and blog index)
+### 5.1 Post row and note row (shared by home and blog index)
 
 Hairline above; three areas:
 
@@ -348,6 +349,30 @@ Hairline above; three areas:
 Hover / focus: the title shifts 12px right, the arrow moves up-right 4px, the day
 numeral turns accent, and the cursor becomes `READ`. The whole row is one link.
 Posts written in the other language carry a small mono badge (`UZ` / `EN`).
+
+**Note row.** The blog has a second, lighter kind of entry: a note, at most 300 words of
+text (enforced; usually 50 or more) and text only (paragraphs, emphasis, links, inline code, code
+blocks, simple lists). Notes share the posts' chronology, lists and URLs (`/blog/<slug>`), and a note is read in the list:
+
+- The same grid and hairline as a post row, and the same date block.
+- **Body**: the title in `title`, then the whole note in `body` at full `ink` (not
+  `ink-soft`), measure 36em, paragraphs 0.8em apart, links underlined in `accent-text`,
+  inline code in mono, code blocks as in 5.3, lists with hanging markers (from 768px; on
+  phones the markers stay inside the measure, as in an article). Then the meta line, as in a
+  post row: the language badge for a note in the other language first, then the tags as
+  outlined chips.
+- **Label**: where a post row has its `↗`, a note row has the mono label `NOTE` (`QAYD`) in
+  `ink-soft`, level with the first line of the title. Below 30rem it joins the date line:
+  `THU · 12 NOV 2026 · NOTE`.
+
+At a glance: a post row is a promise (a soft one-liner, an arrow, the whole row a link); a
+note row is complete (dark text, no arrow).
+
+Only the title is a link, to the note's own page; the text may hold links of its own, which
+sit beside the title link, never inside it. Hover / focus on the title: it shifts 12px right,
+the day numeral turns accent, the cursor is the `link` ring. Over the text the native I-beam
+shows (the cursor's `text` state). There is no `READ` pill. Rows reveal exactly as post rows
+do (7.2), and the title morphs into the note's page title like a post's (3.4).
 
 ### 5.2 Blog index `/blog`
 
@@ -379,6 +404,12 @@ A classic, calm reading page.
   accent as the article is read, with the post title rotated 90° next to it in `label`.
 - End of article: tags, a `COPY LINK` action, then `MORE ENTRIES` with the previous and
   next post side by side (title in `title`, hairline frame, arrow), then the footer.
+
+**A note's page** is this page with less: the mono line reads date · `NOTE` · language (no
+reading time); no drop cap, no progress line, no cover. The header, the title in
+`article-title`, the 680px serif column and the end matter (tags, `COPY LINK`,
+`MORE ENTRIES`) are unchanged. Notes and posts share one chronology, so the previous and
+next entries can be either kind.
 
 ## 6. Projects and other pages
 

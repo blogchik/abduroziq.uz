@@ -1,0 +1,15 @@
+---
+import type { ComponentProps } from 'astro/types';
+import NoteRow from '@/components/ui/NoteRow.astro';
+import PostRow from '@/components/ui/PostRow.astro';
+
+/**
+ * One entry of the blog in a list: a `PostRow` for a post, a `NoteRow` for a note
+ * (`post.kind`). Both take the same props; everything is passed through unchanged.
+ */
+type Props = ComponentProps<typeof PostRow>;
+
+const props = Astro.props;
+---
+
+{props.post.kind === 'note' ? <NoteRow {...props} /> : <PostRow {...props} />}
