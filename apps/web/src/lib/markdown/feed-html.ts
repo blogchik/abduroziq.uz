@@ -25,11 +25,25 @@ function getContainer(): Promise<AstroContainer> {
   return container;
 }
 
+/**
+ * Removes `<style>` and `<script>` blocks. One pass is not enough for every input: removing
+ * the inner block of `<scr<script></script>ipt>` joins a new `<script>`, so the removal
+ * repeats until nothing changes.
+ */
+function removeBlocks(html: string): string {
+  let previous: string;
+  let current = html;
+  do {
+    previous = current;
+    current = current.replace(/<(style|script)\b[\s\S]*?<\/\1>/gi, '');
+  } while (current !== previous);
+  return current;
+}
+
 /** Makes site-relative URLs absolute and removes attributes that only matter on the site. */
 export function cleanFeedHtml(html: string, pageUrl: string): string {
   const origin = new URL(pageUrl).origin;
-  return html
-    .replace(/<(style|script)\b[\s\S]*?<\/\1>/g, '')
+  return removeBlocks(html)
     .replace(
       /\s(?:data-(?:reveal|astro|cursor|lenis|copy)[\w-]*|transition:[\w-]+)(?:="[^"]*")?/g,
       '',
