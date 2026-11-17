@@ -12,7 +12,7 @@
 **Personal website and blog of Abduroziq Jabborov, a product engineer in Tashkent.**<br>
 Static, bilingual (English and Uzbek), type-first. Ink on paper, hairlines, one orange accent.
 
-[**abduroziq.uz**](https://abduroziq.uz) · [Design](docs/DESIGN.md) · [Architecture](docs/ARCHITECTURE.md) · [Stack notes](docs/STACK-NOTES.md) · [Deploy](docs/DEPLOY.md)
+[**abduroziq.uz**](https://abduroziq.uz) · [Design](docs/DESIGN.md) · [Architecture](docs/ARCHITECTURE.md) · [Stack notes](docs/STACK-NOTES.md) · [Deploy](docs/DEPLOY.md) · [Security](SECURITY.md)
 
 [![CI](https://github.com/blogchik/abduroziq.uz/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/blogchik/abduroziq.uz/actions/workflows/ci.yml)
 [![Deploy](https://github.com/blogchik/abduroziq.uz/actions/workflows/deploy.yml/badge.svg)](https://github.com/blogchik/abduroziq.uz/actions/workflows/deploy.yml)

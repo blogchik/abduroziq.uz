@@ -57,7 +57,7 @@ abduroziq.uz/
 ├─ docs/                         DESIGN.md, ARCHITECTURE.md, STACK-NOTES.md
 ├─ .github/workflows/            ci.yml, deploy.yml
 ├─ turbo.json, pnpm-workspace.yaml, package.json
-└─ LICENSE, README.md, CLAUDE.md
+└─ LICENSE, README.md, SECURITY.md, CLAUDE.md
 ```
 
 Writing a post touches only `packages/content/posts/`. Changing copy touches only
@@ -494,7 +494,7 @@ orchestrator.
 | SEO | `components/seo/`, `lib/seo/`, `pages/og/`, `pages/robots.txt.ts`, `public/` icons and manifest, `i18n/*/seo.json` |
 | Projects | `components/projects/`, `pages/[...locale]/projects/`, `lib/projects.ts`, `lib/project-data.ts`, `i18n/*/projects.json`, `packages/content/projects/` |
 | Content | `packages/content/src/`, `packages/content/assets/` |
-| CI and deploy | `.github/`, `wrangler.*`, `lighthouserc.*`, `apps/web/public/_headers` |
+| CI and deploy | `.github/`, `wrangler.*`, `lighthouserc.*`, `apps/web/public/_headers`, `SECURITY.md` |
 
 ## 9. Quality bars
 

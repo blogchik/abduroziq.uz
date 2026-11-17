@@ -128,5 +128,10 @@ to commit). Workers metrics (requests, errors) are under Workers & Pages -> `abd
   `cloudflare/wrangler-action`, which receives the API token. Dependabot's `github-actions`
   updates keep the SHAs and the comments current.
 - Dependabot opens weekly grouped PRs against `dev`; TypeScript stays below 7 and pnpm on 10.
+- Security features that are switched on in the repository settings on GitHub, not in a file
+  here: private vulnerability reporting, Dependabot alerts and security updates, secret
+  scanning with push protection. [SECURITY.md](../SECURITY.md) tells reporters how to use the
+  first one, so it has to stay on. Dependabot security updates ignore `target-branch` and
+  open their pull requests against `main`, where a merge deploys.
 - `_headers` limits: 100 rules, 2000 characters per line. Headers apply to static assets
   only, and are not applied to Worker-generated responses (there is no Worker code here).
