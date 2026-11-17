@@ -6,3 +6,8 @@ packages:
 onlyBuiltDependencies:
   - esbuild
   - workerd
+
+# GHSA-px8p-9vwx-vf98 (fflate < 0.7.5). satori pins fflate 0.7.3 exactly, so no update can move it.
+# Remove once satori ships a release that depends on a patched fflate.
+overrides:
+  'satori>fflate': '0.7.5'
