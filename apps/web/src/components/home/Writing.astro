@@ -49,7 +49,7 @@ const soonMonth = `${monthShort(now, locale)} ${year(now, locale)}`;
       <div class="soon" data-reveal="rise">
         <p class="soon__date" aria-hidden="true">
           <span class="type-label">{t(locale, 'home.writing.emptyKicker')}</span>
-          <span class="type-numeral soon__numeral">01</span>
+          <span class="type-numeral">01</span>
           <span class="type-label" data-writing-month>
             {soonMonth}
           </span>
@@ -140,6 +140,8 @@ const soonMonth = `${monthShort(now, locale)} ${year(now, locale)}`;
     border-block: var(--hairline) solid var(--rule);
   }
 
+  /* Labels and numeral alike in ink-soft, as in the blog's empty state: the numeral is
+     decorative, but it is still text and keeps text contrast (rule would be 1.3:1). */
   .soon__date {
     display: flex;
     flex-direction: column;
@@ -147,10 +149,6 @@ const soonMonth = `${monthShort(now, locale)} ${year(now, locale)}`;
     gap: 0.45rem;
     margin: 0;
     color: var(--ink-soft);
-  }
-
-  .soon__numeral {
-    color: var(--rule);
   }
 
   .soon__body {
