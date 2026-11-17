@@ -1,0 +1,84 @@
+---
+title: "Bu saytni AI agentlar bilan qurdim"
+description: "Kodning deyarli hammasini agentlar yozdi, tanlash va rad etish menda qoldi. Ish qanday bo'lingani, nima buzilgani va tekshiruv nima topgani."
+date: 2026-11-16
+tags: [ai-agents, process, astro]
+draft: true
+translationKey: site-with-agents
+---
+
+Juma kuni saytning birinchi versiyasi tayyor bo'ldi. Birinchi ekranni ochdim va u menga yoqmadi: bitta ekranda to'rtta g'oya bor edi, ko'z hech biriga to'xtamasdi. Bu saytning kodini men deyarli yozmadim: uni Claude Code'dagi agentlar yozdi. Lekin birinchi ekran yaxshi chiqdimi, yo'qmi, buni hal qilish menda qoldi. Bosh sahifadagi rasm ham shu haqda: ikkita nuqtali kursor, `Abduroziq` yorlig'idagi qo'l va `AI agent` yorlig'idagi strelka, bir-biriga tegishiga sal qolgan.
+
+## Ish qanday tashkil qilindi
+
+Hammasi payshanba kuni Pinterest'dan boshlandi. Oltita qidiruvdan 37 ta pin yig'ildi, ular beshta yo'nalishga ajratilib, yorliqli moodboard'ga joylandi. Men ulardan yettitasini tanladim. Shu kuni reja kelishib olindi, MIT litsenziyali ochiq repozitoriy yaratildi va kechqurun birinchi commit qilindi.
+
+Men faqat bitta Claude sessiyasi bilan gaplashardim. U orkestrator edi: ishni bo'lib, har bir subagent'ga alohida topshiriq yozib berardi. Har bir subagent o'z git worktree'sida ishlardi, commit'ni esa faqat orkestrator qilardi.
+
+Birorta sahifa yozilmasdan oldin orkestrator hujjatlarni yozdi. `docs/DESIGN.md` sayt qanday ko'rinishi, o'qilishi va harakatlanishini belgilaydi. `docs/ARCHITECTURE.md` modullar orasidagi kelishuvlarni va qaysi papka kimga tegishli ekanini jadval qilib beradi. Keyin tutashuv joylari tayyorlandi: masalan, asosiy layout oldindan shunday ulab qo'yildiki, dizayn, motion va SEO agentlari bir xil qatorlarni tahrirlamasin. Yana bir fayl, `docs/STACK-NOTES.md`, qotirib qo'yilgan versiyalar uchun tekshirilgan API'larni saqlaydi, chunki Astro 7, Tailwind CSS 4, GSAP 3.15 va Lenis modellar o'qitilgan ma'lumotlardan yangiroq.
+
+Ish bosqichma-bosqich bordi, jami o'n oltita topshiriq:
+
+| Bosqich | Topshiriqlar | Soni |
+| --- | --- | --- |
+| 1 | stack tadqiqoti va loyiha karkasi | 2 |
+| 2 | dizayn tizimi, motion kit, SEO, kontent, CI va deploy (parallel) | 5 |
+| 3 | bosh sahifa va blog | 2 |
+| 4 | tekshiruvlar: dizayn, SEO va tezlik, accessibility, kod | 4 |
+| 5 | tuzatishlar | 3 |
+
+Modellar ham ishga qarab tanlandi. Tadqiqot, karkas, SEO, kontent, CI va blog yengilroq modellarga berildi; dizayn tizimi, motion kit, bosh sahifa va dizayn tekshiruvi eng kuchli modellarga.
+
+Payshanba kechqurundan dushanbagacha jami 58 ta commit bo'ldi.
+
+<Note>
+Bu hujjatlarning hammasi [repozitoriyda](https://github.com/blogchik/abduroziq.uz) ochiq, `docs/` papkasida.
+</Note>
+
+## Menda nima qoldi
+
+Referenslarni ikki marta o'zim tanladim. Reja va asosiy qarorlarni men tasdiqladim: inglizcha versiya asosiy manzilda (`/`), o'zbekchasi `/uz/` manzilida, yozuvlar MDX fayllarda, yorug' va qorong'i rejim, aloqa formasi yo'q. Har bir relizdan oldin “Ha, chiqar” deb javob berdim. Deploy secret'larini o'z qo'lim bilan qo'shdim.
+
+Birinchi ekranni ikki marta rad etdim. To'rtta g'oyali birinchi variantdan keyin faqat birinchi ekran uchun yana referens yig'ildi: yettita turga ajratilgan 42 ta pin, men ulardan oltitasini tanladim. Ekran “Statement & Meeting” nomi bilan qaytadan qurildi. Bu safar ham ortiqcha narsa ko'p edi va men shunday yozdim:
+
+> Elementlar juda ko'p, keraksizlari ham bor, fokusni to'g'ri yo'naltir; lekin 3D obyekt (nuqtali kursorlar) yoqdi.
+
+O'sha kuniyoq ekranda ikki narsa qoldi: bitta gap va nuqtali kursorlar. Sayt ham shu kuni abduroziq.uz'da ishga tushdi. Orkestrator esa men haqimda bir xulosa yozib qo'ydi: men uchun “minimal” bitta ekranda ikkita fokus nuqtasi degani, gap bezaklar sonida emas.
+
+Bitta tafsilotni aytib o'tay. Men tanlagan referensda ikki haqiqiy qo'l bir-biriga tegishiga sal qolgan. Ularni kursor qilib chizish, ya'ni qo'l kursori va strelka kursori, agentning g'oyasi edi. Men uni qoldirdim.
+
+Shanba kuni [loyihalar sahifalari](/uz/projects/) ham chiqdi. Undan oldingi tekshiruv yettita topilma berdi, ulardan oltitasi tuzatildi.
+
+## Nima xato ketdi
+
+Eng muhimi: hech bir agent animatsiyalarni harakatda ko'rmadi. Ular ishlagan brauzer paneli yashirin edi, shuning uchun brauzer kadrlarni chizmasdi. Agentlar mantiq va joylashuvni tekshirdi, harakat qanday sezilishini esa tekshira olmadi. Buni o'zim baholashim kerak. 16-noyabr holatiga ko'ra sayt hali haqiqiy telefonda ham, Safari'da ham sinab ko'rilmagan.
+
+Sahifa ichidagi havolalar noto'g'ri joyga sakrardi. Router brauzerga kerakli joyga sakrashga imkon berardi, keyin silliq aylantirish kutubxonasi (Lenis) sakrashdan keyin o'lchab, ustiga o'zining eski pozitsiyasini qo'shardi. Tuzatish shunday bo'ldi: kutubxona endi bunday havolalarni boshqarmaydi, motion kit esa bosilgan joydan brauzer to'xtagan joygacha bir soniyalik silliq o'tish qo'shadi.
+
+Sahifadan sahifaga o'tishda chiqadigan panel qotib qolishi mumkin edi. Shu sahifaning o'zidagi bo'limga olib boradigan havola navigatsiyani bekor qilardi, sahifa almashmasdi va ekranni kesib o'tadigan panel sahifa ustida turib qolardi. Bu xato Chromium, Firefox va WebKit'da takrorlandi.
+
+Birinchi ekrandagi o'zbekcha gap inglizchasidan uzunroq. Veb-shrift yuklanguncha zaxira shrift uni to'rt qatorga bo'lardi va sahifa sakrardi: layout shift 0,243 ga yetdi, saytning o'z chegarasi esa 0,02. Tuzatishdan keyin bu ko'rsatkich 0 ga teng.
+
+Yana bir topilma xotira oqishi (memory leak) bo'ldi: bosh sahifaga har safar kirilganda oldingi sahifa butunlay xotirada qolib ketardi. Yigirma marta borib-kelishda DOM daraxtidan uzilib qolgan tugunlar soni 6475 taga yetardi, tuzatishdan keyin esa 338 tada turadi.
+
+Bitta xato faqat CI'dagi Linux'da chiqdi, mening Windows kompyuterimda esa hech qachon ko'rinmadi. U Docker konteynerida takrorlandi va tuzatildi.
+
+Bir agent hisobotini yuborishdan oldin to'xtab qoldi, lekin ishi diskda allaqachon tayyor edi. Subagent'lar hisobot faylini saqlay olmasligi ham ma'lum bo'ldi, shuning uchun ular topilmalarini matn ko'rinishida qaytaradi.
+
+## Tekshiruv
+
+Dushanba kuni to'liq tekshiruv bo'ldi: to'rtta tekshiruvchi, to'qqizta sinovchi va bitta tasdiqlovchi. Ular uchta brauzer dvigatelida (Chromium, WebKit, Firefox) va sakkizta qurilma profilida ishladi. Yorug' va qorong'i rejim, ikkala til, harakat yoqilgan va o'chirilgan holat, kamaytirilgan harakat, JavaScript'siz ishlash, sekin tarmoq va protsessor, majburiy ranglar va kattalashtirish ham ko'rib chiqildi. Birgina sinovning o'zida sahifa 1152 marta yuklandi.
+
+Topilmalar: 0 ta kritik, 6 ta yuqori, 14 ta o'rta va 35 ga yaqin past darajali. Tasdiqlovchi taklif qilingan tuzatishlarni ham tekshirdi va ulardan ikkitasi noto'g'ri bo'lib chiqdi. Men ham ba'zi tuzatishlarni rad etdim, animatsiyadagi ikkita vaqt qiymatini esa dizayn qarori sifatida o'zgarishsiz qoldirdim.
+
+Topilgan har bir nuqson sahifaning ishlashida edi: aylantirish, elementlarning paydo bo'lishi, o'tish paneli, sichqoncha g'ildiragi. Unit testlar bunday narsalarni ko'rmaydi. Shuning uchun tekshiruvdan keyin haqiqiy brauzerda ishlaydigan end-to-end smoke testlar to'plami qo'shildi (Playwright, kompyuter va telefon uchun). U endi CI'da ishlaydi.
+
+## Keyingi safar
+
+Ikki narsani takrorlayman. Birinchisi, sahifalardan oldin hujjatlar: dizayn spetsifikatsiyasi, modullar orasidagi kelishuvlar va qaysi papka kimga tegishli ekani. Parallel ish shularga tayandi. Ikkinchisi, tasdiqlovchisi bor tekshiruv. Taklif qilingan tuzatishlarni ham kimdir tekshirishi kerak: ulardan ikkitasi noto'g'ri edi.
+
+O'zgartiradigan narsalarim ham bor. Haqiqiy brauzerdagi smoke testlarni birinchi bosqichdayoq qo'shardim. Animatsiyalarni esa har bir bosqichdan keyin o'zim ko'rib chiqardim, chunki agentlar ularni ko'rmaydi.
+
+Hozircha raqamlar shunday: mobil Lighthouse bosh sahifaga 100 / 100 / 100 / 100 berdi, largest contentful paint 1,2 soniya (13-noyabrdagi o'lchov). Bosh sahifa yuklaydigan shriftlar 483 KB'dan 215 KB atrofigacha kamaydi. Eng katta o'zgarish: 279 KB'lik o'zgaruvchan serif shrift o'rniga har biri 22 KB atrofidagi yettita statik fayl qo'yildi.
+
+Ro'yxatimdagi keyingi ish oddiy: saytni o'z telefonimda va Safari'da ochish. Ikki kursor haqiqiy telefon ekranida qanday uchrashishini hali hech kim ko'rmagan, men ham.

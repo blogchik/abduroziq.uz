@@ -1,0 +1,84 @@
+---
+title: "Building this site with AI agents"
+description: "The agents wrote almost all of the code; choosing and rejecting stayed with me. How the work was split, what broke and what the audit found."
+date: 2026-11-16
+tags: [ai-agents, process, astro]
+draft: true
+translationKey: site-with-agents
+---
+
+On Friday the first version of this site was ready. I opened the first screen and did not like it: it carried four ideas at once, and the eye had nowhere to rest. I typed almost none of this site's code: the agents in Claude Code wrote it. But whether that first screen was any good was left for me to decide. The picture on the home page is about this too: two dotted cursors, a hand tagged `Abduroziq` and an arrow tagged `AI agent`, a moment away from touching.
+
+## How the work was organised
+
+It started on Thursday, on Pinterest. Six searches gave 37 pins, sorted into five directions on a labelled moodboard. I picked seven of them. The same day the plan was agreed, a public repository under the MIT licence was created, and the first commit was made that evening.
+
+I talked to one Claude session only. It was the orchestrator: it split the work and wrote a brief for each subagent. Every subagent worked in its own git worktree, and only the orchestrator committed.
+
+Before any page was written, the orchestrator wrote the documents. `docs/DESIGN.md` sets how the site looks, reads and moves. `docs/ARCHITECTURE.md` lays out the contracts between modules and a table of who owns which paths. Then came the seams: the base layout, for example, was wired in advance so that the design, motion and SEO agents would not edit the same lines. One more file, `docs/STACK-NOTES.md`, holds APIs verified for the pinned versions, because Astro 7, Tailwind CSS 4, GSAP 3.15 and Lenis are newer than what the models were trained on.
+
+The build went in waves, sixteen jobs in all:
+
+| Wave | Jobs | Count |
+| --- | --- | --- |
+| 1 | stack research and scaffold | 2 |
+| 2 | design system, motion kit, SEO, content, CI and deploy (in parallel) | 5 |
+| 3 | home page and blog | 2 |
+| 4 | reviews: design, SEO and speed, accessibility, code | 4 |
+| 5 | fixes | 3 |
+
+Models were matched to the jobs as well. Research, scaffold, SEO, content, CI and the blog went to lighter models; the design system, the motion kit, the home page and the design review went to the strongest ones.
+
+From Thursday evening to Monday there were 58 commits in all.
+
+<Note>
+All of these documents are public in the [repository](https://github.com/blogchik/abduroziq.uz), in the `docs/` folder.
+</Note>
+
+## What stayed with me
+
+I picked the references myself, twice. I approved the plan and the main choices: English at the root (`/`), Uzbek under `/uz/`, posts as MDX files, light and dark themes, no contact form. Before every release I answered “Ha, chiqar”: yes, ship it. I added the deploy secrets with my own hands.
+
+I rejected the first screen twice. After the first version with its four ideas, references were gathered again, this time for the first screen alone: 42 pins in seven types, of which I picked six. The screen was rebuilt as “Statement & Meeting”. It was still too busy, and I wrote:
+
+> Too many elements, some of them unnecessary; direct the focus properly. But I liked the 3D object, the dotted cursors.
+
+The same day the screen was cut down to two things: one sentence and the dotted cursors. The site went live on abduroziq.uz that day too. The orchestrator wrote down a lesson about me: for me “minimal” means two focus points on one screen; the number of decorations is beside the point.
+
+One detail is worth telling. In the reference I chose, two real hands almost touch. Drawing them as cursors, a hand cursor and an arrow cursor, was the agent's idea. I kept it.
+
+On Saturday the [project pages](/projects/) went live as well. The review before them found seven issues, and six were fixed.
+
+## What went wrong
+
+The biggest one: no agent ever saw the animations move. The browser pane they worked in was hidden, so the browser was not painting frames. The agents checked logic and layout, and how the motion feels was out of their reach. That I have to judge myself. As of 16 November the site has still not been tried on a real phone or in Safari.
+
+Anchor links jumped to the wrong place. The router let the browser jump to the target, then the smooth-scroll library (Lenis) measured after the jump and added its own stale position on top. The fix: the library no longer handles anchors, and the motion kit adds a one-second glide from where the click happened to where the browser landed.
+
+The page-transition panel could get stuck. A link to a section on the same page cancelled the navigation, no page swap followed, and the panel that wipes across the screen stayed over the page for good. The bug was reproduced in Chromium, Firefox and WebKit.
+
+The Uzbek sentence on the first screen is longer than the English one. Before the web font loaded, the fallback font wrapped it onto four lines and the page jumped: a layout shift of 0.243, where the site's own limit is 0.02. After the fix it is 0.
+
+Then a memory leak: every visit to the home page kept the whole previous page alive. Over twenty round trips the count of detached DOM nodes grew to 6,475; after the fix it stays at 338.
+
+One failure showed up only on Linux in CI and never on my Windows machine. It was reproduced in a Docker container and fixed.
+
+One agent stopped before sending its report, though its work was already finished on disk. Subagents also turned out to be unable to save report files, so they return their findings as text.
+
+## The audit
+
+On Monday came a full audit: four reviewers, nine testers and one verifier. They worked across three browser engines (Chromium, WebKit, Firefox) and eight device profiles. Both themes and both languages, motion on and off, reduced motion, JavaScript off, a slow network and CPU, forced colours and zoom were covered as well. One test alone made 1,152 page loads.
+
+The findings: 0 critical, 6 high, 14 medium and about 35 low. The verifier checked the proposed fixes too, and two of them were wrong. I turned down some fixes myself and kept two animation timings unchanged, as design decisions.
+
+Every defect the audit found was in behaviour: scrolling, reveals, the transition panel, the mouse wheel. Unit tests do not see that kind of thing. So after the audit an end-to-end smoke suite was added that runs in a real browser (Playwright, desktop and phone). It now runs in CI.
+
+## Next time
+
+Two things I would repeat. The first is documents before pages: the design spec, the contracts between modules, and who owns which paths. The parallel work stood on them. The second is an audit with a verifier. Someone has to check the proposed fixes as well: two of them were wrong.
+
+Some things I would change. I would add the smoke tests in a real browser in the first wave. And I would watch the animations myself after every wave, because the agents cannot see them.
+
+For now the numbers are these: Lighthouse on mobile gives the home page 100 / 100 / 100 / 100, with a largest contentful paint of 1.2 s (measured on 13 November). The fonts the home page loads went from 483 KB to about 215 KB. The biggest change: the 279 KB variable serif was replaced by seven static files of about 22 KB each.
+
+The next item on my list is simple: open the site on my own phone and in Safari. Nobody has yet seen the two cursors meet on a real phone screen, me included.
