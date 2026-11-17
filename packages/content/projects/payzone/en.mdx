@@ -1,11 +1,45 @@
 ## What it is
 
-Payzone is a store for game currency. Players in Uzbekistan and the CIS top up PUBG Mobile, Mobile Legends, Valorant, Steam and other games here. An order is a player ID, a package and a payment, and part of every purchase comes back as Peasy Coin, the store's own cashback currency.
+Payzone is a store for game currency. Players in Uzbekistan and the CIS top up PUBG Mobile, Mobile Legends, Valorant, Steam and other games here. An order is a player ID, a package and a payment. Part of every purchase comes back as Peasy Coin, the store's own cashback currency, to spend on later purchases.
+
+Players pay with Uzcard, Humo, Visa or Mastercard. Besides the catalog there are order history, promo codes, saved player IDs, notifications, a partner programme and a support chat.
 
 ## My part
 
-I build Payzone and keep it running: the storefront, the services behind it and the infrastructure they run on.
+I build Payzone and keep it running: the storefront, a separate admin panel for the operators, the services behind them, the infrastructure, and the support chat with its automatic assistant.
+
+I started the storefront in April 2026. The backend's first phase was finished at the end of April with nine services, and I set up the production infrastructure at the start of May. In June the store moved to payzone.uz, with about 15 services by then. In September the main work was the reliability of the support chat and the Telegram bot.
 
 ## How it is built
 
-The storefront is a Next.js app in TypeScript, styled with Tailwind CSS. Behind it are Python services on FastAPI, with PostgreSQL, Redis and RabbitMQ. Everything is packaged with Docker and runs on Kubernetes.
+The storefront and the admin panel are separate apps, with FastAPI services behind them: sign-in, users, catalog, orders, payments, the Peasy Coin ledger, notifications, support and the Telegram bot.
+
+Kubernetes and PostgreSQL are managed services, with a CDN and object storage in front. The infrastructure is written as Terraform code. Redis and RabbitMQ run inside the cluster to fit the launch budget; they can move to managed services later without changing the services that use them.
+
+Every service deploys from one shared Helm chart with its own small values file, so no template is duplicated between services. A deploy is an image build, a migration job, then a Helm upgrade, one service at a time because the cluster is small.
+
+Personal data stays out of the events that travel between services: a service that needs it asks the service that owns it.
+
+Orders and wallet top-ups share one payment model, which keeps the code simpler. The Peasy Coin ledger is a separate service.
+
+I moved the catalog descriptions from Markdown to sanitised HTML and gave the admin panel a rich-text editor, because the operators needed to embed videos. The migration ran once, with a backup, and without errors.
+
+The support chat runs on WebSockets, and Redis pub/sub carries messages between pods. An assistant answers first, then hands over to an operator in the admin panel.
+
+## Hard days
+
+### The chat that did not answer
+
+On the day in May when I first put the support chat into production, it did not answer: a message went out and nothing came back. The logs said the connection was open, and that line misled me for hours. Four causes were stacked on top of each other. The first two were visible in ordinary error lines: the application server's worker timeout closed long-lived WebSocket connections, and the Redis pub/sub connection was dropped by a timeout while it was idle. The third I found only after I added logging for every step of a connection: the listener started before the subscription was confirmed and read the acknowledgement itself, so the subscribe call hung without an answer (a race). The fourth turned up along the way: automatic assignment kept handing chats to an operator who showed as online but was not there. Now the subscription comes first and the listener after it, and operators take chats by hand.
+
+### The domain move
+
+In June the store moved from a temporary domain to payzone.uz in four steps: run both domains side by side, switch to the new one, bring the repository in line with what was running, then a permanent redirect. That order was chosen for almost no downtime and an easy way back. The catch: the switch had been made directly in the cluster, so the repository no longer described what was running. The next ordinary deploy would have quietly put production back on the old domain. It was noticed before that deploy, and the repository was brought in line.
+
+### A green build that called localhost
+
+One night in September, for about five hours, the storefront in the browser sent every request to localhost. The pages still rendered on the server, a plain HTTP request returned 200 and the health probes stayed green. The cause: the storefront had been built without its production environment variables. I found it by chance, reading a response header. That night I learned that a 200 from a server-rendered page says nothing about the bundle that runs in the browser.
+
+### The bot that went silent twice
+
+In September the Telegram bot stopped answering twice within three days: its pods looked healthy, but its webhook was gone. The second silence lasted about six hours, and the fix for it was already written: it sat in an unmerged pull request, and the image in production was older than the code. Recovery kept the messages that had queued up meanwhile. The conclusion I took from it: writing a fix does not finish the job, and the image running in production has to be compared with the code. The bot now checks its own webhook and restores it: in a test on the live system the webhook came back in 88 seconds.

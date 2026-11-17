@@ -1,11 +1,45 @@
 ## Bu nima
 
-Payzone o'yin valyutalari do'koni. O'zbekiston va MDHdagi o'yinchilar PUBG Mobile, Mobile Legends, Valorant, Steam va boshqa o'yinlar hisobini shu yerda to'ldiradi. Buyurtma uchun o'yinchi ID'si, paket va to'lov kifoya, har bir xaridning bir qismi esa do'konning o'z keshbek valyutasi, Peasy Coin bo'lib qaytadi.
+Payzone o'yin valyutalari do'koni. O'zbekiston va MDHdagi o'yinchilar bu yerda PUBG Mobile, Mobile Legends, Valorant, Steam va boshqa o'yinlar hisobini to'ldiradi. Buyurtma uchun o'yinchi ID'si, paket va to'lov kifoya. Har bir xaridning bir qismi Peasy Coin bo'lib qaytadi: bu do'konning o'z keshbek valyutasi, uni keyingi xaridlarga sarflash mumkin.
+
+To'lov Uzcard, Humo, Visa yoki Mastercard kartasi bilan qilinadi. Katalogdan tashqari buyurtmalar tarixi, promokodlar, saqlangan o'yinchi ID'lari, bildirishnomalar, hamkorlik dasturi va qo'llab-quvvatlash chati ham bor.
 
 ## Mening ishim
 
-Payzone'ni quraman va ishlab turishini ta'minlayman: do'kon interfeysi, uning ortidagi servislar va ular ishlaydigan infratuzilma.
+Payzone'ni quraman va ishlab turishini ta'minlayman: do'kon interfeysi, operatorlar uchun alohida boshqaruv paneli, ularning ortidagi servislar, infratuzilma, qo'llab-quvvatlash chati va uning avtomatik yordamchisi.
+
+Do'kon interfeysini 2026-yil aprelida boshladim. Aprel oxirida backend'ning birinchi bosqichi to'qqizta servis bilan yakunlandi, may boshida production infratuzilmasini yo'lga qo'ydim. Iyunda do'kon payzone.uz'ga ko'chdi, o'shanda 15 ga yaqin servis bor edi. Sentyabrda asosiy ish qo'llab-quvvatlash chati va Telegram botning ishonchliligi ustida bo'ldi.
 
 ## Qanday qurilgan
 
-Do'kon interfeysi TypeScript'da yozilgan Next.js ilovasi, uslublari Tailwind CSS'da. Uning ortida FastAPI'dagi Python servislari, PostgreSQL, Redis va RabbitMQ turadi. Hammasi Docker bilan yig'iladi va Kubernetes'da ishlaydi.
+Do'kon interfeysi va boshqaruv paneli alohida ilovalar, ularning ortida FastAPI servislari turadi: tizimga kirish, foydalanuvchilar, katalog, buyurtmalar, to'lovlar, Peasy Coin hisobi, bildirishnomalar, qo'llab-quvvatlash va Telegram bot.
+
+Kubernetes va PostgreSQL'ni provayder boshqaradi, ularning oldida CDN va fayl ombori (object storage) turadi. Infratuzilma Terraform'da kod sifatida yozilgan. Redis va RabbitMQ esa boshlang'ich byudjetga sig'ishi uchun klasterning o'zida ishlaydi; servislarni o'zgartirmasdan ularni keyinroq provayder boshqaradigan xizmatlarga ko'chirish mumkin.
+
+Hamma servislar bitta umumiy Helm chart'dan deploy qilinadi, har birining o'zida faqat kichik values fayli bor, shuning uchun servislar orasida birorta shablon takrorlanmaydi. Deploy shunday ketadi: image yig'iladi, migratsiya job'i ishlaydi, keyin Helm upgrade bajariladi. Klaster kichik bo'lgani uchun servislar bittadan chiqariladi.
+
+Shaxsiy ma'lumotlar servislar orasida yuradigan event'larga qo'shilmaydi: kerak bo'lgan servis uni shu ma'lumotga egalik qiladigan servisdan so'raydi.
+
+Buyurtma ham, hamyonni to'ldirish ham bitta to'lov modelidan foydalanadi, shunda kod soddaroq bo'ladi. Peasy Coin hisobi alohida servis.
+
+Katalogdagi tavsiflarni Markdown'dan tozalangan HTML'ga o'tkazdim va boshqaruv paneliga vizual matn muharririni qo'shdim, chunki operatorlarga tavsif ichiga video joylash kerak edi. Migratsiya bir marta, zaxira nusxa bilan ishga tushirildi va xatosiz o'tdi.
+
+Qo'llab-quvvatlash chati WebSocket'da ishlaydi, xabarlarni pod'lar orasida Redis pub/sub tashiydi. Avval yordamchi javob beradi, keyin suhbatni boshqaruv panelidagi operatorga topshiradi.
+
+## Qiyin kunlar
+
+### Javob bermagan chat
+
+May oyida qo'llab-quvvatlash chatini production'ga birinchi marta chiqargan kunim u javob bermadi: xabar ketardi, javob kelmasdi. Loglarda “ulanish ochiq” yozuvi turardi va u meni soatlab chalg'itdi. Ustma-ust kelgan to'rtta sabab bor edi. Birinchi ikkitasi oddiy xato qatorlarida ko'rindi: ilova serverining worker timeout'i uzoq yashaydigan WebSocket ulanishlarini yopardi, Redis pub/sub ulanishi esa jim turganda timeout bilan uzilardi. Uchinchisini ulanishning har bir qadamini logga yozdirganimdan keyingina topdim: listener obuna tasdiqlanishidan oldin ishga tushib, tasdiq javobini o'zi o'qib qo'yardi, obuna so'rovi esa javobsiz osilib qolardi (race condition). To'rtinchisi yo'l-yo'lakay chiqdi: avtomatik taqsimlash onlayn ko'rinib turgan, lekin aslida joyida bo'lmagan operatorga chat berib turardi. Endi avval obuna bo'linadi, listener undan keyin ishga tushadi, operatorlar esa chatni o'zlari qo'lda oladi.
+
+### Domen ko'chishi
+
+Iyunda do'kon vaqtinchalik domendan payzone.uz'ga to'rt qadamda ko'chdi: ikkala domenni parallel ishlatish, yangi domenga o'tish, repozitoriyni amaldagi holatga moslashtirish, keyin doimiy redirect. Bu tartib uzilish deyarli bo'lmasligi va orqaga qaytish oson bo'lishi uchun tanlandi. Nozik joyi shundaki, o'tish to'g'ridan-to'g'ri klasterda bajarilgan edi va repozitoriy ishlab turgan tizimni aks ettirmay qolgan edi. Navbatdagi oddiy deploy production'ni indamay eski domenga qaytarib qo'ygan bo'lardi. Bu o'sha deploy'dan oldin payqaldi va repozitoriy to'g'rilandi.
+
+### Localhost'ga so'rov yuborgan yashil build
+
+Sentyabrda bir kecha, taxminan besh soat davomida, brauzerdagi do'kon interfeysi har bir so'rovni localhost'ga yuborib turdi. Sahifalar serverda baribir render qilinardi, oddiy HTTP so'rov 200 qaytarardi, health probe'lar yashil turardi. Sababi: do'kon interfeysi production muhit o'zgaruvchilarisiz yig'ilgan edi. Buni tasodifan, javob header'ini o'qiyotganimda topdim. O'sha kecha bildim: serverda render qilingan sahifaning 200 javobi brauzerdagi bundle haqida hech narsa demaydi.
+
+### Ikki marta jim qolgan bot
+
+Sentyabrda Telegram bot uch kun ichida ikki marta javob bermay qo'ydi: pod'lari sog'lom ko'rinardi, botning webhook'i esa yo'qolgan edi. Ikkinchi jimlik taxminan olti soat davom etdi, uni tuzatadigan kod esa allaqachon yozilgan edi: u merge qilinmagan pull request'da turardi, production'dagi image koddan eskiroq edi. Tiklashda shu orada navbatda turgan xabarlar yo'qolmadi. Bundan chiqqan xulosa: tuzatish yozilgani bilan ish bitmaydi, production'dagi image'ni kod bilan solishtirish kerak. Endi bot o'z webhook'ini o'zi tekshiradi va tiklaydi: jonli tizimda sinalganda webhook 88 soniyada tiklandi.
