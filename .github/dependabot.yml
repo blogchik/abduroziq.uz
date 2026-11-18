@@ -6,8 +6,11 @@ updates:
       interval: weekly
     open-pull-requests-limit: 5
     target-branch: dev
-    # Wait before proposing a new release (version updates only; security updates are never
-    # delayed). Longer than pnpm's minimumReleaseAge (one day), so every proposal can install.
+    # Wait before proposing a new release (version updates only; the cooldown never delays a
+    # security update, but pnpm's minimumReleaseAge of one day still does). Dependabot runs pnpm
+    # with its minimum release age raised to this cooldown, so every proposal installs, and a
+    # run fails while the lockfile holds a version younger than that (a hand-bumped release
+    # needs three days). The next run starts from scratch and succeeds once it has aged.
     cooldown:
       default-days: 3
       semver-major-days: 7

@@ -144,8 +144,8 @@ jobs:
     name: Deploy to Cloudflare
     needs: [check, lighthouse, e2e]
     # Production is `main` only. The `production` environment accepts `main` only as well
-    # (Settings -> Environments), so a run on another branch could not read its secrets even if
-    # this line changed.
+    # (Settings -> Environments), so this job could not start on another branch even if this
+    # line changed.
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -248,8 +248,8 @@ jobs:
     if: always() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 3
-    # The bot token and chat id live in the `production` environment; `deployment: false` reads
-    # them without recording another deployment.
+    # The bot token and chat id are repository secrets. The `production` environment keeps this
+    # job on `main`; `deployment: false` stops it from recording another deployment.
     environment:
       name: production
       deployment: false

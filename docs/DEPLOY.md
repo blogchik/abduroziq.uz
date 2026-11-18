@@ -60,12 +60,14 @@ cancelled: runs wait for each other, so a deploy never stops halfway.
    - Account: Workers Routes / Zone: Workers Routes: Edit (only needed for the custom domain)
    - Zone: Zone: Read, DNS: Edit (only needed for the custom domain)
    Scope it to your account (and the `abduroziq.uz` zone once it exists). Copy the token once.
-4. Add the secrets to the `production` environment in GitHub: repository -> Settings ->
-   Environments -> `production` -> Environment secrets -> Add secret, or from a terminal:
-   `gh secret set CLOUDFLARE_API_TOKEN --env production` and
-   `gh secret set CLOUDFLARE_ACCOUNT_ID --env production`. The environment's deployment branches
-   are limited to `main`, so only a job on `main` can read them. Do not keep a repository-level
-   copy: a repository secret is readable from every branch.
+4. Add the secrets to the repository: Settings -> Secrets and variables -> Actions -> New
+   repository secret, or from a terminal `gh secret set CLOUDFLARE_API_TOKEN` and
+   `gh secret set CLOUDFLARE_ACCOUNT_ID`. Only the deploy job reads them, and it runs on `main`
+   only. A workflow edited on another branch could still read a repository secret; with one
+   person pushing to this repository that is accepted. To close it, set the same names on the
+   `production` environment instead (`--env production`), whose deployment branches are limited
+   to `main`, and delete the repository copies. A job in that environment reads the
+   environment's secret first, so the workflows need no change.
 5. Push to `main` (or run `CI` by hand on `main`). The deploy publishes to
    `https://abduroziq.uz` only: `wrangler.jsonc` turns the `*.workers.dev` URL and preview
    URLs off. (If they are ever turned back on, `apps/web/public/_headers` already sends
@@ -146,10 +148,10 @@ GitHub:
 The weekly `Live site` workflow ([below](#weekly-check-of-the-live-site)) writes to the same chat,
 only when something failed. Both send through `.github/scripts/telegram.sh`.
 
-Every message ends with a link to the run. The job reads two secrets, `TELEGRAM_BOT_TOKEN` and
-`TELEGRAM_CHAT_ID`, from the `production` environment (with `deployment: false`, so it does not
-record a deployment of its own); until both exist it does nothing and the workflow runs as
-before.
+Every message ends with a link to the run. The job reads two repository secrets,
+`TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`. It runs in the `production` environment with
+`deployment: false`, so it runs on `main` only and does not record a deployment of its own. Until
+both secrets exist it does nothing and the workflow runs as before.
 
 1. Create the bot. In Telegram open [@BotFather](https://t.me/BotFather), send `/newbot` and
    give the bot a name and a username that ends in `bot`. BotFather answers with the token (it
@@ -166,10 +168,10 @@ before.
 
    The chat id is the number in `"chat":{"id":123456789,`. An empty `"result":[]` means the bot
    has received nothing in the last 24 hours: send it any message and ask again.
-4. Add both values as secrets of the `production` environment, next to the Cloudflare ones:
-   repository -> Settings -> Environments -> `production` -> Add secret, or from a terminal
-   `gh secret set TELEGRAM_BOT_TOKEN --env production` and
-   `gh secret set TELEGRAM_CHAT_ID --env production` (each asks for the value).
+4. Add both values as repository secrets, next to the Cloudflare ones: Settings -> Secrets and
+   variables -> Actions -> New repository secret, or from a terminal
+   `gh secret set TELEGRAM_BOT_TOKEN` and `gh secret set TELEGRAM_CHAT_ID` (each asks for the
+   value).
 5. Try it: Actions -> `CI` -> Run workflow, on `main` (this checks and deploys the current
    `main` again). The message arrives when the run ends.
 
@@ -253,7 +255,10 @@ to commit). Workers metrics (requests, errors) are under Workers & Pages -> `abd
   It waits three days after a release before proposing it (seven for a major npm release), and
   `minimumReleaseAge` in `pnpm-workspace.yaml` stops pnpm from resolving any version younger
   than a day, locally too. Both guard against a hijacked release, which is usually pulled
-  within hours.
+  within hours. Dependabot runs pnpm with its own three days as the minimum age, so after a
+  hand-bumped release younger than that its npm run fails (`update_not_possible`) until the
+  release ages; the next run succeeds on its own. A security fix younger than a day is refused
+  the same way, by the one-day limit. Details in [STACK-NOTES.md](STACK-NOTES.md).
 - Security features that are switched on in the repository settings on GitHub, not in a file
   here: private vulnerability reporting, Dependabot alerts and security updates, secret
   scanning with push protection, CodeQL code scanning (default setup: JavaScript/TypeScript,

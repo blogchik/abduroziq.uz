@@ -90,9 +90,9 @@ to it.
 - Secret scanning with push protection. The repository holds no secrets: environment files
   contain public values only.
 - Workflows run with read-only `contents` permission, and every action is pinned to a commit
-  SHA (the repository settings require it). The Cloudflare token is a secret of the `production`
-  environment, which only `main` can use. It is read by one job that runs after all checks pass
-  and builds nothing: it publishes the build the checks tested.
+  SHA (the repository settings require it). The Cloudflare token is a repository secret read by
+  one job, on `main` only, after all checks pass. That job builds nothing: it publishes the build
+  the checks tested.
 - CodeQL code scanning covers the JavaScript and TypeScript code and the workflows.
 - Force pushes to `main` and `dev` and their deletion are blocked by a ruleset.
 - New package versions are not installed until they are a day old (`minimumReleaseAge` in
