@@ -735,7 +735,7 @@ name: CI
 on: { push: { branches: [main] }, pull_request: {} }
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
@@ -754,7 +754,7 @@ jobs:
 ```
 
 - Turborepo's own GH Actions page still shows `checkout@v4`/`setup-node@v4` (stale); use the majors in the pinned table. Turbo caches to `./.turbo/cache` by default (`cacheDir` option).
-- Lighthouse CI: either `treosh/lighthouse-ci-action@v12` (`urls`, `configPath: ./lighthouserc.json`, `budgetPath`, `uploadArtifacts: true`, `temporaryPublicStorage: true`) or `pnpm dlx @lhci/cli@0.16.1 autorun` with `.lighthouserc.json` `{ "ci": { "collect": { "staticDistDir": "./apps/web/dist", "numberOfRuns": 3 }, "assert": { "preset": "lighthouse:recommended" } } }`. Run it after build in the same workflow (needs Chrome, preinstalled on ubuntu-latest). `@lhci/cli` needs node >=22.19.
+- Lighthouse CI: either `treosh/lighthouse-ci-action@v12` (`urls`, `configPath: ./lighthouserc.json`, `budgetPath`, `uploadArtifacts: true`, `temporaryPublicStorage: true`) or `pnpm dlx @lhci/cli@0.16.1 autorun` with `.lighthouserc.json` `{ "ci": { "collect": { "staticDistDir": "./apps/web/dist", "numberOfRuns": 3 }, "assert": { "preset": "lighthouse:recommended" } } }`. Run it after build in the same workflow (needs Chrome, preinstalled on the GitHub Ubuntu runners). `@lhci/cli` needs node >=22.19.
 - Deploy job: `needs: build`, `if: github.ref == 'refs/heads/main'`, `permissions: { contents: read }`, then wrangler-action step from section 16 (download artifact or rebuild).
   **Source:** GitHub releases API (latest tags), turborepo GH Actions doc, treosh/lighthouse-ci-action README.
 

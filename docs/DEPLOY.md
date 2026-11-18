@@ -244,6 +244,10 @@ to commit). Workers metrics (requests, errors) are under Workers & Pages -> `abd
   and in `.github/actions/` (listed in `dependabot.yml`, which does not look there by itself).
   Every checkout sets `persist-credentials: false`, so the workflow token is not left in
   `.git/config`.
+- Every job runs on `ubuntu-26.04`, not `ubuntu-latest`, so GitHub moving that label to the
+  next Ubuntu cannot change the system under the checks without a commit. Dependabot does not
+  update runner labels: move to the next image by hand, on `dev` first, when GitHub announces
+  the end of this one (github.com/actions/runner-images).
 - Shared pieces: `.github/actions/setup` (pnpm, Node from `.nvmrc`, the pnpm store cache and
   `pnpm install --frozen-lockfile`, used by every job that needs dependencies),
   `.github/scripts/telegram.sh` and `.github/scripts/check-live-site.sh`.

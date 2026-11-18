@@ -37,7 +37,7 @@ permissions:
 jobs:
   check:
     name: Format, lint, typecheck, test, build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -78,7 +78,7 @@ jobs:
   lighthouse:
     name: Lighthouse CI
     needs: check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -106,7 +106,7 @@ jobs:
   e2e:
     name: End-to-end smoke suite
     needs: check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -147,7 +147,7 @@ jobs:
     # (Settings -> Environments), so this job could not start on another branch even if this
     # line changed.
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     environment:
       name: production
@@ -191,7 +191,7 @@ jobs:
   verify:
     name: Check the live site
     needs: deploy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -209,7 +209,7 @@ jobs:
   sync-dev:
     name: Fast-forward dev to main
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 3
     permissions:
       contents: write
@@ -246,7 +246,7 @@ jobs:
     name: Notify on Telegram
     needs: [check, lighthouse, e2e, deploy, verify]
     if: always() && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 3
     # The bot token and chat id are repository secrets. The `production` environment keeps this
     # job on `main`; `deployment: false` stops it from recording another deployment.
