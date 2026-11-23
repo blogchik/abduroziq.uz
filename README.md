@@ -7,17 +7,19 @@
   </picture>
 </a>
 
+<img src="packages/content/assets/logo.svg" width="56" height="56" alt="The logo: two slanted orange slabs">
+
 # abduroziq.uz
 
 **Personal website and blog of Abduroziq Jabborov, a product engineer in Tashkent.**<br>
-Static, bilingual (English and Uzbek), type-first. Ink on paper, hairlines, one orange accent.
+Static, bilingual (English and Uzbek), type-first. Navy ink on warm white, hairlines, one orange accent.
 
 [**abduroziq.uz**](https://abduroziq.uz) · [Design](docs/DESIGN.md) · [Architecture](docs/ARCHITECTURE.md) · [Stack notes](docs/STACK-NOTES.md) · [Deploy](docs/DEPLOY.md) · [Security](SECURITY.md)
 
 [![CI](https://github.com/blogchik/abduroziq.uz/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/blogchik/abduroziq.uz/actions/workflows/ci.yml)
-[![Astro 7](https://img.shields.io/badge/Astro-7-141310?logo=astro&logoColor=E28413)](https://astro.build)
-[![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4-141310?logo=tailwindcss&logoColor=E28413)](https://tailwindcss.com)
-[![Node 24](https://img.shields.io/badge/Node-24-141310?logo=nodedotjs&logoColor=E28413)](.nvmrc)
+[![Astro 7](https://img.shields.io/badge/Astro-7-000022?logo=astro&logoColor=E28413)](https://astro.build)
+[![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4-000022?logo=tailwindcss&logoColor=E28413)](https://tailwindcss.com)
+[![Node 24](https://img.shields.io/badge/Node-24-000022?logo=nodedotjs&logoColor=E28413)](.nvmrc)
 [![Code: MIT](https://img.shields.io/badge/code-MIT-E28413)](LICENSE)
 
 </div>
@@ -170,6 +172,9 @@ This repository has two licences, depending on the directory:
 - **Content** (everything in `packages/content`: posts, site copy, photos and other images):
   [(c) Jabborov Abduroziq, all rights reserved](packages/content/LICENSE). It is not covered by
   the MIT licence and is published here so the site can be built, not to be reused.
+- **The logo** (`packages/content/assets/logo.svg`) is content too, and so is every copy made
+  from it elsewhere in the repository: the icons in `apps/web/public/` and the mark on the site
+  and in its Open Graph images.
 
 <div align="center">
 <br>

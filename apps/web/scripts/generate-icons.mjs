@@ -1,27 +1,43 @@
-// Generates the raster icons in public/ from the brand dot. Run when the logo changes:
+// Generates the icons in public/ from the logo (packages/content/assets/logo.svg). Run when
+// the logo or the brand colours change:
 //   node apps/web/scripts/generate-icons.mjs   (from the repo root)
 // The outputs are committed, so builds never depend on this script.
 /* global Buffer, console */
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
-const publicDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../public');
+const here = path.dirname(fileURLToPath(import.meta.url));
+const publicDir = path.resolve(here, '../public');
+const logoFile = path.resolve(here, '../../../packages/content/assets/logo.svg');
 
-// Keep in sync with src/lib/seo/brand.ts (docs/DESIGN.md section 2.1).
-const ACCENT = '#E28413';
-const PAPER = '#ECEAE5';
+// Keep in sync with src/lib/seo/brand.ts (docs/DESIGN.md section 2.1). The colours of
+// public/site.webmanifest are kept there by hand.
+const PRIMARY = '#E28413';
+const SECONDARY = '#000022';
 
-/** SVG of the dot. `radius` is a fraction of the canvas; `background` fills the whole square. */
-function dotSvg(size, radius, background) {
+/** The logo's master square; its paths are read as they are (src/lib/logo.ts does the same). */
+const LOGO = 1200;
+const paths = [...(await readFile(logoFile, 'utf8')).matchAll(/\sd="([^"]+)"/g)].map((m) => m[1]);
+if (paths.length === 0) throw new Error(`${logoFile}: no path data found`);
+
+/**
+ * SVG of the logo on a `size` square: the mark takes `scale` of the side, centred, in the
+ * primary colour; `background` fills the whole square (none: transparent).
+ */
+function logoSvg(size, scale, background) {
+  const k = (size * scale) / LOGO;
+  const offset = (size - size * scale) / 2;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${
     background ? `<rect width="${size}" height="${size}" fill="${background}"/>` : ''
-  }<circle cx="${size / 2}" cy="${size / 2}" r="${size * radius}" fill="${ACCENT}"/></svg>`;
+  }<g transform="translate(${offset} ${offset}) scale(${k})" fill="${PRIMARY}">${paths
+    .map((d) => `<path d="${d}"/>`)
+    .join('')}</g></svg>`;
 }
 
-const png = (size, radius, background) =>
-  sharp(Buffer.from(dotSvg(size, radius, background)), { density: 384 })
+const png = (size, scale, background) =>
+  sharp(Buffer.from(logoSvg(size, scale, background)), { density: 384 })
     .resize(size, size)
     .png({ compressionLevel: 9 })
     .toBuffer();
@@ -49,19 +65,22 @@ function ico(images) {
 await mkdir(publicDir, { recursive: true });
 
 const files = {
-  'icon-32.png': await png(32, 0.34),
-  'icon-192.png': await png(192, 0.34),
-  'icon-512.png': await png(512, 0.34),
-  // iOS fills transparency with black, so the touch icon sits on paper.
-  'apple-touch-icon.png': await png(180, 0.3, PAPER),
-  // Maskable: the dot stays inside the central 80% safe zone whatever the mask shape.
-  'icon-maskable-512.png': await png(512, 0.22, PAPER),
+  // Tabs and bookmarks: the mark alone, edge to edge, on a transparent square.
+  'icon-32.png': await png(32, 1),
+  'icon-192.png': await png(192, 0.84),
+  'icon-512.png': await png(512, 0.84),
+  // iOS fills transparency with black, so the touch icon sits on the secondary colour.
+  'apple-touch-icon.png': await png(180, 0.58, SECONDARY),
+  // Maskable: the mark stays inside the central safe circle (radius 40%) whatever the mask.
+  'icon-maskable-512.png': await png(512, 0.5, SECONDARY),
   'favicon.ico': ico([
-    { size: 16, data: await png(16, 0.36) },
-    { size: 32, data: await png(32, 0.34) },
+    { size: 16, data: await png(16, 1) },
+    { size: 32, data: await png(32, 1) },
   ]),
   'favicon.svg': Buffer.from(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="11" fill="${ACCENT}"/></svg>\n`,
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${LOGO} ${LOGO}" fill="${PRIMARY}">${paths
+      .map((d) => `<path d="${d}"/>`)
+      .join('')}</svg>\n`,
   ),
 };
 

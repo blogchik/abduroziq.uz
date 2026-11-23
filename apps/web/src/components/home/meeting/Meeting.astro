@@ -115,7 +115,7 @@ const tagStyle = (tag: { x: number; y: number }): string =>
     }
   }
 
-  /* The name behind: ink at reduced strength (3.2:1 on paper in the light theme, 3.4:1 in the
+  /* The name behind: ink at reduced strength (3.2:1 on paper in the light theme, 3.5:1 in the
      dark one, where the same mix would be brighter), its capitals centred on the stage (the
      line box has room for the Q's tail). */
   .meeting :global(.meeting__name) {
@@ -123,13 +123,13 @@ const tagStyle = (tag: { x: number; y: number }): string =>
     inset-inline: 0;
     top: 50%;
     translate: 0 calc(-50% + 0.95cqi);
-    color: color-mix(in srgb, var(--ink) 48%, var(--paper));
+    color: color-mix(in srgb, var(--ink) 44%, var(--paper));
   }
 
   @supports (color: light-dark(#000, #fff)) {
     .meeting :global(.meeting__name) {
       color: light-dark(
-        color-mix(in srgb, var(--ink) 48%, var(--paper)),
+        color-mix(in srgb, var(--ink) 44%, var(--paper)),
         color-mix(in srgb, var(--ink) 40%, var(--paper))
       );
     }

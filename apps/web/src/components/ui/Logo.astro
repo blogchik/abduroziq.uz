@@ -1,0 +1,36 @@
+---
+import { LOGO_SIZE, logoPaths } from '@/lib/logo';
+
+/**
+ * The logo mark (DESIGN 2.5), drawn in `currentColor` at the width of its box (it is square).
+ * Decorative by default; pass `label` when the mark stands alone and has to be named.
+ */
+interface Props {
+  label?: string;
+}
+
+const { label } = Astro.props;
+---
+
+<svg
+  class="logo"
+  viewBox={`0 0 ${LOGO_SIZE} ${LOGO_SIZE}`}
+  fill="currentColor"
+  focusable="false"
+  role={label ? 'img' : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : 'true'}
+>
+  {logoPaths.map((d) => (
+    <path d={d} />
+  ))}
+</svg>
+
+<style>
+  .logo {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    aspect-ratio: 1;
+  }
+</style>

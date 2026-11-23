@@ -4,41 +4,44 @@
  * (`bg-paper`, `text-ink-soft`, `border-rule`, `font-mono`, `px-gutter`, `mt-section`, ...).
  */
 
-/* 2.1 Colour. Light is the default; `data-theme` on <html> switches. The `--inv-*` set is
-   the opposite theme with `ink` as background: it powers `surface-ink` (the ink band). */
+/* 2.1 Colour. Built from the three brand colours: primary #e28413 (the accent), secondary
+   #000022 (ink in light, paper in dark) and white #fbf5f3 (paper in light, ink in dark). The
+   greys between are mixes of secondary and white (DESIGN 2.1 says how much of each).
+   Light is the default; `data-theme` on <html> switches. The `--inv-*` set is the opposite
+   theme with `ink` as background: it powers `surface-ink` (the ink band). */
 :root {
-  --paper: #eceae5;
-  --paper-raised: #f6f4f0;
-  --ink: #141310;
-  --ink-soft: #5c574e;
-  --rule: #d2cec6;
+  --paper: #fbf5f3;
+  --paper-raised: #ffffff;
+  --ink: #000022;
+  --ink-soft: #5f5d71;
+  --rule: #ddd8da;
   --accent: #e28413;
   --accent-text: #9c5200;
-  --on-accent: #141310;
+  --on-accent: #000022;
 
-  --inv-paper: #141310;
-  --inv-paper-raised: #1b1a17;
-  --inv-ink: #eceae5;
-  --inv-ink-soft: #9c968a;
-  --inv-rule: #2c2a26;
+  --inv-paper: #000022;
+  --inv-paper-raised: #0f0f2f;
+  --inv-ink: #fbf5f3;
+  --inv-ink-soft: #928e9b;
+  --inv-rule: #23223f;
   --inv-accent-text: #e28413;
 
   color-scheme: light;
 }
 
 :root[data-theme='dark'] {
-  --paper: #121110;
-  --paper-raised: #1b1a17;
-  --ink: #efece6;
-  --ink-soft: #9c968a;
-  --rule: #2c2a26;
+  --paper: #000022;
+  --paper-raised: #0f0f2f;
+  --ink: #fbf5f3;
+  --ink-soft: #928e9b;
+  --rule: #23223f;
   --accent-text: #e28413;
 
-  --inv-paper: #efece6;
-  --inv-paper-raised: #f6f4f0;
-  --inv-ink: #121110;
-  --inv-ink-soft: #5c574e;
-  --inv-rule: #d2cec6;
+  --inv-paper: #fbf5f3;
+  --inv-paper-raised: #ffffff;
+  --inv-ink: #000022;
+  --inv-ink-soft: #5f5d71;
+  --inv-rule: #ddd8da;
   --inv-accent-text: #9c5200;
 
   color-scheme: dark;
@@ -47,18 +50,18 @@
 /* Before the theme script has run (or without JavaScript) follow the system preference. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    --paper: #121110;
-    --paper-raised: #1b1a17;
-    --ink: #efece6;
-    --ink-soft: #9c968a;
-    --rule: #2c2a26;
+    --paper: #000022;
+    --paper-raised: #0f0f2f;
+    --ink: #fbf5f3;
+    --ink-soft: #928e9b;
+    --rule: #23223f;
     --accent-text: #e28413;
 
-    --inv-paper: #efece6;
-    --inv-paper-raised: #f6f4f0;
-    --inv-ink: #121110;
-    --inv-ink-soft: #5c574e;
-    --inv-rule: #d2cec6;
+    --inv-paper: #fbf5f3;
+    --inv-paper-raised: #ffffff;
+    --inv-ink: #000022;
+    --inv-ink-soft: #5f5d71;
+    --inv-rule: #ddd8da;
     --inv-accent-text: #9c5200;
 
     color-scheme: dark;

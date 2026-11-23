@@ -4,14 +4,15 @@ import { profile } from '@abduroziq/content';
 import satori from 'satori';
 import sharp from 'sharp';
 import type { Locale } from '@/i18n';
+import { logoSvg } from '@/lib/logo';
 import { seededRandom } from '@/lib/prng';
 import { palette } from './brand';
 import { OG_HEIGHT, OG_WIDTH } from './og';
 
 /**
- * Open Graph card (1200x630 PNG) in the site's own look: paper background, a mono label
- * line, the title large in Bricolage Grotesque and an accent label strip with the name, the
- * domain and barcode-like ticks (docs/DESIGN.md sections 2.1 and 2.2). No photo.
+ * Open Graph card (1200x630 PNG) in the site's own look: paper background, the logo and a
+ * mono label line, the title large in Bricolage Grotesque and an accent label strip with the
+ * name, the domain and barcode-like ticks (docs/DESIGN.md sections 2.1, 2.2 and 2.5). No photo.
  *
  * satori renders only the default instance of variable fonts, so the static Fontsource
  * files are used. They are read from the app root that `astro.config.ts` injects as
@@ -55,6 +56,8 @@ const fontsPromise = Promise.all([
 
 const PAD = 64;
 const STRIP_HEIGHT = 104;
+const LOGO_SIZE = 32;
+const LOGO_SRC = `data:image/svg+xml;base64,${Buffer.from(logoSvg(palette.accent)).toString('base64')}`;
 const TITLE_WIDTH = OG_WIDTH - PAD * 2 - 16; // a little slack for the rough width estimate
 
 const NARROW = new Set([..."ilj.,:;'`|!ʻʼ’"]);
@@ -165,13 +168,15 @@ function tree(card: OgCard): Node {
     [
       el('div', { flexDirection: 'column', flexGrow: 1, padding: `52px ${PAD}px 36px` }, [
         el('div', { alignItems: 'center' }, [
-          el('div', {
-            width: 18,
-            height: 18,
-            borderRadius: 9,
-            background: palette.accent,
-            marginRight: 18,
-          }),
+          {
+            type: 'img',
+            props: {
+              src: LOGO_SRC,
+              width: LOGO_SIZE,
+              height: LOGO_SIZE,
+              style: { width: LOGO_SIZE, height: LOGO_SIZE, marginRight: 20 },
+            },
+          },
           el(
             'div',
             {

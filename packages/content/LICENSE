@@ -2,7 +2,12 @@ Copyright (c) 2026 Jabborov Abduroziq. All rights reserved.
 
 Everything in this directory (packages/content) is the property of Jabborov Abduroziq: the
 posts, the site copy and interface strings in English and Uzbek, the profile and project
-descriptions, and all images and other assets (including the portrait and any photographs).
+descriptions, and all images and other assets (including the logo, the portrait and any
+photographs).
+
+The logo (assets/logo.svg) stays covered by this notice wherever a copy of it appears in the
+repository, including the icons generated from it in apps/web/public and the mark drawn by the
+site's code.
 
 This content is NOT covered by the MIT licence that applies to the source code of this
 repository (see the LICENSE file in the repository root). It is published here only so that

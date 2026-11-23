@@ -6,8 +6,9 @@ details (files, APIs, contracts) live in [ARCHITECTURE.md](ARCHITECTURE.md).
 ## 1. Concept: "Statement & Meeting"
 
 Abduroziq is a product engineer: he designs products and builds them, from Figma to
-production, and he works with AI agents every day. The site is a quiet, type-first page (ink
-on paper, hairlines, one accent) with exactly three loud ideas:
+production, and he works with AI agents every day. The site is a quiet, type-first page (navy
+ink on warm white paper, hairlines, one orange accent, the two-slab logo) with exactly three
+loud ideas:
 
 1. **The statement.** The introduction is one large, plain sentence in the brand sans, in
    two tones. A single living thing sits in it: a small capsule after his name that rolls
@@ -26,8 +27,9 @@ Principles, in priority order:
 - **Minimal is not empty.** Few elements, each one finished. If a thing is not the
   statement, the meeting, the desk, a table row or body text, question whether it should
   exist.
-- **One accent.** Orange `#E28413` is the only colour. No second accent, no gradients, no
-  glass, no glow, no drop shadows except the lifted desk objects.
+- **One accent.** The brand has three colours (2.1): orange `#E28413` is the only colour, the
+  navy `#000022` is the ink and the warm white `#FBF5F3` the paper. No second accent, no
+  gradients, no glass, no glow, no drop shadows except the lifted desk objects.
 - **Motion has weight.** Things rise, settle, get thrown and land. Nothing floats
   aimlessly. The few loops are small and slow (the rolling capsule, the breathing cursors and
   their spark, the tape) and all of them stop with the motion switch.
@@ -40,20 +42,37 @@ Principles, in priority order:
 
 ### 2.1 Colour
 
+The brand palette has three colours (the Figma file "Jabborov Abduroziq", page Assets):
+
+| Brand | Hex | Role on the site |
+|---|---|---|
+| Primary | `#E28413` | the accent, in both themes; the logo |
+| Secondary | `#000022` | ink in the light theme, paper in the dark one; text on the accent |
+| White | `#FBF5F3` | paper in the light theme, ink in the dark one |
+
+Every token is one of these, or a mix of secondary and white (the greys), with two
+exceptions: `paper-raised` in the light theme is pure white, one step lighter than the brand
+white, and `accent-text` in the light theme is the primary darkened for text.
+
 | Token | Light | Dark | Use |
 |---|---|---|---|
-| `paper` | `#ECEAE5` | `#121110` | page background |
-| `paper-raised` | `#F6F4F0` | `#1B1A17` | cards, code blocks, hovered rows |
-| `ink` | `#141310` | `#EFECE6` | text, rules at full strength, inverted bands |
-| `ink-soft` | `#5C574E` | `#9C968A` | secondary text |
-| `rule` | `#D2CEC6` | `#2C2A26` | hairlines |
-| `accent` | `#E28413` | `#E28413` | fills: tape, footer, the capsule, the agent's name tag, the spark, cursor burst |
-| `accent-text` | `#9C5200` | `#E28413` | accent-coloured text and icons on `paper` |
-| `on-accent` | `#141310` | `#141310` | text on an accent fill (always dark ink) |
+| `paper` | `#FBF5F3` white | `#000022` secondary | page background |
+| `paper-raised` | `#FFFFFF` | `#0F0F2F` (6% white) | cards, code blocks, hovered rows |
+| `ink` | `#000022` secondary | `#FBF5F3` white | text, rules at full strength, inverted bands |
+| `ink-soft` | `#5F5D71` (62% secondary) | `#928E9B` (58% white) | secondary text |
+| `rule` | `#DDD8DA` (12% secondary) | `#23223F` (14% white) | hairlines |
+| `accent` | `#E28413` primary | `#E28413` primary | fills: tape, footer, the capsule, the agent's name tag, the spark, cursor burst |
+| `accent-text` | `#9C5200` | `#E28413` primary | accent-coloured text and icons on `paper` |
+| `on-accent` | `#000022` secondary | `#000022` secondary | text on an accent fill (always the navy) |
+
+Contrast, checked for every pair: `ink` on `paper` 19:1; `ink-soft` 5.9:1 on `paper` and
+6.4:1 on `paper-raised` (light), 6.4:1 and 5.8:1 (dark); `accent-text` 5.4:1 on `paper`
+(light), 7.4:1 (dark); `on-accent` on `accent` 7.4:1. The light `rule` and `paper-raised`
+sit as far from the paper as the old warm greys did (1.3:1 and 1.08:1).
 
 Rules:
 
-- Accent is a **fill** first. Text on accent is always dark ink (contrast about 6.7:1).
+- Accent is a **fill** first. Text on accent is always the navy `on-accent` (7.4:1).
   Accent-coloured text on paper uses `accent-text`, never raw `accent` in light mode.
 - An **ink band** is a full-bleed section with `ink` background and `paper` text. Use at
   most one per page (home: none by default; reserved for the 404 page and future use).
@@ -115,16 +134,41 @@ Scale (fluid with `clamp()`; values are min at 360px and max at 1440px):
 | `ease-in-out` | `cubic-bezier(0.65, 0, 0.35, 1)` | wipes, page transition |
 | `spring` | GSAP `elastic.out(1, 0.6)` / `back.out(1.6)` | the capsule, object drop-in |
 
+### 2.5 Logo
+
+Two slanted slabs with rounded outer corners on a square: the mark of the brand. The master
+is `packages/content/assets/logo.svg` (1200 x 1200, primary). It is content, not code: all
+rights reserved like the rest of `packages/content`, including every copy generated from it.
+
+| Where | How |
+|---|---|
+| Header (3.1) | 18px, `accent`, before `ABDUROZIQ.UZ`; it grows a little on hover |
+| Favicons (`favicon.svg`, `favicon.ico`, `icon-32/192/512.png`) | the primary mark on transparency, edge to edge (192 and 512: 84% of the square) |
+| Touch and maskable icons | the primary mark on a secondary square: 58% of the side (touch), 50% (maskable, inside the safe circle) |
+| Open Graph images | 32px, primary, before the mono label line |
+| README | the primary mark above the title |
+
+Rules:
+
+- One colour at a time: primary on paper or on the secondary; secondary on the accent;
+  white on the secondary or on a photo. Never primary on an accent fill, never two colours in
+  one mark.
+- Never redrawn, stretched, rotated or outlined: the paths are read from the master file
+  (`src/lib/logo.ts` on the site, `scripts/generate-icons.mjs` for the icons).
+- At least 16px on screen; clear space around it of a quarter of its size.
+- In the interface it is decorative (the link next to it names it); drawn in `currentColor`,
+  so forced colours turn it into `CanvasText`.
+
 ## 3. Global chrome
 
 ### 3.1 Header
 
 One row, not sticky on the way down; reappears when scrolling up (slides in, `dur-2`).
 
-- Left: an 8px accent dot and `ABDUROZIQ.UZ` in `label` style, links home.
+- Left: the logo mark (2.5, 18px, accent) and `ABDUROZIQ.UZ` in `label` style, links home.
 - Right: `BUILDING`, `WRITING` (label style links), a language switch `EN / UZ` (current
   one in ink, the other in `ink-soft`), and a theme toggle drawn as a half-filled circle.
-- Mobile: dot + name left; `MENU` label right opens a full-screen paper sheet with the
+- Mobile: mark + name left; `MENU` label right opens a full-screen paper sheet with the
   links in `display` style, language switch and theme toggle at the bottom.
 
 ### 3.2 Custom cursor
@@ -230,7 +274,7 @@ desktop never past the fold, so that the whole object shares the first screen wi
 statement (at 1440x900, 1366x768 and 1280x720 it ends a few pixels above the fold).
 
 - **Behind: the name.** `ABDUROZIQ` in the thin cut of the `name` style, exactly as wide as
-  the content box, vertically centred on the stage, in ink at reduced strength (a 48% mix
+  the content box, vertically centred on the stage, in ink at reduced strength (a 44% mix
   with paper in the light theme, 40% in the dark one: a little over 3:1 in both).
 - **In front: one dotted object**, drawn on a canvas: two cursors about to touch, the way
   two hands almost touch in the famous fresco. From the left a pointing-hand cursor: a long

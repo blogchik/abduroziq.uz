@@ -2,10 +2,11 @@
 import { profile } from '@abduroziq/content';
 import LangSwitch from '@/components/chrome/LangSwitch.astro';
 import ThemeToggle from '@/components/chrome/ThemeToggle.astro';
+import Logo from '@/components/ui/Logo.astro';
 import { localePath, t, type Locale } from '@/i18n';
 
 /**
- * Site header (DESIGN 3.1). One row: accent dot + ABDUROZIQ.UZ left; BUILDING, WRITING,
+ * Site header (DESIGN 3.1). One row: the logo mark + ABDUROZIQ.UZ left; BUILDING, WRITING,
  * EN / UZ and the theme toggle right. Below 768px a MENU button opens a full-screen sheet.
  *
  * Scroll behaviour is pure CSS on root state kept by the motion kit: sticky, slides away
@@ -45,7 +46,9 @@ const links = [
       href={localePath(locale, '/')}
       aria-label={t(locale, 'common.nav.homeLabel')}
     >
-      <span class="brand__dot" aria-hidden="true"></span>
+      <span class="brand__mark">
+        <Logo />
+      </span>
       <span>abduroziq.uz</span>
     </a>
 
@@ -260,18 +263,15 @@ const links = [
     text-decoration: none;
   }
 
-  .brand__dot {
-    width: 8px;
-    height: 8px;
-    border-radius: var(--radius-pill);
-    background-color: var(--accent);
+  /* The mark is drawn in currentColor: accent here, CanvasText under forced colours. */
+  .brand__mark {
+    width: 18px;
+    color: var(--accent);
     transition: scale var(--dur-2) var(--ease-out);
-    /* Drawn by its background: keep it under forced colours too. */
-    forced-color-adjust: none;
   }
 
-  .brand:hover .brand__dot {
-    scale: 1.5;
+  .brand:hover .brand__mark {
+    scale: 1.12;
   }
 
   .site-nav {

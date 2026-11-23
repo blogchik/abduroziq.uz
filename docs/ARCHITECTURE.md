@@ -50,7 +50,7 @@ abduroziq.uz/
 │  │  ├─ posts/en/*.mdx          English posts
 │  │  ├─ posts/uz/*.mdx          Uzbek posts
 │  │  ├─ projects/<slug>/        project.yaml, optional en.mdx / uz.mdx, optional media/
-│  │  ├─ assets/                 portrait and post images
+│  │  ├─ assets/                 logo.svg (the master, DESIGN 2.5), portrait and post images
 │  │  ├─ i18n/<locale>/*.json    UI strings by namespace
 │  │  └─ src/                    types.ts, site.ts (profile), locales.ts, index.ts
 │  └─ config/                    @abduroziq/config: shared tsconfig, ESLint, Prettier

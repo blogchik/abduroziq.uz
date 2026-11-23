@@ -128,7 +128,8 @@ Verification codes are public values, so committing them is fine.
 ## Maintenance
 
 - Icons: `node apps/web/scripts/generate-icons.mjs` regenerates the PNG, ICO and SVG icons in
-  `public/` from the accent dot (outputs are committed).
+  `public/` from the logo, `packages/content/assets/logo.svg` (outputs are committed; sizes and
+  backgrounds in `docs/DESIGN.md` 2.5). The manifest's colours are set by hand.
 - OG layout: `lib/seo/og-image.ts`. Long titles shrink and wrap (checked at 20, 60 and 110
   characters). Colours mirror `docs/DESIGN.md` 2.1 in `lib/seo/brand.ts`.
 - Verify production output with `PUBLIC_ALLOW_INDEXING=true pnpm build` and inspect

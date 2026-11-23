@@ -9,6 +9,7 @@ import Barcode from '@/components/ui/Barcode.astro';
 import Capsule from '@/components/ui/Capsule.astro';
 import Container from '@/components/ui/Container.astro';
 import GiantName from '@/components/ui/GiantName.astro';
+import Logo from '@/components/ui/Logo.astro';
 import MonthTab from '@/components/ui/MonthTab.astro';
 import NoteRow from '@/components/ui/NoteRow.astro';
 import PostRow from '@/components/ui/PostRow.astro';
@@ -21,14 +22,14 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import { getPosts, type PostSummary } from '@/lib/posts';
 
 const colours = [
-  { token: 'paper', light: '#ECEAE5', dark: '#121110', use: 'page background' },
-  { token: 'paper-raised', light: '#F6F4F0', dark: '#1B1A17', use: 'hovered rows, code, desk' },
-  { token: 'ink', light: '#141310', dark: '#EFECE6', use: 'text, full rules, ink band' },
-  { token: 'ink-soft', light: '#5C574E', dark: '#9C968A', use: 'secondary text' },
-  { token: 'rule', light: '#D2CEC6', dark: '#2C2A26', use: 'hairlines' },
+  { token: 'paper', light: '#FBF5F3', dark: '#000022', use: 'page background' },
+  { token: 'paper-raised', light: '#FFFFFF', dark: '#0F0F2F', use: 'hovered rows, code, desk' },
+  { token: 'ink', light: '#000022', dark: '#FBF5F3', use: 'text, full rules, ink band' },
+  { token: 'ink-soft', light: '#5F5D71', dark: '#928E9B', use: 'secondary text' },
+  { token: 'rule', light: '#DDD8DA', dark: '#23223F', use: 'hairlines' },
   { token: 'accent', light: '#E28413', dark: '#E28413', use: 'fills only' },
   { token: 'accent-text', light: '#9C5200', dark: '#E28413', use: 'accent text on paper' },
-  { token: 'on-accent', light: '#141310', dark: '#141310', use: 'text on accent' },
+  { token: 'on-accent', light: '#000022', dark: '#000022', use: 'text on accent' },
 ];
 
 const typeScale = [
@@ -209,6 +210,21 @@ const notes = { en: await firstNote('en'), uz: await firstNote('uz') };
         <SectionLabel number={9} name="surface-ink" />
         <p class="type-title">The ink band: the other theme on ink.</p>
         <ArrowLink href="#colour" label="A link on ink" />
+      </div>
+    </div>
+    <p class="sg-note type-body">
+      The logo (DESIGN 2.5), one colour at a time: primary on paper and on ink, on-accent on the
+      accent. Component: <code>Logo</code>, drawn in <code>currentColor</code>.
+    </p>
+    <div class="sg-logos">
+      <div class="sg-logo">
+        <Logo label="Logo on paper" />
+      </div>
+      <div class="sg-logo surface-ink">
+        <Logo label="Logo on ink" />
+      </div>
+      <div class="sg-logo surface-accent sg-logo--on-accent">
+        <Logo label="Logo on accent" />
       </div>
     </div>
   </Container>
@@ -641,6 +657,24 @@ const notes = { en: await firstNote('en'), uz: await firstNote('uz') };
 
   .sg-surface p {
     margin: 0;
+  }
+
+  .sg-logos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--col-gap);
+    margin-block-start: 1.5rem;
+  }
+
+  .sg-logo {
+    width: 7rem;
+    padding: 1.75rem;
+    outline: var(--hairline) solid var(--rule);
+    color: var(--accent);
+  }
+
+  .sg-logo--on-accent {
+    color: var(--on-accent);
   }
 
   .sg-type {
