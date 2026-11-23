@@ -41,7 +41,8 @@ monorepo. Public repository, MIT.
 - Never duplicate a page per language: one page file renders both locales.
 - Colours, type, spacing and motion values come from the design tokens. No raw hex
   values, font sizes or easings in components. The brand has three colours (primary
-  `#E28413`, secondary `#000022`, white `#FBF5F3`) and one logo, mastered in
+  `#E28413`, secondary `#000022`, white `#FBF5F3`): the light theme is built from them, the
+  dark theme keeps its earlier warm palette and shares only the primary. One logo, mastered in
   `packages/content/assets/logo.svg` (DESIGN 2.1 and 2.5). After changing either, run
   `node apps/web/scripts/generate-icons.mjs` and commit the icons.
 - Shared motion goes through the motion kit and its data attributes. Content must be

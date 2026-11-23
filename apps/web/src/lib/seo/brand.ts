@@ -5,7 +5,10 @@
  * sync.
  */
 
-/** The three brand colours. Every colour of the site is one of them or a mix of them. */
+/**
+ * The three brand colours. Every colour of the light theme is one of them or a mix of them; the
+ * dark theme keeps its earlier warm palette and shares only the primary.
+ */
 export const brand = {
   primary: '#E28413',
   secondary: '#000022',
@@ -14,7 +17,8 @@ export const brand = {
 
 export const palette = {
   paper: brand.white,
-  paperDark: brand.secondary,
+  /** The dark theme's paper (its earlier warm black), for `<meta name="theme-color">`. */
+  paperDark: '#121110',
   paperRaised: '#FFFFFF',
   ink: brand.secondary,
   inkSoft: '#5F5D71',

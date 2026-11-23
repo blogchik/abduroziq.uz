@@ -12,7 +12,7 @@
 # abduroziq.uz
 
 **Personal website and blog of Abduroziq Jabborov, a product engineer in Tashkent.**<br>
-Static, bilingual (English and Uzbek), type-first. Navy ink on warm white, hairlines, one orange accent.
+Static, bilingual (English and Uzbek), type-first. Ink on paper, hairlines, one orange accent.
 
 [**abduroziq.uz**](https://abduroziq.uz) · [Design](docs/DESIGN.md) · [Architecture](docs/ARCHITECTURE.md) · [Stack notes](docs/STACK-NOTES.md) · [Deploy](docs/DEPLOY.md) · [Security](SECURITY.md)
 

@@ -4,9 +4,10 @@
  * (`bg-paper`, `text-ink-soft`, `border-rule`, `font-mono`, `px-gutter`, `mt-section`, ...).
  */
 
-/* 2.1 Colour. Built from the three brand colours: primary #e28413 (the accent), secondary
-   #000022 (ink in light, paper in dark) and white #fbf5f3 (paper in light, ink in dark). The
-   greys between are mixes of secondary and white (DESIGN 2.1 says how much of each).
+/* 2.1 Colour. The light theme is built from the three brand colours: primary #e28413 (the
+   accent), secondary #000022 (ink) and white #fbf5f3 (paper); the greys between are mixes of
+   secondary and white (DESIGN 2.1 says how much of each). The dark theme keeps its earlier
+   warm palette with the same accent.
    Light is the default; `data-theme` on <html> switches. The `--inv-*` set is the opposite
    theme with `ink` as background: it powers `surface-ink` (the ink band). */
 :root {
@@ -29,19 +30,22 @@
   color-scheme: light;
 }
 
+/* The dark theme keeps its earlier warm palette: only the accent (the brand primary, the same
+   orange as before) is shared with the light theme. */
 :root[data-theme='dark'] {
-  --paper: #000022;
-  --paper-raised: #0f0f2f;
-  --ink: #fbf5f3;
-  --ink-soft: #928e9b;
-  --rule: #23223f;
+  --paper: #121110;
+  --paper-raised: #1b1a17;
+  --ink: #efece6;
+  --ink-soft: #9c968a;
+  --rule: #2c2a26;
   --accent-text: #e28413;
+  --on-accent: #141310;
 
-  --inv-paper: #fbf5f3;
-  --inv-paper-raised: #ffffff;
-  --inv-ink: #000022;
-  --inv-ink-soft: #5f5d71;
-  --inv-rule: #ddd8da;
+  --inv-paper: #efece6;
+  --inv-paper-raised: #f6f4f0;
+  --inv-ink: #121110;
+  --inv-ink-soft: #5c574e;
+  --inv-rule: #d2cec6;
   --inv-accent-text: #9c5200;
 
   color-scheme: dark;
@@ -50,18 +54,19 @@
 /* Before the theme script has run (or without JavaScript) follow the system preference. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    --paper: #000022;
-    --paper-raised: #0f0f2f;
-    --ink: #fbf5f3;
-    --ink-soft: #928e9b;
-    --rule: #23223f;
+    --paper: #121110;
+    --paper-raised: #1b1a17;
+    --ink: #efece6;
+    --ink-soft: #9c968a;
+    --rule: #2c2a26;
     --accent-text: #e28413;
+    --on-accent: #141310;
 
-    --inv-paper: #fbf5f3;
-    --inv-paper-raised: #ffffff;
-    --inv-ink: #000022;
-    --inv-ink-soft: #5f5d71;
-    --inv-rule: #ddd8da;
+    --inv-paper: #efece6;
+    --inv-paper-raised: #f6f4f0;
+    --inv-ink: #121110;
+    --inv-ink-soft: #5c574e;
+    --inv-rule: #d2cec6;
     --inv-accent-text: #9c5200;
 
     color-scheme: dark;

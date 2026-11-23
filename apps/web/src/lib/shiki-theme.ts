@@ -28,7 +28,7 @@ export interface CodeColors {
 
 export const codeColors = {
   light: { background: '#FFFFFF', ink: '#000022', inkSoft: '#5F5D71', accentText: '#9C5200' },
-  dark: { background: '#0F0F2F', ink: '#FBF5F3', inkSoft: '#928E9B', accentText: '#E28413' },
+  dark: { background: '#1B1A17', ink: '#EFECE6', inkSoft: '#9C968A', accentText: '#E28413' },
 } as const satisfies Record<'light' | 'dark', CodeColors>;
 
 interface TokenRule {

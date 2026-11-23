@@ -6,9 +6,9 @@ details (files, APIs, contracts) live in [ARCHITECTURE.md](ARCHITECTURE.md).
 ## 1. Concept: "Statement & Meeting"
 
 Abduroziq is a product engineer: he designs products and builds them, from Figma to
-production, and he works with AI agents every day. The site is a quiet, type-first page (navy
-ink on warm white paper, hairlines, one orange accent, the two-slab logo) with exactly three
-loud ideas:
+production, and he works with AI agents every day. The site is a quiet, type-first page (ink
+on paper, navy on warm white in the light theme, hairlines, one orange accent, the two-slab
+logo) with exactly three loud ideas:
 
 1. **The statement.** The introduction is one large, plain sentence in the brand sans, in
    two tones. A single living thing sits in it: a small capsule after his name that rolls
@@ -27,9 +27,10 @@ Principles, in priority order:
 - **Minimal is not empty.** Few elements, each one finished. If a thing is not the
   statement, the meeting, the desk, a table row or body text, question whether it should
   exist.
-- **One accent.** The brand has three colours (2.1): orange `#E28413` is the only colour, the
-  navy `#000022` is the ink and the warm white `#FBF5F3` the paper. No second accent, no
-  gradients, no glass, no glow, no drop shadows except the lifted desk objects.
+- **One accent.** Orange `#E28413`, the brand primary, is the only colour in both themes.
+  In the light theme the brand navy `#000022` is the ink and the warm white `#FBF5F3` the
+  paper; the dark theme keeps its warm black (2.1). No second accent, no gradients, no glass,
+  no glow, no drop shadows except the lifted desk objects.
 - **Motion has weight.** Things rise, settle, get thrown and land. Nothing floats
   aimlessly. The few loops are small and slow (the rolling capsule, the breathing cursors and
   their spark, the tape) and all of them stop with the motion switch.
@@ -47,32 +48,41 @@ The brand palette has three colours (the Figma file "Jabborov Abduroziq", page A
 | Brand | Hex | Role on the site |
 |---|---|---|
 | Primary | `#E28413` | the accent, in both themes; the logo |
-| Secondary | `#000022` | ink in the light theme, paper in the dark one; text on the accent |
-| White | `#FBF5F3` | paper in the light theme, ink in the dark one |
+| Secondary | `#000022` | ink in the light theme; text on the accent there; the light theme's ink band |
+| White | `#FBF5F3` | paper in the light theme |
 
-Every token is one of these, or a mix of secondary and white (the greys), with two
-exceptions: `paper-raised` in the light theme is pure white, one step lighter than the brand
-white, and `accent-text` in the light theme is the primary darkened for text.
+**Light theme**: every token is one of these, or a mix of secondary and white (the greys),
+with two exceptions: `paper-raised` is pure white, one step lighter than the brand white, and
+`accent-text` is the primary darkened for text.
+
+**Dark theme**: it keeps its earlier warm palette (a warm black paper and a warm off-white
+ink) and shares only the primary with the light theme. The brand navy is not used there.
 
 | Token | Light | Dark | Use |
 |---|---|---|---|
-| `paper` | `#FBF5F3` white | `#000022` secondary | page background |
-| `paper-raised` | `#FFFFFF` | `#0F0F2F` (6% white) | cards, code blocks, hovered rows |
-| `ink` | `#000022` secondary | `#FBF5F3` white | text, rules at full strength, inverted bands |
-| `ink-soft` | `#5F5D71` (62% secondary) | `#928E9B` (58% white) | secondary text |
-| `rule` | `#DDD8DA` (12% secondary) | `#23223F` (14% white) | hairlines |
+| `paper` | `#FBF5F3` white | `#121110` | page background |
+| `paper-raised` | `#FFFFFF` | `#1B1A17` | cards, code blocks, hovered rows |
+| `ink` | `#000022` secondary | `#EFECE6` | text, rules at full strength, inverted bands |
+| `ink-soft` | `#5F5D71` (62% secondary) | `#9C968A` | secondary text |
+| `rule` | `#DDD8DA` (12% secondary) | `#2C2A26` | hairlines |
 | `accent` | `#E28413` primary | `#E28413` primary | fills: tape, footer, the capsule, the agent's name tag, the spark, cursor burst |
 | `accent-text` | `#9C5200` | `#E28413` primary | accent-coloured text and icons on `paper` |
-| `on-accent` | `#000022` secondary | `#000022` secondary | text on an accent fill (always the navy) |
+| `on-accent` | `#000022` secondary | `#141310` | text on an accent fill (always the theme's dark ink) |
 
-Contrast, checked for every pair: `ink` on `paper` 19:1; `ink-soft` 5.9:1 on `paper` and
-6.4:1 on `paper-raised` (light), 6.4:1 and 5.8:1 (dark); `accent-text` 5.4:1 on `paper`
-(light), 7.4:1 (dark); `on-accent` on `accent` 7.4:1. The light `rule` and `paper-raised`
-sit as far from the paper as the old warm greys did (1.3:1 and 1.08:1).
+The ink band (`surface-ink`) is the other theme on the theme's ink: in the light theme a
+navy band (`#000022`, with white text and greys mixed from secondary and white: raised
+`#0F0F2F`, soft text `#928E9B`, rules `#23223F`); in the dark theme a warm off-white band.
+
+Contrast, checked for every pair. Light: `ink` on `paper` 19:1; `ink-soft` 5.9:1 on `paper`
+and 6.4:1 on `paper-raised`; `accent-text` 5.4:1 on `paper`; `on-accent` on `accent` 7.4:1.
+The light `rule` and `paper-raised` sit as far from the paper as the earlier warm greys did
+(1.3:1 and 1.08:1). Dark: `ink` on `paper` 16:1; `ink-soft` 6.4:1 and 5.9:1; `accent-text`
+6.8:1 on `paper`; `on-accent` on `accent` 6.7:1.
 
 Rules:
 
-- Accent is a **fill** first. Text on accent is always the navy `on-accent` (7.4:1).
+- Accent is a **fill** first. Text on accent is always the theme's dark `on-accent` (navy in
+  the light theme, warm black in the dark one).
   Accent-coloured text on paper uses `accent-text`, never raw `accent` in light mode.
 - An **ink band** is a full-bleed section with `ink` background and `paper` text. Use at
   most one per page (home: none by default; reserved for the 404 page and future use).
