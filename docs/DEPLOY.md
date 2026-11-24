@@ -218,10 +218,20 @@ scheduled workflow off after 60 days without activity in a public repository; Ac
 
 ## Analytics
 
-Cloudflare dashboard -> Analytics & Logs -> Web Analytics. Create a site there, copy the
-token, and set `PUBLIC_ANALYTICS_TOKEN` in `apps/web/.env.production` (public value, safe
-to commit). Workers metrics (requests, errors) are under Workers & Pages -> `abduroziq-uz`
--> Metrics. No Content-Security-Policy is set, so the analytics script is not blocked.
+Cloudflare Web Analytics runs through **automatic setup**: Cloudflare injects its beacon into
+the HTML at the edge, so nothing in the repository adds it. The site was added in November 2026
+(dashboard: Observability -> Analytics -> Web analytics -> `abduroziq.uz`) with the setting
+"Enable, excluding visitor data in the EU", so visitors from the EU are not counted.
+
+Keep `PUBLIC_ANALYTICS_TOKEN` in `apps/web/.env.production` empty. `Analytics.astro` adds its
+own beacon when the token is set, and with automatic setup on, every visit would be counted
+twice. To use the snippet instead (for example to count EU visitors or to control the script
+from the repository): switch the site to "Enable with JS Snippet installation" in the
+dashboard, put the token in `PUBLIC_ANALYTICS_TOKEN`, deploy, and check that the live HTML has
+exactly one `beacon.min.js`.
+
+Workers metrics (requests, errors) are under Workers & Pages -> `abduroziq-uz` -> Metrics. No
+Content-Security-Policy is set, so the analytics script is not blocked.
 
 ## Things to know
 

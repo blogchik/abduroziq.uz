@@ -115,8 +115,7 @@ metadata (`pnpm check` fails otherwise).
    `https://abduroziq.uz/sitemap-index.xml`. Set the regional link to Uzbekistan.
 4. **Bing Webmaster Tools**: add the site (or import from Search Console), meta tag code in
    `PUBLIC_BING_SITE_VERIFICATION`, submit the sitemap.
-5. **Analytics (optional)**: create a Cloudflare Web Analytics site and put its token in
-   `PUBLIC_ANALYTICS_TOKEN`. Empty means no script.
+5. **Analytics**: done through Cloudflare's automatic setup (DEPLOY.md, "Analytics"); leave `PUBLIC_ANALYTICS_TOKEN` empty.
 6. Test one post in the Rich Results Test and a share preview (Telegram, LinkedIn). In Search
    Console use URL Inspection > Request indexing for the home page and each new post.
 7. **IndexNow (optional)**: Bing and Yandex accept instant URL pings. Generate a key, host

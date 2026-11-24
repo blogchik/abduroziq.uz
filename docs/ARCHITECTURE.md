@@ -83,7 +83,7 @@ secret: `apps/web/.env.development` and `apps/web/.env.production`.
 |---|---|---|---|
 | `PUBLIC_SITE_URL` | `http://localhost:4321` | `https://abduroziq.uz` | canonical origin |
 | `PUBLIC_ALLOW_INDEXING` | `false` | `true` | `false` adds `noindex` and a disallow-all robots.txt |
-| `PUBLIC_ANALYTICS_TOKEN` | empty | empty until provided | Cloudflare Web Analytics token; empty means no script |
+| `PUBLIC_ANALYTICS_TOKEN` | empty | empty | Cloudflare Web Analytics token; empty means no script. Keep it empty: Cloudflare's automatic setup injects the beacon (DEPLOY.md, "Analytics") |
 | `PUBLIC_GOOGLE_SITE_VERIFICATION`, `PUBLIC_YANDEX_VERIFICATION`, `PUBLIC_BING_SITE_VERIFICATION` | empty | empty until provided | search engine ownership codes; a non-empty value is output as a meta tag |
 
 The variables are declared in the `astro:env` schema in `astro.config.ts` (read them with
@@ -386,7 +386,9 @@ Outputs: title (site suffix from `seo.site.titleTemplate`, none on the home page
 canonical, hreflang alternates plus `x-default`, robots, Open Graph (with image size and alt),
 article tags, Twitter card, theme-color, author, RSS and sitemap links, favicons and manifest
 links, optional verification metas and JSON-LD through `JsonLd.astro` (`@context` added,
-output escaped). `Analytics.astro` renders the Cloudflare beacon in production builds only.
+output escaped). `Analytics.astro` renders the Cloudflare beacon in production builds only, and
+only when `PUBLIC_ANALYTICS_TOKEN` is set, which it is not: Cloudflare injects the beacon at the
+edge (DEPLOY.md, "Analytics").
 Schema helpers live in `apps/web/src/lib/seo/`: `personSchema`, `websiteSchema`,
 `profilePageSchema`, `blogSchema`, `collectionPageSchema`, `blogPostingSchema`,
 `projectsPageSchema`, `projectSchema`, `breadcrumbSchema`, `countWords`, plus `ogImageUrl` (`og.ts`) and the title helpers
